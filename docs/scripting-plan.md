@@ -30,12 +30,12 @@ without injection.
 ```
 ┌────────────────────────── engine (closed source, Zig) ──────────────────────┐
 │                                                                             │
-│  launcher (exe)                      runtime (dll, injected)                │
+│  launcher (native ELF)               runtime (dll, injected into game)      │
 │  ├─ legitimacy check                 ├─ AOB scan + version gate             │
 │  ├─ offline enforcement (no EAC)     ├─ hook framework (trampolines)        │
-│  ├─ inject runtime dll               ├─ Lua VM pool + sandbox               │
-│  └─ launch game                      ├─ SDK modules (params/hooks/ui/perf)  │
-│                                      ├─ DX12 present hook → overlay/UI     │
+│  ├─ drive Proton to start game       ├─ Lua VM pool + sandbox               │
+│  └─ arrange DLL injection            ├─ SDK modules (params/hooks/ui/perf)  │
+│     (WINEDLLOVERRIDES)               ├─ DX12 present hook → overlay/UI     │
 │                                      └─ mod lifecycle (load/reload/kill)   │
 └─────────────────────────────────────────────────────────────────────────────┘
         ▲                                        ▲
@@ -43,8 +43,22 @@ without injection.
   mods/*.lua  (open ecosystem)             sdk/*.lua (shipped stubs + docs)
 ```
 
-- **Launcher** and **runtime** are one Zig codebase, cross-compiled
-  `x86_64-windows-gnu` from the Linux dev box; tested under Proton.
+- **The launcher is a native binary** for the user's OS (Linux by default),
+  not a Windows exe. Its job — find the install, drive Proton, arrange
+  injection — happens outside the game process, so running it under Wine
+  would only add indirection. It starts the Windows game the way Steam does:
+  invoking the `proton` script with the `STEAM_COMPAT_*` environment, minus
+  EAC. Injection then rides Proton's own Wine loader via `WINEDLLOVERRIDES`,
+  so the launcher never has to ptrace anything.
+- **The runtime is a Windows PE DLL** (`x86_64-windows-gnu`), because it is
+  injected into `eldenring.exe`'s address space — a Wine PE process, into
+  which a native `.so` cannot be loaded. This split is the most-native design
+  the platform allows: native kernel, native GPU driver, native Vulkan (via
+  VKD3D-Proton translating the game's D3D12), native launcher; only the
+  game's own code and code injected into it stay PE and translated by Wine.
+- **Launcher** and **runtime** are one Zig codebase with two build targets
+  (host for the launcher, `x86_64-windows-gnu` for the runtime); developed
+  and tested on Linux, with the runtime path exercised under Proton.
 - **Mods are open**; the engine is the closed part. The SDK surface (Lua API,
   documentation, type stubs) is public so mod development needs nothing
   proprietary.
@@ -62,10 +76,12 @@ Honest scoping — these are deterrents and safety rails, not DRM:
   pirated-copy case. It cannot be made cryptographically strong against a
   determined user, and we should not pretend otherwise or arms-race it.
 - **Offline enforcement**: hard rule — the runtime never attaches to a
-  process with Easy Anti-Cheat active. The launcher starts the game with EAC
-  disabled (the documented `steam_appid`/direct-launch route) and the runtime
-  double-checks before installing any hook. This is a safety guarantee to the
-  user (no bans), so it is belt *and* braces.
+  process with Easy Anti-Cheat active. The install ships two executables:
+  `start_protected_game.exe` starts EAC and then the game, `eldenring.exe` is
+  the game itself. The launcher runs the latter directly through Proton and
+  never the former, and the runtime double-checks before installing any hook.
+  This is a safety guarantee to the user (no bans), so it is belt *and*
+  braces.
 - **Version gate**: on unknown game build the runtime logs, disables all
   hooks, and lets the vanilla game run. Never crash, never half-attach.
 

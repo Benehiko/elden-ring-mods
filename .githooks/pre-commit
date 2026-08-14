@@ -1,0 +1,13 @@
+#!/bin/sh
+# Thin pre-commit dispatcher: fast checks only (fmt + build). Full tests run in CI.
+set -e
+
+staged_zig=$(git diff --cached --name-only --diff-filter=ACM | grep '\.zig$' || true)
+[ -z "$staged_zig" ] && exit 0
+
+if ! zig fmt --check $staged_zig; then
+    echo "pre-commit: zig fmt would change the files above — run 'zig fmt .' and re-stage." >&2
+    exit 1
+fi
+
+zig build

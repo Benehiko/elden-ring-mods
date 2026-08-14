@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libzstd
+        run: sudo apt-get update && sudo apt-get install -y libzstd-dev
+
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: 0.16.0
+
+      - name: Check formatting
+        run: zig fmt --check .
+
+      - name: Build
+        run: zig build
+
+      - name: Test
+        run: zig build test
+
+  paramdefs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: 0.16.0
+
+      # The generated field tables are committed; regenerating them must be a
+      # no-op, otherwise the checked-in tables have drifted from the XML.
+      # The generator's raw output is not fmt-clean, so format it first —
+      # the committed file is formatted and `zig fmt --check .` covers it.
+      - name: Verify generated paramdefs are up to date
+        run: |
+          python3 tools/gen_paramdef.py paramdefs src/generated/paramdefs.zig \
+            CharaInitParam ItemLotParam EquipParamWeapon EquipParamProtector EquipParamGoods
+          zig fmt src/generated/paramdefs.zig
+          git diff --exit-code src/generated/paramdefs.zig

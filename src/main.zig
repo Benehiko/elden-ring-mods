@@ -10,6 +10,7 @@ const paramdef = ermod_lua.paramdef;
 const defs = ermod_lua.paramdefs;
 const modspec = @import("modspec.zig");
 const offline_host = @import("offline_host.zig");
+const devcmd = @import("devcmd.zig");
 const sdk = ermod_lua.sdk;
 const mods = @import("mods");
 const level60 = mods.level60;
@@ -45,6 +46,16 @@ const usage =
     \\                                                 A mod is a built-in spec name or a
     \\                                                 path to a .lua launch mod.
     \\
+    \\Mod authoring (the game's own front end, run on the host):
+    \\  ermod check <mod.lua>...                       Would each load in-game? Exit 1 if not
+    \\  ermod perf  <mod.lua> [--frames N] [--runes N] [--deaths N]
+    \\              [--regulation <regulation.bin>]    Synthetic session under the real budget
+    \\                                                 model; cost per event
+    \\  ermod stubs [out.lua]                          LuaLS type stubs for the SDK
+    \\  ermod img stat <capture.png> [--rect x,y,w,h]  Measure a frame capture
+    \\  ermod img diff <a.png> <b.png> [--threshold N] [--rect x,y,w,h]
+    \\                                                 What changed between two captures
+    \\
 ;
 
 const max_file_size = 512 * 1024 * 1024;
@@ -71,6 +82,12 @@ pub fn main(init: std.process.Init) !void {
     }
 
     const cmd = args[1];
+
+    // The mod-authoring commands take an unbounded, flag-carrying argument
+    // list and report pass/fail through the exit code, so they are dispatched
+    // off the raw argument vector rather than the fixed `args` above.
+    if (isDevCommand(cmd)) return runDevCommand(gpa, io, cmd, init.minimal.args.vector[2..]);
+
     if (std.mem.eql(u8, cmd, "decrypt")) {
         try requireArgs(argc, 4);
         const data = try readFile(io, gpa, args[2]);
@@ -418,6 +435,42 @@ pub fn main(init: std.process.Init) !void {
     }
 }
 
+fn isDevCommand(cmd: []const u8) bool {
+    for ([_][]const u8{ "check", "perf", "stubs", "img" }) |c| {
+        if (std.mem.eql(u8, cmd, c)) return true;
+    }
+    return false;
+}
+
+/// Run one of the mod-authoring commands and exit 1 if it reported a failure.
+///
+/// These answer a question rather than produce a file — "would this load?",
+/// "what does it cost?", "did the overlay draw?" — so the exit code is the
+/// result, and a `false` here is a normal outcome to be scripted against, not
+/// an error to unwind with a stack trace.
+fn runDevCommand(
+    gpa: std.mem.Allocator,
+    io: std.Io,
+    cmd: []const u8,
+    rest: []const [*:0]const u8,
+) !void {
+    var out_buf: [8192]u8 = undefined;
+    var stdout = std.Io.File.stdout().writerStreaming(io, &out_buf);
+    const out = &stdout.interface;
+
+    const ok = if (std.mem.eql(u8, cmd, "check"))
+        try devcmd.check(gpa, io, out, rest)
+    else if (std.mem.eql(u8, cmd, "perf"))
+        try devcmd.perf(gpa, io, out, rest)
+    else if (std.mem.eql(u8, cmd, "stubs"))
+        try devcmd.stubs(io, out, rest)
+    else
+        try devcmd.img(gpa, io, out, rest);
+
+    try out.flush();
+    if (!ok) std.process.exit(1);
+}
+
 /// Load one `.lua` mod through the shared front end and run it against the
 /// unpacked archive.
 ///
@@ -521,6 +574,7 @@ test {
     _ = paramdef;
     _ = modspec;
     _ = offline_host;
+    _ = devcmd;
     _ = level60;
     _ = class_gear;
 }

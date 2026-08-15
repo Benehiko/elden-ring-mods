@@ -27,6 +27,15 @@ jobs:
       - name: Test
         run: zig build test
 
+      # `stubs/ermod.lua` is committed so an author gets editor completion by
+      # cloning, without building anything. Regenerating it must therefore be
+      # a no-op: a drift here means the checked-in stubs describe an SDK that
+      # no longer exists.
+      - name: Verify committed SDK stubs are up to date
+        run: |
+          ./zig-out/bin/ermod stubs stubs/ermod.lua
+          git diff --exit-code stubs/ermod.lua
+
   paramdefs:
     runs-on: ubuntu-latest
     steps:

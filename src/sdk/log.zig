@@ -10,7 +10,7 @@ const host_mod = @import("host.zig");
 const sdk = @import("sdk.zig");
 
 /// LuaLS annotations for this module, assembled by `stubs.zig` into the
-/// file `ermod-dev stubs` emits. Kept beside the bindings so a new function
+/// file `ermod stubs` emits. Kept beside the bindings so a new function
 /// without a stub is visible in the same diff.
 pub const stub =
     \\---@class ermod.sdk.log

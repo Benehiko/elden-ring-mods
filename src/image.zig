@@ -1,7 +1,7 @@
 //! Frame images: what a screen capture produces and what the host tools
 //! analyse. Pure memory in, memory out — no files, no GPU — so it is
 //! host-tested and shared by the injected runtime (encode on the capture
-//! thread) and `ermod-dev img` (decode, measure, compare).
+//! thread) and `ermod img` (decode, measure, compare).
 //!
 //! The on-disk format is PNG (8-bit RGB, zlib deflate through std) so a
 //! capture opens anywhere and stays small enough to attach to a finding.

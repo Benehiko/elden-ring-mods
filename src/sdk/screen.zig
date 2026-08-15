@@ -13,7 +13,7 @@
 //! write outside the captures directory.
 //!
 //! This is the engine's own eyes as much as a mod's: `ermod-engine shot`
-//! asks for the same capture from the host, and `ermod-dev img` measures
+//! asks for the same capture from the host, and `ermod img` measures
 //! the result. A mod that wants to prove its overlay drew can capture and
 //! log the path; a test harness can diff two captures.
 

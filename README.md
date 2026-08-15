@@ -124,6 +124,54 @@ writes land in live memory instead of the archive. Offline, though:
 Two runs of `apply` never produce byte-identical `regulation.bin` files — the
 encryption uses a random IV. To compare two outputs, `ermod unpack` them first.
 
+## Author tooling
+
+`check`, `perf` and `stubs` run the game's own mod front end — the same loader,
+sandbox, manifest rules, instruction budget and SDK modules, compiled for the
+host. So "passes `check`" means "would load in-game", and `perf`'s numbers come
+from the real dispatcher rather than an estimate.
+
+```sh
+ermod check my_mod.lua other_mod.lua     # syntax, manifest, permissions, entry point
+ermod perf  my_mod.lua                   # synthetic session; cost per event
+ermod perf  my_mod.lua --regulation "$GAME/regulation.bin"
+ermod stubs stubs/ermod.lua              # LuaLS type stubs for editor completion
+```
+
+`check` prints one line per mod and exits 1 if any would fail to load, so it
+drops straight into a pre-commit hook or CI.
+
+`perf` fires a synthetic session (`--frames`, `--runes`, `--deaths`) and reports
+per-event handler cost against the real budget model, ending with the worst
+`on_present` frame as a percentage of a 60 fps frame. It is a pre-flight, not a
+promise: there is no game, so the overlay records instead of drawing and `store`
+lives in memory. Without `--regulation`, `params` is unavailable exactly as it
+is before the game's tables load — which means a launch mod fails at its first
+`params` call. Give it a `regulation.bin` and `on_launch` runs against the
+unpacked archive instead (`apply` without the pack), so launch mods get an
+honest number too. Nothing is written back; `perf` never produces a file.
+
+`stubs` writes LuaLS annotations for the whole SDK. The output is already
+committed at `stubs/ermod.lua`, so editor completion needs no build — point a
+language server at that directory:
+
+```json
+{ "workspace.library": ["path/to/elden-ring-mods/stubs"] }
+```
+
+`img` turns a frame capture into numbers a check can assert on, without eyes on
+the screen. The engine's `ermod-engine shot` and the `screen` SDK module produce
+the PNGs:
+
+```sh
+ermod img stat shot.png                        # size, mean colour, lit coverage, distinct colours
+ermod img stat shot.png --rect 20,20,420,260   # just the overlay window's area
+ermod img diff before.png after.png            # changed pixels and their bbox; exit 1 if none changed
+```
+
+`img diff` exits 1 when nothing changed, so "did this draw?" is a shell test.
+8-bit RGB/RGBA non-interlaced PNGs only — what the engine writes.
+
 ## CLI
 
 ```
@@ -139,6 +187,14 @@ ermod verify-ids <regulation.bin>                 Check mod item IDs exist
 ermod selftest   <regulation.bin>                 Golden checks against the game
 ermod apply   <regulation.bin> <out.bin> <mod>... Apply mods (a mod is a built-in
                                                   name or a .lua launch mod path)
+
+ermod check <mod.lua>...                          Would each load in-game?
+ermod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <bin>]
+                                                  Cost per event, real budget model
+ermod stubs [out.lua]                             LuaLS type stubs for the SDK
+ermod img stat <png> [--rect x,y,w,h]             Measure a frame capture
+ermod img diff <a.png> <b.png> [--threshold N] [--rect x,y,w,h]
+                                                  What changed between two captures
 ```
 
 `ermod show` is handy for exploring: row IDs 3000–3009 are the ten starting classes.
@@ -186,6 +242,7 @@ regulation.bin
 make test        # unit tests (no game data needed)
 make selftest    # golden checks against the real install
 make paramdefs   # regenerate field tables from vendored Paramdex XML
+make stubs       # regenerate the committed LuaLS stubs (CI checks for drift)
 make hooks       # activate the pre-commit hook (fmt check + build)
 ```
 

@@ -1,7 +1,7 @@
 GAME ?= $(HOME)/.local/share/Steam/steamapps/common/ELDEN RING/Game
 MODS ?= level60 class-gear
 
-.PHONY: hooks build test selftest apply paramdefs clean
+.PHONY: hooks build test selftest apply paramdefs stubs clean
 
 hooks:
 	git config core.hooksPath .githooks
@@ -28,6 +28,11 @@ paramdefs:
 	python3 tools/gen_paramdef.py paramdefs src/generated/paramdefs.zig \
 		CharaInitParam ItemLotParam EquipParamWeapon EquipParamProtector EquipParamGoods
 	zig fmt src/generated/paramdefs.zig
+
+# Regenerate the committed LuaLS stubs. They are checked in so an author gets
+# editor completion by cloning; CI fails if this would change anything.
+stubs: build
+	./zig-out/bin/ermod stubs stubs/ermod.lua
 
 clean:
 	rm -rf .zig-cache zig-out build_out

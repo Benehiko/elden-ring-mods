@@ -1,0 +1,18 @@
+.{
+    .name = .ermod,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.16.0",
+    .fingerprint = 0xbe73ed6d75c923ff,
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "mods",
+        "vendor",
+        "stubs",
+        "test",
+        "README.md",
+        "docs",
+    },
+}

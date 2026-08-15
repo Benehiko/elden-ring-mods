@@ -12,6 +12,38 @@ See [docs/architecture.md](docs/architecture.md) for the design,
 [docs/deploy.md](docs/deploy.md) for running it through Proton, and
 [docs/tasks.md](docs/tasks.md) for status.
 
+This repo also holds **`ermod-lua`**, the mod front end shared with the Lua
+mod engine — see [The `ermod-lua` package](#the-ermod-lua-package) below.
+
+## The `ermod-lua` package
+
+`src/ermod_lua.zig` is a Zig package: everything a Lua mod *is*, independent
+of where it runs.
+
+| | |
+| --- | --- |
+| `src/lua/` | the sandboxed Lua 5.4 VM, the instruction budget, manifest parsing, the mod loader |
+| `src/sdk/` | every `sdk.*` binding a mod calls — `log`, `params`, `hooks`, `perf`, `store`, `ui`, `screen` — and `host.zig`, the interface they call back into |
+| `src/paramview.zig` | one PARAM table as a view over its bytes, live or unpacked |
+| `src/param_writes.zig` | the write ledger: who wrote which field, and conflicts between mods |
+| `src/perf.zig`, `src/ui_backend.zig`, `src/store_format.zig`, `src/screen.zig`, `src/image.zig` | the pure data and interfaces those bindings are defined over |
+| `vendor/lua/` | Lua 5.4.7, compiled by `build.zig` (no system dependency) |
+| `test/mods/` | Lua fixtures exercising one SDK slice each; also the engine's |
+
+A mod's whole blast radius is the vtable in `src/sdk/host.zig`. If a
+capability is not a function on it, no mod can reach it — and that file is
+here, in the open, rather than inside the closed engine. The two consumers
+supply the other half:
+
+- **`ermod` (this repo)** implements `Host` over an unpacked
+  `regulation.bin`, so `ermod apply` can run a `.lua` mod offline.
+- **the engine** implements it over the running game — live param tables,
+  the ImGui overlay, frame capture, event hooks — and consumes this package
+  through its `build.zig.zon`.
+
+Same bindings, same sandbox, same paramdefs, both ways. That is what makes
+"author live, ship offline" one code path rather than two.
+
 ## Requirements
 
 - Zig 0.16

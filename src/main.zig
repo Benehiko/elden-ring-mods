@@ -3,8 +3,11 @@ const crypto = @import("crypto.zig");
 const dcx = @import("dcx.zig");
 const bnd4 = @import("bnd4.zig");
 const param = @import("param.zig");
-const paramdef = @import("paramdef.zig");
-const defs = @import("generated/paramdefs.zig");
+const paramcheck = @import("paramcheck.zig");
+const ermod_lua = @import("ermod_lua");
+const paramview = ermod_lua.paramview;
+const paramdef = ermod_lua.paramdef;
+const defs = ermod_lua.paramdefs;
 const modspec = @import("modspec.zig");
 const mods = @import("mods");
 const level60 = mods.level60;
@@ -180,6 +183,25 @@ pub fn main(init: std.process.Init) !void {
         }
         std.debug.print("ok: no-op rebuild is byte-identical ({d} bytes)\n", .{rebuilt.len});
 
+        // Both PARAM readers over every real table, on the archive's original
+        // bytes: the file reader `apply` uses, and the in-place view a Lua mod
+        // sees through `sdk.params`. Synthetic fixtures cover the layout in
+        // `zig build test`; only the game's own params have the row counts,
+        // string blocks and padding that would expose a divergence — and a
+        // divergence means a field a mod edits live lands elsewhere offline.
+        var checked: usize = 0;
+        var rows: usize = 0;
+        for (archive.files) |*f| {
+            if (!std.mem.endsWith(u8, f.name, ".param")) continue;
+            paramcheck.compare(gpa, f.data) catch |err| {
+                std.debug.print("FAIL: {s}: readers disagree ({s})\n", .{ f.name, @errorName(err) });
+                return error.SelfTestFailed;
+            };
+            checked += 1;
+            rows += (paramview.Table.at(f.data.ptr) orelse unreachable).row_count;
+        }
+        std.debug.print("ok: both param readers agree on {d} table(s), {d} rows\n", .{ checked, rows });
+
         const report = try modspec.apply(gpa, &archive, &.{ level60.spec, class_gear.spec });
         const patched = try bnd4.write(gpa, &archive);
         defer gpa.free(patched);
@@ -321,6 +343,7 @@ test {
     _ = dcx;
     _ = bnd4;
     _ = param;
+    _ = paramcheck;
     _ = paramdef;
     _ = modspec;
     _ = level60;

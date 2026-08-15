@@ -28,6 +28,11 @@ pub const host = @import("sdk/host.zig");
 pub const paramview = @import("paramview.zig");
 pub const param_defs = @import("params/defs.zig");
 pub const paramdef = @import("paramdef.zig");
+/// The generated per-param field tables. Re-exported because `ermod`'s
+/// offline half reads the same layout the SDK does, and a Zig file may only
+/// belong to one module — so the package owns them and everything else goes
+/// through here.
+pub const paramdefs = @import("generated/paramdefs.zig");
 pub const param_writes = @import("param_writes.zig");
 
 pub const perf = @import("perf.zig");

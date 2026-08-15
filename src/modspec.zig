@@ -12,8 +12,8 @@
 const std = @import("std");
 const bnd4 = @import("bnd4.zig");
 const param = @import("param.zig");
-const paramdef = @import("paramdef.zig");
-const defs = @import("generated/paramdefs.zig");
+const paramdef = @import("ermod_lua").paramdef;
+const defs = @import("ermod_lua").paramdefs;
 const spec_types = @import("spec");
 
 pub const Value = spec_types.Value;

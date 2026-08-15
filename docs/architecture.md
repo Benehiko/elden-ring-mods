@@ -196,6 +196,16 @@ The generated `row_size` is checked against the game's actual row stride at runt
 so a paramdef that no longer matches the installed game version is caught rather than
 silently writing to wrong offsets.
 
+**Row IDs are not unique.** They are unique in every param a mod has touched so far,
+but not in general: `RandomAppearParam` ships 26 IDs that appear on more than one
+descriptor, each with its own row data. Both readers resolve a lookup by ID to the
+*first* matching descriptor (`param.findRow`, `paramview.Table.row`); the later copies
+are reachable only by position (`Table.rowAt`). A mod that edits a duplicated ID
+therefore edits the first row of that ID and no other — consistently offline and live,
+since both paths use the same rule, but worth knowing before writing a mod against a
+param where IDs repeat. This is a case no synthetic fixture had; `ermod selftest`'s
+reader cross-check over the real archive is what surfaced it.
+
 For editing we only need: find row by ID → patch bytes at known field offsets → write
 back, in place. Row sizes never change, so no offsets need recomputing. Full paramdef
 coverage of all 194 params is not required.
@@ -249,6 +259,13 @@ the game stays offline while modded.
      leaving the other 193 params bit-for-bit untouched.
   3. Row size and param type from the generated paramdefs match the shipped data, so a
      game patch that changes a param's layout fails loudly.
+  4. The two PARAM readers agree on every table in the archive — 194 tables, 178 935
+     rows. `param.zig` owns a copy of a file and is what `apply` patches; `paramview.zig`
+     (in `ermod-lua`) is a zero-copy view over bytes it does not own, and is what a Lua
+     mod sees through `sdk.params`, live or offline. A mod is authored against the
+     second and shipped through the first, so a divergence between them would mean a
+     field edited in-game lands somewhere else in the packed archive. `src/paramcheck.zig`
+     holds the comparison; it also runs over synthetic images in CI.
 - **ID validation** — `ermod verify-ids` resolves every weapon, armour and goods ID the
   mods reference against the game's own tables. This is what caught that upgraded
   weapon IDs (`base + 6`) do not exist as rows.

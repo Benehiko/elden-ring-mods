@@ -17,9 +17,9 @@ runtime test points at a specific capability.
 | `overlay.lua` | `ui` + `hooks`: HUD driven by `on_rune_gain` / `on_death` | runs (recording backend) + **live-proven** |
 | `bad_sandbox.lua` | `os`/`io`/undeclared-module access | **must be rejected** |
 
-`ermod-dev check test/mods/*.lua` loads every fixture the way the game
+`ermod check test/mods/*.lua` loads every fixture the way the game
 would (all pass, including `bad_sandbox` — it loads; it fails at its entry
-point, which is the point); `ermod-dev perf test/mods/overlay.lua` runs one
+point, which is the point); `ermod perf test/mods/overlay.lua` runs one
 against a synthetic session and reports handler cost.
 
 Permission model: a mod may only touch SDK modules listed in its manifest
@@ -27,17 +27,22 @@ Permission model: a mod may only touch SDK modules listed in its manifest
 sandbox denies both stdlib escapes (`os`, `io`) and undeclared SDK modules.
 
 The SDK surface used here (`log`, `hooks`, `params`, `ui`, `perf`, `store`)
-matches the plan in the open repo's `docs/scripting-plan.md`.
+matches `docs/scripting-plan.md`; `docs/scripting.md` is the author-facing
+reference for the format these fixtures are written in.
 
-Every module is implemented, so every fixture but `double_runes` and
+These files belong to the `ermod-lua` package, which is why they are reached
+from `src/lua/fixtures` (a symlink to this directory) as well as from here —
+both consumers embed them from one copy. Every fixture but `double_runes` and
 `death_ping` is executed by the tests, not merely loaded: `hello_launch`,
-`rune_counter`, `present_ping` and `bad_sandbox` in
-`src/runtime/sdk/mod_instance.zig` and `src/runtime/registry.zig`;
-`level60` in `src/runtime/sdk/params.zig` against a synthetic
-`CharaInitParam` table; and the three E4 showcase mods together in
-`src/runtime/registry.zig` against the recording UI backend
-(`src/runtime/ui_backend.zig`), a fake clock and the in-memory store.
-`present_ping` is also the fixture the runtime loads on disk for the live
-`on_present` test; `level60` is the live E3 proof; the three showcase mods
-are the live E4 proof (`docs/e4-ui-platform-scoping.md`). `double_runes`
-uses `GameAreaParam`, which has no vendored paramdef yet.
+`rune_counter`, `overlay`, `perf_monitor`, `settings` and `bad_sandbox` in
+`src/lua/loader.zig`; `level60` in `src/sdk/params.zig` against a synthetic
+`CharaInitParam` table; `settings` again in `src/sdk/store.zig` against the
+in-memory store. The engine runs the three E4 showcase mods together in its
+`src/runtime/registry.zig`, against the recording UI backend
+(`src/ui_backend.zig` here), a fake clock and the in-memory store.
+
+`present_ping` is the fixture the runtime loads on disk for the live
+`on_present` test; `level60` is the live E3 proof and the subject of the
+offline golden test (`level60.lua` ≡ the `level60` Zig spec, byte-identical);
+the three showcase mods are the live E4 proof. `double_runes` uses
+`GameAreaParam`, which has no vendored paramdef yet.

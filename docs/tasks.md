@@ -180,6 +180,39 @@ The same ten stat spreads written two ways must produce the same archive.
   `crypto.encrypt` uses a random IV, so no two `apply` runs produce the same
   file even from identical contents.
 
+### T15. `ermod check/perf/stubs/img` ✅
+
+The authoring tools move off the engine's `ermod-dev` onto `ermod`, beside
+`apply`, because the front end they run lives here now. `src/devcmd.zig`.
+`sigs` does not move — it reads the private signature tables, so it stays as
+`ermod-engine sigs`.
+
+- AC: same output and exit codes as `ermod-dev`; `stubs/ermod.lua` committed
+  and CI-checked for drift.
+- Result: the four commands dispatch off the raw argument vector rather than
+  `main`'s fixed array, because they take unbounded flag-carrying argument
+  lists and answer with an exit code instead of a file. Finding: **`perf`
+  gained `--regulation <bin>`** and it is not a nicety — without params a
+  *launch* mod dies at its first `sdk.params` call (correct, and exactly what
+  happens before the game's tables load), which meant `perf` could not measure
+  the one kind of mod `apply` ships. With an archive it reads through the same
+  mapping the offline host uses (`level60.lua`: 0.270 ms, 90 field writes).
+  Nothing is written back.
+
+### T16. Author documentation ✅
+
+`docs/scripting.md` — the plan's E1 doc: mod anatomy, the two `run_at` kinds,
+permissions and the sandbox, every SDK module, the author loop offline and
+in-game, and the two conflict policies. README gains the Lua sections.
+
+- AC: a mod author can write, check and ship a mod from the docs alone; every
+  command and output shown is real.
+- Result: examples are transcripts of actual runs against the installed
+  `regulation.bin`, not sketches — including the four refusals (event mod,
+  sandbox escape, budget overrun, conflict), which differ in wording from the
+  scoping doc's guesses.
+
+
 ### T14. In-game verification of the shipped file 🧪
 
 Deploy the `regulation.bin` from T13 through Mod Engine 2 and confirm the

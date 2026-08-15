@@ -8,7 +8,8 @@ directory that [Mod Engine 2](https://github.com/soulsmods/ModEngine2) loads at 
 **The game install is only ever read.** All output goes to `mod/`; the vanilla install
 stays byte-for-byte untouched.
 
-See [docs/architecture.md](docs/architecture.md) for the design,
+See [docs/scripting.md](docs/scripting.md) for writing mods in Lua,
+[docs/architecture.md](docs/architecture.md) for the design,
 [docs/deploy.md](docs/deploy.md) for running it through Proton, and
 [docs/tasks.md](docs/tasks.md) for status.
 
@@ -123,6 +124,10 @@ writes land in live memory instead of the archive. Offline, though:
 
 Two runs of `apply` never produce byte-identical `regulation.bin` files — the
 encryption uses a random IV. To compare two outputs, `ermod unpack` them first.
+
+[docs/scripting.md](docs/scripting.md) is the full reference: the manifest,
+both `run_at` kinds, every SDK module, the sandbox and its budgets, and the
+author loop in-game as well as offline.
 
 ## Author tooling
 

@@ -238,9 +238,8 @@ pub fn main(init: std.process.Init) !void {
         // `sdk.params` offline edits exactly what the Zig pipeline does, and
         // therefore what the live backend edits through the same view.
         //
-        // The comparison is at the BND4 payload, not at `regulation.bin`:
-        // `crypto.encrypt` uses a random IV, so two runs of `apply` never
-        // produce the same file even with identical contents.
+        // The comparison is at the BND4 payload: that is what the mods touch,
+        // and the container around it is deterministic anyway.
         {
             var lua_archive = try bnd4.read(gpa, original_bnd);
             defer lua_archive.deinit();

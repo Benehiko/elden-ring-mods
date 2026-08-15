@@ -9,6 +9,16 @@
 //!
 //! Strategy: preserve the original header bytes verbatim on repack and patch
 //! only the two size fields — avoids re-deriving FromSoftware's param fields.
+//!
+//! The zstd frame is written in the shape the game's own file has, not the
+//! one-shot default: no content-size field in the frame header and a 64 MiB
+//! window (windowLog 26, what zstd's level 21 through the streaming API
+//! yields — the DCP block declares 0x15 = 21). `ZSTD_compress` at level 19
+//! instead writes a frame with the content size present and an 8 MiB window,
+//! and that file, decodable by every zstd we have, is refused by the game.
+//! Whether the game's decoder rejects the content-size flag or the smaller
+//! window is not established; a frame header byte-identical to the shipped
+//! one removes the question.
 
 const std = @import("std");
 const c = @cImport(@cInclude("zstd.h"));
@@ -60,14 +70,39 @@ pub fn unpackWithHeader(allocator: std.mem.Allocator, bytes: []const u8) Error!U
     return result;
 }
 
+/// Compression level. Level 19 with the game's window and frame flags below;
+/// the level itself only affects search effort, not the frame's shape.
+const compression_level = 19;
+/// The game's frame window: 2^26 = 64 MiB.
+const window_log = 26;
+
 /// Repacks `data` into a DCX using `header` as the template (sizes patched).
 pub fn pack(allocator: std.mem.Allocator, header: [header_len]u8, data: []const u8) Error![]u8 {
     const bound = c.ZSTD_compressBound(data.len);
     const buf = try allocator.alloc(u8, header_len + bound);
     errdefer allocator.free(buf);
 
-    const n = c.ZSTD_compress(buf.ptr + header_len, bound, data.ptr, data.len, 19);
-    if (c.ZSTD_isError(n) != 0) return Error.CompressFailed;
+    const cctx = c.ZSTD_createCCtx() orelse return Error.OutOfMemory;
+    defer _ = c.ZSTD_freeCCtx(cctx);
+    if (c.ZSTD_isError(c.ZSTD_CCtx_setParameter(cctx, c.ZSTD_c_compressionLevel, compression_level)) != 0 or
+        c.ZSTD_isError(c.ZSTD_CCtx_setParameter(cctx, c.ZSTD_c_windowLog, window_log)) != 0 or
+        c.ZSTD_isError(c.ZSTD_CCtx_setParameter(cctx, c.ZSTD_c_contentSizeFlag, 0)) != 0 or
+        c.ZSTD_isError(c.ZSTD_CCtx_setParameter(cctx, c.ZSTD_c_checksumFlag, 0)) != 0)
+        return Error.CompressFailed;
+
+    // Streamed with the source size unpledged, as the game's writer evidently
+    // did: a one-shot compress knows the size and shrinks the window to fit
+    // it, and the frame header would then say so. `bound` is enough for the
+    // whole frame, so the end flush completes in one call.
+    var input = c.ZSTD_inBuffer{ .src = data.ptr, .size = data.len, .pos = 0 };
+    var output = c.ZSTD_outBuffer{ .dst = buf.ptr + header_len, .size = bound, .pos = 0 };
+    while (input.pos < input.size) {
+        if (c.ZSTD_isError(c.ZSTD_compressStream2(cctx, &output, &input, c.ZSTD_e_continue)) != 0)
+            return Error.CompressFailed;
+    }
+    const remaining = c.ZSTD_compressStream2(cctx, &output, &input, c.ZSTD_e_end);
+    if (c.ZSTD_isError(remaining) != 0 or remaining != 0) return Error.CompressFailed;
+    const n = output.pos;
 
     @memcpy(buf[0..header_len], &header);
     std.mem.writeInt(u32, buf[dcs_uncompressed_off..][0..4], @intCast(data.len), .big);
@@ -89,4 +124,21 @@ test "dcx roundtrip" {
     var unpacked = try unpackWithHeader(allocator, packed_bytes);
     defer unpacked.deinit(allocator);
     try std.testing.expectEqualSlices(u8, payload, unpacked.data);
+}
+
+test "the zstd frame header is the game's: no content size, 64 MiB window" {
+    // Frame_Header_Descriptor 0x00 (no FCS, no single-segment, no checksum,
+    // no dictionary) then Window_Descriptor 0x80 (exponent 16 → windowLog
+    // 10 + 16 = 26). These are the six bytes at 0x4C of the shipped file.
+    const allocator = std.testing.allocator;
+    var header: [header_len]u8 = [_]u8{0} ** header_len;
+    @memcpy(header[0..4], "DCX\x00");
+    @memcpy(header[0x28..0x2C], "ZSTD");
+
+    const payload = "regulation payload " ** 4096;
+    const packed_bytes = try pack(allocator, header, payload);
+    defer allocator.free(packed_bytes);
+
+    const frame = packed_bytes[header_len..];
+    try std.testing.expectEqualSlices(u8, &.{ 0x28, 0xB5, 0x2F, 0xFD, 0x00, 0x80 }, frame[0..6]);
 }

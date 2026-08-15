@@ -122,8 +122,9 @@ writes land in live memory instead of the archive. Offline, though:
   and a mod that cannot finish `on_launch` under budget is cut off here rather
   than in your session.
 
-Two runs of `apply` never produce byte-identical `regulation.bin` files — the
-encryption uses a random IV. To compare two outputs, `ermod unpack` them first.
+`apply` is deterministic: the same input and mods produce a byte-identical
+`regulation.bin` (zero IV, as the game's own file has), so two outputs can be
+compared directly. `ermod unpack` still helps to see *what* differs.
 
 [docs/scripting.md](docs/scripting.md) is the full reference: the manifest,
 both `run_at` kinds, every SDK module, the sandbox and its budgets, and the

@@ -36,7 +36,8 @@ the game root. It is a nested container:
 ```
 regulation.bin                      (2 MB, encrypted)
 └── AES-256-CBC                     key: community-known 32-byte key (SoulsFormats),
-    │                               IV: first 16 bytes of the file, no padding
+    │                               IV: first 16 bytes of the file (the game
+    │                               ships zeros; so do we), no padding
     └── DCX container               big-endian header, "DCP" scheme = ZSTD
         │                           (ZSTD since game patch 1.12; older was DFLT/zlib)
         └── BND4 archive            ~54 MB, FromSoftware's generic file bundle
@@ -332,10 +333,9 @@ the game stays offline while modded.
      produce the same BND4, byte for byte. This is the proof that a mod authored
      against the live backend ships unchanged through the offline one.
 
-     The comparison is at the **BND4 payload, not at `regulation.bin`**:
-     `crypto.encrypt` uses a random IV, so two runs of `apply` never produce the
-     same file even with identical contents. Anyone diffing two `apply` outputs
-     should `ermod unpack` them first.
+     The comparison is at the BND4 payload, which is what the mods touch; the
+     container around it is deterministic too (zero IV, fixed zstd parameters),
+     so two `apply` outputs from the same input are byte-identical files.
 - **ID validation** — `ermod verify-ids` resolves every weapon, armour and goods ID the
   mods reference against the game's own tables. This is what caught that upgraded
   weapon IDs (`base + 6`) do not exist as rows.

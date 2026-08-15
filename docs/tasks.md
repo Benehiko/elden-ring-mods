@@ -215,37 +215,37 @@ in-game, and the two conflict policies. README gains the Lua sections.
 ### T17. The container the game accepts ✅
 
 The engine's regulation redirect (E7 in the engine repo) delivered `apply`
-output to a running game for the first time, and the game refused it — exited
-before params populated — while a byte-identical copy of the stock file through
-the same redirect booted normally. `ermod unpack` accepted the artifact
-throughout, so the fault was in what our writer emits and our reader forgives.
-Two differences from the shipped file, both in the container:
+output to a running game for the first time, and the game died on it —
+exit `0xC0000005` a moment after the read — while a byte-identical copy of the
+stock file through the same redirect booted. `ermod unpack` accepted every
+artifact, so the fault was in what our writer emits and our reader forgives.
 
-- **IV.** The game's `regulation.bin` starts with sixteen zero bytes;
-  `crypto.encrypt` wrote a random IV. Fine for a reader that takes the IV from
-  the file (ours), not known to be fine for the game. `encrypt` now writes the
-  zero IV by default (`crypto.game_iv`), which also makes `apply` deterministic.
-- **zstd frame header.** The stock frame has no content-size field and a
-  64 MiB window (`28 b5 2f fd 00 80`, what streaming level 21 emits — the DCP
-  block says 0x15). One-shot `ZSTD_compress` at level 19 wrote a frame with the
-  content size present and an 8 MiB window. `dcx.pack` now streams with the
-  size unpledged, `windowLog` 26 and the content-size flag off, so the six
-  header bytes match the shipped file exactly. Which of the two the game
-  objects to is not established; matching removes the question.
+The obvious differences from the shipped file were removed one at a time
+(random IV → zero IV; one-shot zstd → streaming, no content size; 128 KiB →
+64 KiB blocks; padding; even the file size padded to the byte) and every
+variant died the same way, including a repack of the *unmodified* payload.
+The engine's new crash log relayed the game's own panic — `DLRegularHeap.cpp
+(710): given memory block seems to be improper or freed already` — and the
+exe named the decoder, `DLCM::Zstd::ZstdDecompressionStream`. **It keeps
+64 KiB of history.** The shipped frame declares a 64 MiB window but never
+reaches back that far; ours did, at every level. `windowLog` 16 booted the
+game at once.
 
-- AC: `apply` output starts with the same 32 bytes as stock (zero IV, same
-  first block since the DCX header is the template's), the zstd frame header
-  is `28 b5 2f fd 00 80`, and the game boots through the engine's redirect
-  with the modded values live. Tests pin the IV and the frame header.
-- Result: container matches; in-game confirmation is recorded with T14.
+`dcx.pack` now writes: zero IV, no content-size field, no checksum,
+`windowLog` 16, a flush every 64 KiB (825 blocks + terminator, like stock),
+block splitters off, level 19. ~2.08 MB for the stock payload against the
+shipped 2.04 MB. Deterministic. Tests pin the frame header and the block bound.
 
-### T14. In-game verification of the shipped file 🧪
+- AC: `apply` output boots through the engine's redirect and the runtime
+  reads the modded value from the live table.
+- Result: `CharaInitParam[3000] soulLv=60 baseVit=30`, `loaded 0 mod(s)`.
 
-Deploy the `regulation.bin` from T13 and confirm the character-creation screen
-shows level 60 for every class. Closes the T5 check and proves "author live,
-ship offline" end to end. Two routes: Mod Engine 2 (`docs/deploy.md`) or the
-engine's `--regulation` redirect. Blocked until T17 — the file itself was
-wrong.
+### T14. In-game verification of the shipped file ✅
+
+The `level60` artifact through the engine's `--regulation` redirect: game
+boots, live table reads `soulLv=60` for row 3000 with no mods loaded (T17).
+Mod Engine 2 route (`docs/deploy.md`) not separately re-run — the file is the
+same file.
 
 - AC: same save, creation screen at level 60, vanilla install untouched.
 

@@ -40,6 +40,8 @@ regulation.bin                      (2 MB, encrypted)
     │                               ships zeros; so do we), no padding
     └── DCX container               big-endian header, "DCP" scheme = ZSTD
         │                           (ZSTD since game patch 1.12; older was DFLT/zlib)
+        │                           the game's decoder keeps 64 KiB of history:
+        │                           write with windowLog 16 (see dcx.zig)
         └── BND4 archive            ~54 MB, FromSoftware's generic file bundle
             └── ~250 *.param files  fixed-size row tables (CharaInitParam,
                                     ItemLotParam_map, SpEffectParam, ...)

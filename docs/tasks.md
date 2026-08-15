@@ -123,6 +123,73 @@ executable (the sandbox here blocks `chmod`, so it must be run once locally).
 
 ---
 
+## Milestone 4 — Ship offline (engine E6)
+
+Closing the engine's core promise from this side: the Lua mod an author
+iterates against the running game is the mod `ermod apply` patches an archive
+with. The engine repo's `docs/e6-ship-offline-scoping.md` is the plan; these
+are the rows that land here.
+
+### T10. `ermod-lua` package ✅
+
+The shared mod front end — Lua VM and sandbox, manifest, loader, every SDK
+binding and the `Host` interface — moved into this repo as a Zig package so
+the engine can consume it (a private repo cannot be depended on). Replaces
+`make sync-paramdefs`: the paramdefs come with the package.
+
+- AC: both repos build against one copy of the front end; no behaviour change.
+- Result: `src/ermod_lua.zig` and `build.zig`'s `ermodLua()`, which the engine's
+  `build.zig` calls for its own target (the runtime is `x86_64-windows-gnu`,
+  `ermod` is host-native, and a module carries its target).
+
+### T11. `paramview.Table` + two-reader cross-check ✅
+
+`Table` is the in-place PARAM view both backends hand to `sdk.params`.
+`src/paramcheck.zig` compares it against `param.zig` — the reader `apply`
+patches — by position and by id.
+
+- AC: the two readers agree on every table in the real archive.
+- Result: 194 tables, 178 935 rows, agreeing. Runs over synthetic images in CI
+  and over the real archive from `ermod selftest`. Finding: **row IDs are not
+  unique** — `RandomAppearParam` ships 26 duplicates, and both readers resolve
+  an ID to the first descriptor, so a Lua mod's `row(id)` reaches the first
+  match only. Documented in `docs/architecture.md`.
+
+### T12. Offline `Host`; `ermod apply` takes `.lua` mods ✅🧪 (needs in-game verification)
+
+`src/offline_host.zig` implements `Host` over an unpacked `regulation.bin`:
+`param_table` is "BND4 entry → `Table` over its bytes", `log` prints under
+`mod[name]`, and everything needing a running game reports itself unavailable.
+`apply` accepts `.lua` paths beside built-in spec names.
+
+- AC: `apply` runs a Lua launch mod against the real archive; event mods, budget
+  overruns and cross-mod field conflicts are refused with no output file.
+- Result: all four verified against the real `regulation.bin`. One ledger covers
+  Zig patches and Lua writes, so they collide with each other; offline the
+  policy is refuse-to-pack where live is last-wins-with-warning. Zig specs run
+  before Lua mods because `modspec` replaces entry buffers the Lua host views.
+  See `docs/architecture.md`, "Applying Lua mods offline".
+
+### T13. Golden test: `level60.lua` ≡ `level60.zig` ✅
+
+The same ten stat spreads written two ways must produce the same archive.
+
+- AC: byte-identical output; runs from `ermod selftest`.
+- Result: identical across all 53 945 424 BND4 bytes, 90 Lua writes. Finding:
+  the comparison must be at the **BND4 payload, not `regulation.bin`** —
+  `crypto.encrypt` uses a random IV, so no two `apply` runs produce the same
+  file even from identical contents.
+
+### T14. In-game verification of the shipped file 🧪
+
+Deploy the `regulation.bin` from T13 through Mod Engine 2 and confirm the
+character-creation screen shows level 60 for every class. Closes the T5 check
+and proves "author live, ship offline" end to end.
+
+- AC: same save, creation screen at level 60, vanilla install untouched.
+
+---
+
 ## Backlog / stretch (not scheduled)
 
 - **Physical chest near spawn** — route 2: `.msb` map edit + `ItemLotParam_map` +

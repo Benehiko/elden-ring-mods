@@ -123,12 +123,72 @@ ermod show    <regulation.bin> <row> [field]      # inspect CharaInitParam rows
 ermod mods                                        # list available mods
 ermod verify-ids <regulation.bin>                 # check mod IDs exist in the game
 ermod selftest   <regulation.bin>                 # golden checks (see Testing)
-ermod apply   <regulation.bin> <out.bin> <mod>... # full pipeline
+ermod apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
+                                                  # built-in spec name or a .lua
+                                                  # launch mod path
 ```
 
 `ermod apply` is the end-user command: reads the game's regulation.bin, applies the
 named mods, and writes a modded copy ready for Mod Engine 2. `make apply` wraps it
 with the default game path and mod list.
+
+### Applying Lua mods offline
+
+A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
+launch mod; the two can be mixed on one command line:
+
+```
+ermod apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
+```
+
+The Lua mod runs through the shared `ermod-lua` front end — the same loader,
+manifest validation, sandbox and instruction budget the injected runtime uses,
+compiled for the host. What differs is only the `Host`: `src/offline_host.zig`
+implements `param_table` as "BND4 entry name → `paramview.Table` over that
+entry's bytes", where the runtime implements it as a walk of the game's
+`SoloParamRepository`. Both hand back a view over the same on-disk PARAM
+layout, so `sdk.params.row("CharaInitParam", 3000).soulLv = 60` writes the same
+bytes at the same offset in both. That is the whole of "author live, ship
+offline": one code path, two backends.
+
+Everything else on the `Host` vtable is unavailable offline and says so — there
+is no frame to draw an overlay on, no session to measure, no game to persist a
+store for. Consequently **only launch mods are accepted**; an event mod is
+refused with "event mods run in-game only" rather than silently doing nothing,
+because offline has no events to fire.
+
+Three refusals exit 1 without writing an output file, since a half-patched
+archive is worse than none: an event mod, a mod that errors or exceeds its
+instruction budget in `on_launch`, and a cross-mod write conflict. The sandbox
+and budget are the game's, not a weaker host copy — a mod calling `os.execute`
+finds `os` nil offline exactly as it does in-game, and a runaway `on_launch` is
+cut off rather than hanging `apply`.
+
+**Conflicts are an error offline, a warning live.** Both halves feed one
+`param_writes.Ledger` keyed by `(table, row, field)`, including the Zig `spec`
+pipeline, so a Zig patch and a Lua write on one field collide like any two
+mods:
+
+```
+ermod: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already written by level60
+ermod: refusing to pack; resolve the overlap or apply one mod at a time (1 conflicting write(s))
+```
+
+In the game, a later write wins and the conflict is logged — a hot-reloaded mod
+rewrites its own fields by design. Offline, the file a player installs must not
+depend on the order two mods happened to be listed in, so `apply` refuses. One
+ledger, two policies.
+
+Two consequences worth stating:
+
+- The ledger keys ownership by **mod name**, so two mods that share a name are
+  treated as one and never conflict with each other. That is the same rule that
+  makes a hot reload silent, and it means `level60.lua` and the `level60` spec
+  (which deliberately share a name and write the same 90 fields) can be applied
+  together without complaint.
+- The Zig `spec` pipeline runs first, then the Lua mods. `modspec` replaces an
+  entry's buffer when it writes a param back, and the Lua host holds views into
+  those buffers — so the specs must settle before any view is taken.
 
 ## Format notes
 
@@ -266,6 +326,16 @@ the game stays offline while modded.
      second and shipped through the first, so a divergence between them would mean a
      field edited in-game lands somewhere else in the packed archive. `src/paramcheck.zig`
      holds the comparison; it also runs over synthetic images in CI.
+  5. **The golden test for the offline half**: `level60.lua` and `level60.zig` carry
+     the same ten stat spreads written two different ways — one through `sdk.params`
+     against the offline `Host`, one through the Zig `spec` pipeline — and must
+     produce the same BND4, byte for byte. This is the proof that a mod authored
+     against the live backend ships unchanged through the offline one.
+
+     The comparison is at the **BND4 payload, not at `regulation.bin`**:
+     `crypto.encrypt` uses a random IV, so two runs of `apply` never produce the
+     same file even with identical contents. Anyone diffing two `apply` outputs
+     should `ermod unpack` them first.
 - **ID validation** — `ermod verify-ids` resolves every weapon, armour and goods ID the
   mods reference against the game's own tables. This is what caught that upgraded
   weapon IDs (`base + 6`) do not exist as rows.

@@ -72,6 +72,58 @@ Then point Mod Engine 2 at the `mod/` directory — see [docs/deploy.md](docs/de
 make apply MODS="level60"                   # pick a subset
 ```
 
+## Writing a mod in Lua
+
+A mod argument to `ermod apply` is either a built-in name above or a path to a
+`.lua` file, and the two mix freely:
+
+```sh
+GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
+./zig-out/bin/ermod apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua class-gear
+```
+
+A mod is a table with a manifest and an entry point. This one raises the
+Vagabond to level 60 — a cut-down `src/lua/fixtures/level60.lua`:
+
+```lua
+local mod = {
+  name = "level60",
+  version = "1.0.0",
+  run_at = "launch",
+  permissions = { "params", "log" },
+}
+
+function mod.on_launch(sdk)
+  local row = sdk.params.row("CharaInitParam", 3000)   -- nil if no such row
+  sdk.log.info("Vagabond was level " .. row.soulLv)
+  row.soulLv = 60
+end
+
+return mod
+```
+
+`permissions` is the whole of what the mod can reach: a module not listed is
+not present in the `sdk` table it receives. Field names are the paramdef's own
+(`soulLv`, `baseVit`, …), and `.param` on a file name is optional.
+
+The same file runs unchanged inside the game through the engine, where the
+writes land in live memory instead of the archive. Offline, though:
+
+- **Only `run_at = "launch"` mods are accepted.** There are no events to fire
+  offline, so an event mod is refused rather than silently doing nothing.
+- **`params` and `log` are the modules that work.** `ui`, `perf`, `store` and
+  `screen` need a running game and report themselves unavailable.
+- **Two mods writing one field is an error**, not last-wins: `apply` names both
+  mods and the field, refuses to pack, and writes no output file. In-game the
+  same overlap is a warning, because a hot-reloaded mod rewrites its own fields
+  by design.
+- **The sandbox and instruction budget are the game's.** `os` and `io` are nil,
+  and a mod that cannot finish `on_launch` under budget is cut off here rather
+  than in your session.
+
+Two runs of `apply` never produce byte-identical `regulation.bin` files — the
+encryption uses a random IV. To compare two outputs, `ermod unpack` them first.
+
 ## CLI
 
 ```
@@ -85,7 +137,8 @@ ermod show    <regulation.bin> <row> [field]      Inspect CharaInitParam rows
 ermod mods                                        List available mods
 ermod verify-ids <regulation.bin>                 Check mod item IDs exist
 ermod selftest   <regulation.bin>                 Golden checks against the game
-ermod apply   <regulation.bin> <out.bin> <mod>... Apply mods
+ermod apply   <regulation.bin> <out.bin> <mod>... Apply mods (a mod is a built-in
+                                                  name or a .lua launch mod path)
 ```
 
 `ermod show` is handy for exploring: row IDs 3000–3009 are the ten starting classes.

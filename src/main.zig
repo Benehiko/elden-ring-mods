@@ -9,9 +9,15 @@ const paramview = ermod_lua.paramview;
 const paramdef = ermod_lua.paramdef;
 const defs = ermod_lua.paramdefs;
 const modspec = @import("modspec.zig");
+const offline_host = @import("offline_host.zig");
+const sdk = ermod_lua.sdk;
 const mods = @import("mods");
 const level60 = mods.level60;
 const class_gear = mods.class_gear;
+
+/// The reference mod in Lua, embedded so `selftest`'s golden check needs no
+/// path on the command line. Its Zig twin is `mods/level60.zig`.
+const level60_lua = @embedFile("lua/fixtures/level60.lua");
 
 /// Mods selectable on the command line.
 const available_mods = [_]struct { name: []const u8, spec: modspec.Spec }{
@@ -35,7 +41,9 @@ const usage =
     \\  ermod selftest <regulation.bin>                Golden checks against the real game
     \\  ermod verify-ids <regulation.bin>              Check mod item IDs exist in the game
     \\  ermod apply <regulation.bin> <out.bin> <mod>...
-    \\                                                 Apply mods, write a modded copy
+    \\                                                 Apply mods, write a modded copy.
+    \\                                                 A mod is a built-in spec name or a
+    \\                                                 path to a .lua launch mod.
     \\
 ;
 
@@ -45,11 +53,16 @@ pub fn main(init: std.process.Init) !void {
     const gpa = init.gpa;
     const io = init.io;
 
-    var args: [8][]const u8 = undefined;
+    // `apply` takes an unbounded mod list in principle; bound it here and say
+    // so, rather than silently dropping the tail of the command line.
+    var args: [32][]const u8 = undefined;
     var argc: usize = 0;
     var it = std.process.Args.Iterator.init(init.minimal.args);
     while (it.next()) |arg| : (argc += 1) {
-        if (argc >= args.len) break;
+        if (argc >= args.len) {
+            std.debug.print("too many arguments (max {d})\n", .{args.len});
+            return error.InvalidArguments;
+        }
         args[argc] = arg;
     }
     if (argc < 2) {
@@ -202,6 +215,45 @@ pub fn main(init: std.process.Init) !void {
         }
         std.debug.print("ok: both param readers agree on {d} table(s), {d} rows\n", .{ checked, rows });
 
+        // The golden test the plan named for the offline half: the reference
+        // mod written in Lua and the same mod written as a Zig spec must
+        // produce the same archive, byte for byte. It is the proof that
+        // `sdk.params` offline edits exactly what the Zig pipeline does, and
+        // therefore what the live backend edits through the same view.
+        //
+        // The comparison is at the BND4 payload, not at `regulation.bin`:
+        // `crypto.encrypt` uses a random IV, so two runs of `apply` never
+        // produce the same file even with identical contents.
+        {
+            var lua_archive = try bnd4.read(gpa, original_bnd);
+            defer lua_archive.deinit();
+            var sink = std.Io.Writer.Discarding.init(&.{});
+            var host = offline_host.OfflineHost.init(&lua_archive, &sink.writer);
+            const m = try sdk.load(gpa, level60_lua, "=level60.lua", host.host());
+            defer sdk.destroy(m);
+            try m.start();
+            const from_lua = try bnd4.write(gpa, &lua_archive);
+            defer gpa.free(from_lua);
+
+            var spec_archive = try bnd4.read(gpa, original_bnd);
+            defer spec_archive.deinit();
+            _ = try modspec.apply(gpa, &spec_archive, &.{level60.spec});
+            const from_spec = try bnd4.write(gpa, &spec_archive);
+            defer gpa.free(from_spec);
+
+            if (!std.mem.eql(u8, from_lua, from_spec)) {
+                std.debug.print("FAIL: level60.lua and level60.zig do not agree\n", .{});
+                return error.SelfTestFailed;
+            }
+            if (host.conflict != null) {
+                std.debug.print("FAIL: level60.lua conflicted with itself\n", .{});
+                return error.SelfTestFailed;
+            }
+            std.debug.print("ok: level60.lua == level60 spec, {d} Lua write(s), {d} bytes identical\n", .{
+                host.writes, from_lua.len,
+            });
+        }
+
         const report = try modspec.apply(gpa, &archive, &.{ level60.spec, class_gear.spec });
         const patched = try bnd4.write(gpa, &archive);
         defer gpa.free(patched);
@@ -245,15 +297,32 @@ pub fn main(init: std.process.Init) !void {
             std.debug.print("{s}", .{usage});
             return error.InvalidArguments;
         }
+        // Two kinds of mod on one command line: a `.lua` path runs through
+        // the shared front end, anything else names a built-in Zig spec.
         var selected: [available_mods.len]modspec.Spec = undefined;
         var count: usize = 0;
+        var lua_paths: [args.len][]const u8 = undefined;
+        var lua_count: usize = 0;
         for (args[4..argc]) |want| {
+            if (std.mem.endsWith(u8, want, ".lua")) {
+                lua_paths[lua_count] = want;
+                lua_count += 1;
+                continue;
+            }
             const found = for (available_mods) |m| {
                 if (std.mem.eql(u8, m.name, want)) break m.spec;
             } else {
                 std.debug.print("unknown mod '{s}' (try `ermod mods`)\n", .{want});
                 return error.UnknownMod;
             };
+            // Naming one spec twice would apply every patch twice and, worse,
+            // report each field as its own conflict; it is a typo, not intent.
+            for (selected[0..count]) |s| {
+                if (std.mem.eql(u8, s.name, found.name)) {
+                    std.debug.print("mod '{s}' named twice\n", .{want});
+                    return error.InvalidArguments;
+                }
+            }
             selected[count] = found;
             count += 1;
         }
@@ -261,7 +330,58 @@ pub fn main(init: std.process.Init) !void {
         var archive = try openRegulation(io, gpa, args[2]);
         defer archive.deinit();
 
+        var out_buf: [8192]u8 = undefined;
+        var stdout = std.Io.File.stdout().writerStreaming(io, &out_buf);
+        const out = &stdout.interface;
+        defer out.flush() catch {};
+
+        // Zig specs first: they replace an entry's buffer when writing a param
+        // back, and the Lua host holds views into those buffers.
         const report = try modspec.apply(gpa, &archive, selected[0..count]);
+
+        var host = offline_host.OfflineHost.init(&archive, out);
+        // Now that the buffers have settled, the spec patches go into the same
+        // ledger the SDK writes to, so a Zig patch and a Lua write on one
+        // field collide like any two mods.
+        for (selected[0..count]) |spec| {
+            for (spec.patches) |patch| {
+                const table = host.tableIdentity(patch.param_file) orelse continue;
+                var def_name = patch.param_file;
+                if (std.mem.endsWith(u8, def_name, ".param")) def_name = def_name[0 .. def_name.len - ".param".len];
+                host.recordWrite(spec.name, .{
+                    .table = table,
+                    .def_name = def_name,
+                    .row = patch.row,
+                    .field = patch.field,
+                });
+            }
+        }
+
+        // Everything counted so far is a spec patch; what the Lua mods add is
+        // the difference. Counted rather than derived from the spec total,
+        // which skips a patch whose param the archive lacks.
+        const spec_writes = host.writes;
+
+        // A mod the author must fix — unreadable, refused, or erroring — is a
+        // normal outcome of `apply`, not a crash: the message above is the
+        // whole story, so exit on it rather than unwinding with a stack trace.
+        for (lua_paths[0..lua_count]) |path| {
+            applyLuaMod(gpa, io, out, &host, path) catch {
+                out.flush() catch {};
+                std.process.exit(1);
+            };
+        }
+
+        if (host.conflict) |*conflict| {
+            var buf: [512]u8 = undefined;
+            try out.print("ermod: {s}\n", .{offline_host.formatConflict(&buf, conflict)});
+            try out.print(
+                "ermod: refusing to pack; resolve the overlap or apply one mod at a time ({d} conflicting write(s))\n",
+                .{host.conflicts},
+            );
+            out.flush() catch {};
+            std.process.exit(1);
+        }
 
         const bnd = try bnd4.write(gpa, &archive);
         defer gpa.free(bnd);
@@ -281,13 +401,67 @@ pub fn main(init: std.process.Init) !void {
         defer gpa.free(enc);
         try writeFile(io, args[3], enc);
 
-        std.debug.print("applied {d} patches across {d} param(s) -> {s} ({d} bytes)\n", .{
+        // `params_touched` counts only the params the spec pipeline rewrote;
+        // Lua writes land in the entry buffers directly, so their count is
+        // reported separately rather than folded into a misleading total.
+        if (lua_count > 0) {
+            try out.print("ermod: {d} Lua field write(s) from {d} mod(s)\n", .{
+                host.writes - spec_writes, lua_count,
+            });
+        }
+        try out.print("applied {d} spec patch(es) across {d} param(s) -> {s} ({d} bytes)\n", .{
             report.patches_applied, report.params_touched, args[3], enc.len,
         });
     } else {
         std.debug.print("{s}", .{usage});
         return error.InvalidArguments;
     }
+}
+
+/// Load one `.lua` mod through the shared front end and run it against the
+/// unpacked archive.
+///
+/// The loader, sandbox, permission gating and instruction budget are the ones
+/// the game uses — this *is* the runtime's front end, compiled for the host —
+/// so a mod that runs here is a mod that would run in-game. Only launch mods
+/// are accepted: offline has no events to fire, and a mod that waits for one
+/// would silently do nothing rather than patch the archive.
+fn applyLuaMod(
+    gpa: std.mem.Allocator,
+    io: std.Io,
+    out: *std.Io.Writer,
+    host: *offline_host.OfflineHost,
+    path: []const u8,
+) !void {
+    const source = std.Io.Dir.cwd().readFileAlloc(io, path, gpa, .limited(1 << 20)) catch |err| {
+        try out.print("ermod: cannot read {s} ({s})\n", .{ path, @errorName(err) });
+        return error.ModNotReadable;
+    };
+    defer gpa.free(source);
+
+    var name_buf: [std.fs.max_name_bytes + 2]u8 = undefined;
+    const chunk = std.fmt.bufPrintZ(&name_buf, "={s}", .{std.fs.path.basename(path)}) catch "=mod.lua";
+
+    const m = sdk.load(gpa, source, chunk, host.host()) catch |err| {
+        try out.print("ermod: {s} failed to load ({s})\n", .{ path, @errorName(err) });
+        return error.ModLoadFailed;
+    };
+    defer sdk.destroy(m);
+
+    if (m.run_at != .launch) {
+        try out.print(
+            "ermod: {s} is an event mod ({s}); event mods run in-game only\n",
+            .{ path, @tagName(m.run_at) },
+        );
+        return error.EventModOffline;
+    }
+
+    // A mod that cannot finish `on_launch` under budget offline would not
+    // in-game either; say so rather than pack a half-patched archive.
+    m.start() catch |err| {
+        try out.print("ermod: {s} errored in on_launch ({s})\n", .{ path, @errorName(err) });
+        return error.ModFailed;
+    };
 }
 
 /// Reports how many of `ids` are absent from the given param file.
@@ -346,6 +520,7 @@ test {
     _ = paramcheck;
     _ = paramdef;
     _ = modspec;
+    _ = offline_host;
     _ = level60;
     _ = class_gear;
 }

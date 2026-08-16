@@ -88,19 +88,31 @@ git clone https://github.com/Benehiko/elden-ring-mods.git
 
 ### Where mods go
 
-The engine reads mods from one directory inside the game's Proton prefix,
-which it creates for you on the first launch:
-
-```
-~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/mods
+```sh
+./ermod-engine install ~/Downloads/level60.lua      # one mod
+./ermod-engine install ~/Downloads/elden-ring-mods/examples   # or a directory of them
 ```
 
-(That is the Linux path. The game, running under Wine, sees the same
-directory as `C:\ermod\mods` — which is what the log calls it.)
+That is the whole of it. `install` copies `.lua` files into the engine's mods
+directory, and they load on the next launch — or immediately, if the game is
+already running.
 
-Copy `.lua` files straight in there and they load on the next launch. Nothing
-else is read: one directory, one `.lua` file per mod, no subdirectories, no
-manifest to register them in.
+If you would rather copy files yourself, the directory is:
+
+```
+~/.local/share/ermod/mods
+```
+
+`ermod-engine paths` prints that and every other path the engine uses. The
+game, running under Wine, sees the same directory as `C:\ermod\mods` —
+which is what the log calls it — because the engine links the prefix at your
+home directory. That is deliberate: Proton rebuilds a prefix now and then
+(a Proton version change, a "verify integrity of game files"), and anything
+kept inside one eventually disappears. Your mods and your profile saves live
+outside it.
+
+One directory, one `.lua` file per mod, no subdirectories, no manifest to
+register them in.
 
 **Or keep your mods anywhere you like** and point the engine at them:
 
@@ -132,19 +144,87 @@ the worst moment. `--regulation none` clears it again.
 
 Script mods and a modded regulation can both be active at once.
 
-## 5. Play
+## 5. Profiles, and your own save
+
+**The modded game never plays on your own save, and never writes it.**
+
+This is not a setting. A mod that grants a hundred levels, a bad regulation
+artifact, a script with a bug in it — none of that can reach the save Steam
+Cloud carries to every machine you own, because the modded game is not
+reading that file at all. It plays on a *profile*: a save of the engine's
+own, kept in `~/.local/share/ermod/profiles/`.
+
+The first launch creates a profile called `default`, which is empty. **So the
+first thing you will see is a game with no characters.** They are not gone.
+Copy them into the profile:
+
+```sh
+./ermod-engine profile port default
+```
+
+That reads your own save and writes a copy into the profile. Your file is
+never modified — the engine says so after every port, and you can check with
+`sha256sum` if you like.
+
+The rest:
+
+```sh
+./ermod-engine profile list                # what you have, and which is active
+./ermod-engine profile new no-scaling      # a second, separate save
+./ermod-engine profile use no-scaling      # play on it from now on
+./ermod-engine profile port no-scaling     # start it from your vanilla characters
+./ermod-engine profile delete no-scaling   # and its save, permanently
+```
+
+A profile is also where the engine remembers which mods you have switched
+off, so two profiles can run different mods.
+
+### Going the other way
+
+If you want a character you built in a profile to become your real save:
+
+```sh
+./ermod-engine profile export no-scaling --yes    # game closed
+```
+
+This is the only command in the engine that writes your own save, it never
+runs by itself, and it copies your existing save aside as
+`ER0000.sl2.ermod-bak` first — and refuses rather than overwriting that
+backup, because it may be your only copy.
+
+## 6. Play
 
 ```sh
 ./ermod-engine
 ```
 
-The game starts as normal, with mods loaded. In-game, `Insert` toggles
-whether the overlay takes keyboard focus (only relevant if you run a mod that
-draws one).
+The game starts as normal, with mods loaded.
+
+In-game, **backtick** (`` ` ``) opens the engine's menu: which mods are
+loaded, what each one costs per frame, and a checkbox to turn any of them off
+or back on without restarting. `Insert` separately toggles whether a *mod's*
+own overlay takes keyboard focus.
+
+Both keys can be changed. Write `~/.local/share/ermod/engine.cfg`:
+
+```
+menu_key = "F10"
+focus_key = "insert"
+```
+
+Names are `grave` (backtick), `insert`, `home`, `end`, `delete`, `pause`,
+`pageup`, `pagedown`, `tab`, the bracket/punctuation keys, `F1`–`F24`, or a
+single letter or digit.
 
 ---
 
 ## When something does not work
+
+**"My characters are gone."** They are not — the modded game deliberately
+does not open your save. See [Profiles, and your own
+save](#5-profiles-and-your-own-save); `./ermod-engine profile port default`
+copies your characters into the profile the game plays on. Your own file is
+untouched throughout, and playing through Steam normally still finds it.
 
 **The log is inside the Proton prefix:**
 
@@ -180,7 +260,18 @@ instead.
 ```
 
 That removes what the engine staged into the Proton prefix — the two
-binaries, its logs, and the links to your mods and regulation — and leaves
-your mods, your saved settings and your captures where they are. Add `--all`
-to remove those too. The game install is never touched, so nothing needs
-restoring; the game launches normally through Steam afterwards.
+binaries, its logs, and the links to your mods, profiles and regulation.
+Add `--all` to also clear `C:\ermod` in the prefix (per-mod settings and
+frame captures).
+
+**Neither touches your mods or your profile saves**, which live in
+`~/.local/share/ermod/` and are only unlinked. To delete the saves as well,
+and be told how many went:
+
+```sh
+./ermod-engine uninstall --profiles
+```
+
+Your own save is not involved in any of this — the engine never wrote it.
+The game install is never touched either, so nothing needs restoring; the
+game launches normally through Steam afterwards.

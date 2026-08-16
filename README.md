@@ -326,3 +326,24 @@ Modded play must stay offline; the engine launches the game with Easy Anti-Cheat
 absent, running `eldenring.exe` directly rather than the protected launcher. Loading a
 modified `regulation.bin` while connected to FromSoftware's servers risks a ban. This
 repo contains only tooling and mod definitions — no game data.
+
+## Licence
+
+[Apache-2.0](LICENSE). Chosen over MIT for the explicit patent grant and the
+trademark reservation — both worth having for a project built on
+reverse-engineered file formats.
+
+That covers everything in this repository, including the whole of what a mod
+can reach: the Lua sandbox, every `sdk.*` binding and the `Host` interface
+behind them.
+
+Two things it does not cover, spelled out in [NOTICE](NOTICE):
+
+- **Vendored components** keep their own terms — Lua 5.4.7 (MIT,
+  `vendor/lua/LICENSE`) and the Paramdex PARAMDEF XML in `paramdefs/`.
+- **The engine binaries** published on the Releases page are built from a
+  separate closed-source repository and are licensed with the release, not
+  under Apache-2.0.
+
+ELDEN RING is the property of FromSoftware and Bandai Namco; this project is
+unaffiliated, distributes no game data, and never writes to an installation.

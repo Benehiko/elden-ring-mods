@@ -14,5 +14,10 @@
         "test",
         "README.md",
         "docs",
+        // Apache-2.0 requires the licence and notice to travel with any
+        // redistribution, and a fetched Zig package is one: the engine
+        // consumes this repository through build.zig.zon.
+        "LICENSE",
+        "NOTICE",
     },
 }

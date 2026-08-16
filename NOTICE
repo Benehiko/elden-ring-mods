@@ -1,0 +1,58 @@
+elden-ring-mods
+Copyright 2026 Alano Terblanche
+
+This product includes software developed by Alano Terblanche and the
+elden-ring-mods contributors, licensed under the Apache License, Version 2.0
+(see LICENSE).
+
+The Apache-2.0 licence covers the source in this repository. It does not, and
+cannot, extend to the third-party components vendored here or to any data
+owned by third parties. Those are listed below.
+
+--------------------------------------------------------------------------
+Third-party components distributed with this repository
+--------------------------------------------------------------------------
+
+Lua 5.4.7                                                     vendor/lua/
+    Copyright (C) 1994-2024 Lua.org, PUC-Rio.
+    MIT licence; the full text ships as vendor/lua/LICENSE and is unmodified.
+    Compiled into `ermod` and into the engine runtime as the mod sandbox's
+    interpreter.
+
+Paramdex PARAMDEF XML                                         paramdefs/
+    From soulsmods/Paramdex (https://github.com/soulsmods/Paramdex), ER/Defs/,
+    fetched 2026-08-14. These files describe the field layout of the game's
+    param rows. They are community reverse-engineering work redistributed
+    here unmodified; see paramdefs/README.md for exactly which files and why.
+    Upstream states no explicit licence. They are included because the
+    tooling is unusable without a field layout and there is no independent
+    source for one; if the upstream authors object, they will be removed.
+
+--------------------------------------------------------------------------
+Not covered by this licence
+--------------------------------------------------------------------------
+
+ELDEN RING and all game data are the property of FromSoftware, Inc. and
+Bandai Namco Entertainment Inc. This repository:
+
+  * distributes no game data of any kind — no assets, no `regulation.bin`,
+    no param rows, nothing extracted from an installation;
+  * reads a legitimately installed copy of the game and never writes to it;
+  * grants no rights in, and claims no affiliation with or endorsement by,
+    FromSoftware or Bandai Namco. No trademark rights pass through this
+    licence (Apache-2.0 section 6).
+
+The AES key used to decrypt `regulation.bin` is a long-published constant,
+present in every param editor in the ecosystem. Including it is a statement
+of a known fact, not a claim of ownership over it.
+
+--------------------------------------------------------------------------
+The engine binaries
+--------------------------------------------------------------------------
+
+Releases of this repository include `ermod-engine` and the two Windows
+binaries it injects. Those are built from a separate, closed-source
+repository and are NOT licensed under Apache-2.0 — their terms are stated
+with the release. Everything in *this* repository is Apache-2.0, including
+the whole of what a community mod can reach: the Lua sandbox, every `sdk.*`
+binding, and the `Host` interface that bounds them.

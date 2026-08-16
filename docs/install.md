@@ -154,9 +154,16 @@ Cloud carries to every machine you own, because the modded game is not
 reading that file at all. It plays on a *profile*: a save of the engine's
 own, kept in `~/.local/share/ermod/profiles/`.
 
-The first launch creates a profile called `default`, which is empty. **So the
-first thing you will see is a game with no characters.** They are not gone.
-Copy them into the profile:
+The first launch creates a profile called `default`, which is empty — so
+without your characters in it, the first thing you would see is a game with
+no characters. **The engine offers to copy them in before that happens.** On
+the first launch it shows you the characters in your own save and asks
+whether to copy them into the profile: a window if your desktop has one, a
+question in the terminal if not. Answer either way and it does not ask
+again.
+
+If you said no, or you want a second profile to start from your characters,
+the same thing has a command:
 
 ```sh
 ./ermod-engine profile port default
@@ -166,6 +173,15 @@ That reads your own save and writes a copy into the profile. Your file is
 never modified — the engine says so after every port, and you can check with
 `sha256sum` if you like.
 
+You can also open that window whenever you like:
+
+```sh
+./ermod-engine settings
+```
+
+It lists your own save and every profile, with the characters in each, and
+has buttons for the things below — including backing your own save up.
+
 The rest:
 
 ```sh
@@ -173,6 +189,7 @@ The rest:
 ./ermod-engine profile new no-scaling      # a second, separate save
 ./ermod-engine profile use no-scaling      # play on it from now on
 ./ermod-engine profile port no-scaling     # start it from your vanilla characters
+./ermod-engine profile backup              # copy your own save aside, dated
 ./ermod-engine profile delete no-scaling   # and its save, permanently
 ```
 
@@ -221,10 +238,12 @@ single letter or digit.
 ## When something does not work
 
 **"My characters are gone."** They are not — the modded game deliberately
-does not open your save. See [Profiles, and your own
-save](#5-profiles-and-your-own-save); `./ermod-engine profile port default`
-copies your characters into the profile the game plays on. Your own file is
-untouched throughout, and playing through Steam normally still finds it.
+does not open your save. The first launch offers to copy them into the
+profile; if you declined, or the offer never appeared, run
+`./ermod-engine settings` and use the button beside your own save, or
+`./ermod-engine profile port default`. See [Profiles, and your own
+save](#5-profiles-and-your-own-save). Your own file is untouched throughout,
+and playing through Steam normally still finds it.
 
 **The log is inside the Proton prefix:**
 

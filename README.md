@@ -8,6 +8,9 @@ directory that [Mod Engine 2](https://github.com/soulsmods/ModEngine2) loads at 
 **The game install is only ever read.** All output goes to `mod/`; the vanilla install
 stays byte-for-byte untouched.
 
+**Playing with mods?** [docs/install.md](docs/install.md) is the setup page:
+download the engine, point it at your mods, play. No toolchain needed.
+
 See [docs/scripting.md](docs/scripting.md) for writing mods in Lua,
 [docs/architecture.md](docs/architecture.md) for the design,
 [docs/deploy.md](docs/deploy.md) for running it through Proton, and

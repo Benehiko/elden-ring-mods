@@ -24,11 +24,10 @@ md5sum "$GAME/regulation.bin"   # unchanged before and after
 The modded `regulation.bin` is a normal game file; something has to make the
 game read it instead of its own. Two routes:
 
-- **The engine** (`ermod-engine --regulation`). If you already run the
-  private engine repo's launcher, it can load the artifact directly — it is
-  in the game's load path anyway, and redirects the one file open that
-  matters. Nothing to download, nothing to configure. See that repo's README
-  ("Shipping an artifact") and `docs/e7-regulation-redirect-scoping.md`.
+- **The engine** (`ermod-engine --regulation`). It is already in the game's
+  load path, and redirects the one file open that matters — nothing else to
+  download, nothing to configure. It also runs Lua mods in the live game.
+  See [install.md](install.md), which is the whole setup.
 - **Mod Engine 2**, below. The route to use if you are not running the
   engine, and the one most Elden Ring players already have.
 

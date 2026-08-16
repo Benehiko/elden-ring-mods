@@ -1,9 +1,12 @@
--- Showcase: a performance monitor — `perf` + `ui`.
+-- Example: a tool window rather than a game change — `perf` + `ui`.
 --
--- Draws a small always-on window with the frame rate, the frame time
--- history and every loaded mod's script cost. This is the "side-application
--- in Lua" from the plan reduced to what the runtime must support: read
--- engine counters, draw once per frame, never stutter the game.
+-- Draws frame rate, a rolling frame-time plot and every loaded mod's script
+-- cost, including its own. This is what a side application in Lua looks
+-- like: read the engine's counters, draw once per frame, never stutter the
+-- game.
+--
+-- Handy while developing your own mod — watch your handler's cost in the
+-- table as you hot-reload it.
 
 local mod = {
   name = "perf-monitor",

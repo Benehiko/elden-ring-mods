@@ -1,8 +1,12 @@
--- Showcase: a gameplay overlay — `ui` + `hooks`.
+-- Example: a HUD driven by game events — `ui` + `hooks`.
 --
--- A HUD that reacts to the state events: runes gained this session, deaths
--- this session, and a fading notice on each. Nothing here touches the game;
--- it only listens and draws.
+-- Shows runes gained and deaths this session, plus a notice that fades out
+-- over the following frames. Nothing here touches the game: it only listens
+-- and draws, which makes it a safe first UI mod to modify.
+--
+-- The window is borderless, input-transparent and positioned once
+-- (`no_inputs`, `once`), so it behaves like part of the game's HUD rather
+-- than a tool window.
 
 local mod = {
   name = "hud-overlay",

@@ -223,7 +223,7 @@ const testing = std.testing;
 const mod_instance = @import("mod_instance.zig");
 const host_mod = @import("host.zig");
 
-const level60_src = @embedFile("../lua/fixtures/level60.lua");
+const level60_src = @embedFile("../lua/examples/level60.lua");
 
 /// A synthetic CharaInitParam table the tests hand out as "the game's":
 /// rows 3000–3009 at the real 320-byte stride, seeded with the vanilla

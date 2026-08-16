@@ -261,8 +261,8 @@ so "passes `check`" means "would load in-game". It prints one line per mod
 and exits 1 if any would fail, which makes it a pre-commit hook:
 
 ```
-test/mods/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions=params,log
-test/mods/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
+examples/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions=params,log
+examples/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
 ```
 
 `check` answers "would it *load*", not "does it work" — `bad_sandbox.lua`
@@ -272,8 +272,8 @@ passes `check` and then fails at its first line, which is the distinction.
 dispatcher:
 
 ```
-$ ermod perf test/mods/overlay.lua --frames 120 --runes 5 --deaths 1
-test/mods/overlay.lua: hud-overlay (events mod) — synthetic session: 120 frames, 5 rune pickups, 1 deaths
+$ ermod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
+examples/overlay.lua: hud-overlay (events mod) — synthetic session: 120 frames, 5 rune pickups, 1 deaths
 host pre-flight: no live params (params calls fail as they do before the tables load), recording overlay, in-memory store
 
 start (setup): 0.023 ms
@@ -295,7 +295,7 @@ and `on_launch` runs against the unpacked archive, so launch mods get an
 honest number too:
 
 ```
-$ ermod perf test/mods/level60.lua --regulation "$GAME/regulation.bin"
+$ ermod perf examples/level60.lua --regulation "$GAME/regulation.bin"
 host pre-flight: params from …/regulation.bin (unpacked, never written back), recording overlay, in-memory store
 
 start (on_launch): 0.270 ms
@@ -307,7 +307,7 @@ Nothing is written back; `perf` never produces a file.
 `apply` is the real run. Its log is the mod's own:
 
 ```
-$ ermod apply "$GAME/regulation.bin" mod/regulation.bin test/mods/level60.lua
+$ ermod apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 mod[level60] info: Vagabond: level 9 -> 60
 …
 mod[level60] info: Wretch: level 1 -> 60
@@ -391,11 +391,12 @@ committed, so completion and type checking need only a path:
 
 Regenerate with `make stubs` after an SDK change; CI fails on drift.
 
-## Reference mods
+## Example mods
 
-`test/mods/` holds a fixture per SDK slice — the loader's own test corpus,
-and the best place to read working code. `level60.lua` (params, and the
-offline golden test's subject), `rune_counter.lua` (hooks and per-mod state),
-`settings.lua` (ui + store), `perf_monitor.lua` (ui + perf), `overlay.lua`
-(ui + hooks), and `bad_sandbox.lua`, which exists to be refused. See
-[`test/mods/README.md`](../test/mods/README.md).
+`examples/` holds one worked example per SDK slice — the best place to read
+working code, and the loader's own test corpus. `level60.lua` (params, the
+reference gameplay mod and the offline golden test's subject),
+`rune_counter.lua` (hooks and per-mod state), `settings.lua` (ui + store),
+`perf_monitor.lua` (ui + perf), `overlay.lua` (ui + hooks), and
+`bad_sandbox.lua`, which exists to be refused. The reading order is in
+[`examples/README.md`](../examples/README.md).

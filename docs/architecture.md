@@ -138,7 +138,7 @@ mods/                    built-in patch specs compiled into `ermod` -- NOT how a
   class_gear.zig         extra weapon/shield/consumables per class
 paramdefs/               vendored Paramdex XML (see its README)
 tools/gen_paramdef.py    XML -> Zig field tables
-test/mods/               .lua reference mods and SDK fixtures -- what a mod looks like
+examples/                the example mods -- what a mod looks like; also the SDK test corpus
 docs/                    architecture (this file), install, scripting, deployment, tasks
 build_out/, mod/         output, gitignored
 ```

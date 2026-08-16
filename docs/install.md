@@ -77,10 +77,10 @@ game builds it knows.
 
 ## 3. Get a mod
 
-Mods are Lua files. The examples live in this repository under `test/mods/` —
-`level60.lua` (start at level 60), `death_ping.lua` (log every death),
-`perf_monitor.lua` and `overlay.lua` (in-game overlays). Download the ones
-you want, or clone the repo:
+Mods are Lua files. The example mods live in this repository under
+[`examples/`](../examples/) — `level60.lua` (start at level 60),
+`death_ping.lua` (log every death), `perf_monitor.lua` and `overlay.lua`
+(in-game overlays). Download the ones you want, or clone the repo:
 
 ```sh
 git clone https://github.com/Benehiko/elden-ring-mods.git

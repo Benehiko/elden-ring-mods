@@ -1,18 +1,18 @@
--- Reference mod: every starting class begins at level 60.
+-- Example: a complete, playable mod — every starting class begins at level 60.
 --
--- The Lua port of the open repo's `level60` (mods/level60.zig): the same
--- intent, expressed through the `params` SDK module. Offline that module
--- will patch regulation.bin; in-game it edits the live CharaInitParam table,
--- and the character-creation screen shows level 60 for every class.
+-- This is the reference mod: the one to read before writing your own gameplay
+-- change. It looks up rows by ID, reads a field before overwriting it, and
+-- logs what it did.
 --
 -- Elden Ring derives the displayed level from the stat total: the eight base
 -- stats sum to `soulLv + 79`. Setting `soulLv` alone desynchronises the
 -- character sheet from the rune cost curve, so each class gets an explicit
 -- stat spread summing to 139 (= 60 + 79) that keeps its vanilla identity
--- (see the open repo's docs/classes.md).
+-- (see docs/classes.md).
 --
--- Exercises: `params.row`, typed field read (the vanilla level is logged
--- before it changes) and field write, `run_at = "launch"`.
+-- Run it offline to ship a modded regulation.bin:
+--   ermod apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
+-- or drop it in your mods directory and see level 60 on the creation screen.
 
 local mod = {
   name = "level60",

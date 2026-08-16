@@ -18,7 +18,7 @@ const class_gear = mods.class_gear;
 
 /// The reference mod in Lua, embedded so `selftest`'s golden check needs no
 /// path on the command line. Its Zig twin is `mods/level60.zig`.
-const level60_lua = @embedFile("lua/fixtures/level60.lua");
+const level60_lua = @embedFile("lua/examples/level60.lua");
 
 /// Mods selectable on the command line.
 const available_mods = [_]struct { name: []const u8, spec: modspec.Spec }{

@@ -191,17 +191,17 @@ pub fn destroy(self: *ModInstance) void {
 }
 
 const testing = std.testing;
-const fixtures = struct {
-    const hello_launch = @embedFile("../lua/fixtures/hello_launch.lua");
-    const rune_counter = @embedFile("../lua/fixtures/rune_counter.lua");
-    const bad_sandbox = @embedFile("../lua/fixtures/bad_sandbox.lua");
+const examples = struct {
+    const hello_launch = @embedFile("../lua/examples/hello_launch.lua");
+    const rune_counter = @embedFile("../lua/examples/rune_counter.lua");
+    const bad_sandbox = @embedFile("../lua/examples/bad_sandbox.lua");
 };
 
 test "hello_launch runs its entry point and logs through the SDK" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.hello_launch, "=hello_launch.lua", capture.host());
+    const m = try load(testing.allocator, examples.hello_launch, "=hello_launch.lua", capture.host());
     defer destroy(m);
 
     try m.start();
@@ -214,7 +214,7 @@ test "rune_counter subscribes and accumulates across events" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.rune_counter, "=rune_counter.lua", capture.host());
+    const m = try load(testing.allocator, examples.rune_counter, "=rune_counter.lua", capture.host());
     defer destroy(m);
 
     try m.start();
@@ -232,7 +232,7 @@ test "an event a mod did not subscribe to fires nothing" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.rune_counter, "=rune_counter.lua", capture.host());
+    const m = try load(testing.allocator, examples.rune_counter, "=rune_counter.lua", capture.host());
     defer destroy(m);
 
     try m.start();
@@ -245,7 +245,7 @@ test "dispatch leaves no stack residue" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.rune_counter, "=rune_counter.lua", capture.host());
+    const m = try load(testing.allocator, examples.rune_counter, "=rune_counter.lua", capture.host());
     defer destroy(m);
 
     try m.start();
@@ -258,7 +258,7 @@ test "bad_sandbox fails at its entry point instead of escaping" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.bad_sandbox, "=bad_sandbox.lua", capture.host());
+    const m = try load(testing.allocator, examples.bad_sandbox, "=bad_sandbox.lua", capture.host());
     defer destroy(m);
 
     // It declares no permissions, so it gets an empty SDK table and dies on
@@ -407,7 +407,7 @@ test "a healthy handler never accrues strikes" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const m = try load(testing.allocator, fixtures.rune_counter, "=rune_counter.lua", capture.host());
+    const m = try load(testing.allocator, examples.rune_counter, "=rune_counter.lua", capture.host());
     defer destroy(m);
 
     try m.start();
@@ -442,9 +442,9 @@ test "each mod's SDK context is its own" {
     var capture = host_mod.CaptureHost.init(testing.allocator);
     defer capture.deinit();
 
-    const a = try load(testing.allocator, fixtures.rune_counter, "=a.lua", capture.host());
+    const a = try load(testing.allocator, examples.rune_counter, "=a.lua", capture.host());
     defer destroy(a);
-    const b = try load(testing.allocator, fixtures.rune_counter, "=b.lua", capture.host());
+    const b = try load(testing.allocator, examples.rune_counter, "=b.lua", capture.host());
     defer destroy(b);
 
     try a.start();
@@ -464,7 +464,7 @@ test "unloading a mod releases its handler refs" {
     // leaked allocation would show up as a testing.allocator failure or
     // unbounded registry growth.
     for (0..50) |_| {
-        const m = try load(testing.allocator, fixtures.rune_counter, "=r.lua", capture.host());
+        const m = try load(testing.allocator, examples.rune_counter, "=r.lua", capture.host());
         try m.start();
         m.fire(.on_rune_gain, .{ .rune_gain = .{ .amount = 1 } });
         destroy(m);

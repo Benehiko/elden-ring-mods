@@ -51,8 +51,13 @@ rather than merely refused.
 `stubs/ermod.lua` gives editor completion by cloning this repo — nothing to
 build.
 
-Drop the file in your mods directory and it loads on the next frame. The
-examples in [`test/mods/`](test/mods/) each exercise one part of the SDK.
+Drop the file in your mods directory and it loads on the next frame.
+
+**→ [`examples/`](examples/)** is ten worked examples, one file each, from the
+smallest mod that does anything to a HUD, an in-game settings screen and
+`level60.lua` — the reference gameplay mod. Start with
+[`hello_launch.lua`](examples/hello_launch.lua); the
+[index](examples/README.md) gives the reading order.
 
 ## I want to build the tooling
 
@@ -82,7 +87,7 @@ of where it runs.
 | `src/param_writes.zig` | the write ledger: who wrote which field, and conflicts between mods |
 | `src/perf.zig`, `src/ui_backend.zig`, `src/store_format.zig`, `src/screen.zig`, `src/image.zig` | the pure data and interfaces those bindings are defined over |
 | `vendor/lua/` | Lua 5.4.7, compiled by `build.zig` (no system dependency) |
-| `test/mods/` | Lua fixtures exercising one SDK slice each; also the engine's |
+| `examples/` | the example mods — one per SDK slice, and the package's test corpus for both consumers |
 
 A mod's whole blast radius is the vtable in `src/sdk/host.zig`. If a
 capability is not a function on it, no mod can reach it — and that file is
@@ -143,7 +148,7 @@ GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
 ```
 
 A mod is a table with a manifest and an entry point. This one raises the
-Vagabond to level 60 — a cut-down `src/lua/fixtures/level60.lua`:
+Vagabond to level 60 — a cut-down `src/lua/examples/level60.lua`:
 
 ```lua
 local mod = {

@@ -1,9 +1,11 @@
--- Showcase: an in-game settings screen — `ui` + `store`.
+-- Example: an in-game settings screen that remembers — `ui` + `store`.
 --
--- Values are read from the mod's store at setup and written back the
--- moment a control changes them, so they survive a relaunch. The store is
--- the only sanctioned filesystem access a mod has; where the file lives is
--- the engine's business.
+-- Every control writes to the mod's store the moment it changes, so the
+-- values survive a relaunch. `store` is the only filesystem access a mod
+-- gets; where the file lives is the engine's business, not the mod's.
+--
+-- Copy this one when your mod needs to be configurable in-game. Press Insert
+-- to give the overlay keyboard focus, Insert again to give it back.
 
 local mod = {
   name = "example-settings",

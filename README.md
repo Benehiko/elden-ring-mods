@@ -1,23 +1,73 @@
 # elden-ring-mods
 
-Zig tooling for building Elden Ring gameplay mods (starting level, starting gear, item
-lots) without ever touching the installed game. The tool reads `regulation.bin` from the
-Steam install, applies declarative patches, and writes a modified copy into a mod
-directory that [Mod Engine 2](https://github.com/soulsmods/ModEngine2) loads at runtime.
+Mods for Elden Ring on Linux, written in Lua, that run in the live game —
+and the tooling to build them.
 
-**The game install is only ever read.** All output goes to `mod/`; the vanilla install
-stays byte-for-byte untouched.
+**The game install is only ever read.** Nothing here writes to it, ever.
 
-**Playing with mods?** [docs/install.md](docs/install.md) is the setup page:
-download the engine, point it at your mods, play. No toolchain needed.
+---
 
-See [docs/scripting.md](docs/scripting.md) for writing mods in Lua,
-[docs/architecture.md](docs/architecture.md) for the design,
-[docs/deploy.md](docs/deploy.md) for running it through Proton, and
-[docs/tasks.md](docs/tasks.md) for status.
+## I just want to play with mods
 
-This repo also holds **`ermod-lua`**, the mod front end shared with the Lua
-mod engine — see [The `ermod-lua` package](#the-ermod-lua-package) below.
+Download the engine from [Releases](../../releases), point it at a directory
+of `.lua` mods, and play. No toolchain, no build, no ModEngine.
+
+**→ [docs/install.md](docs/install.md)** is the setup page.
+
+The release includes `ermod-engine` and the two Windows binaries it injects.
+Those are built from a **closed-source** repository; this repository holds
+everything a mod actually touches — the Lua sandbox, every `sdk.*` binding
+and the interface they call into — so what a community mod can and cannot do
+is readable here, by anyone, without trusting the engine binary. See
+[The `ermod-lua` package](#the-ermod-lua-package).
+
+## I want to write a mod
+
+Mods are **Lua files**. One file per mod, sandboxed, hot-reloaded in the
+running game.
+
+```lua
+local mod = {
+  name = "my-mod",
+  version = "1.0.0",
+  run_at = "launch",
+  permissions = { "params", "log" },
+}
+
+function mod.on_launch(sdk)
+  local row = sdk.params.row("CharaInitParam", 3000)
+  row.soulLv = 60
+  sdk.log.info("vagabond starts at level 60")
+end
+
+return mod
+```
+
+A mod declares the SDK modules it needs and receives exactly those — an
+undeclared module is absent from `sdk` entirely, so it cannot be reached
+rather than merely refused.
+
+**→ [docs/scripting.md](docs/scripting.md)** is the guide, and
+`stubs/ermod.lua` gives editor completion by cloning this repo — nothing to
+build.
+
+Drop the file in your mods directory and it loads on the next frame. The
+examples in [`test/mods/`](test/mods/) each exercise one part of the SDK.
+
+## I want to build the tooling
+
+`ermod` is the offline half: it reads `regulation.bin`, runs your Lua mod
+against it on the host, and writes a modded copy the engine (or Mod Engine 2)
+can load — so a mod can ship as a file for people who do not run the engine.
+Requirements and commands are under [Building](#requirements) below;
+[docs/architecture.md](docs/architecture.md) is the design.
+
+> **Note on `mods/*.zig`.** Those are *not* how mods are written. They are two
+> built-in patch specs (`level60`, `class-gear`) compiled into `ermod`, kept
+> as the independent implementation the Lua reference mod is checked against.
+> A mod you write is Lua.
+
+---
 
 ## The `ermod-lua` package
 
@@ -49,6 +99,11 @@ Same bindings, same sandbox, same paramdefs, both ways. That is what makes
 "author live, ship offline" one code path rather than two.
 
 ## Requirements
+
+Only for building `ermod`, the offline tool. **Playing with mods needs none of
+this** — download the engine from [Releases](../../releases) and see
+[docs/install.md](docs/install.md). **Writing a mod needs none of it either** —
+a mod is a `.lua` file.
 
 - Zig 0.16
 - libzstd (system library, for DCX compression)
@@ -213,10 +268,17 @@ GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
 ./zig-out/bin/ermod show "$GAME/regulation.bin" 3000 base   # Vagabond's base stats
 ```
 
-## Writing a mod
+## Built-in patch specs (not how you write a mod)
 
-Mods are Zig files in `mods/` that export a `spec`, so stat tables are computed at
-comptime and checked by unit tests:
+Two mods ship compiled into `ermod` itself — `level60` and `class-gear` — as
+Zig files in `mods/` exporting a `spec`, so their stat tables are computed at
+comptime and checked by unit tests. They exist as the independent
+implementation the Lua reference mod is checked against, and because they
+predate the Lua front end.
+
+**A mod you write is Lua** — see [Writing a mod in Lua](#writing-a-mod-in-lua).
+Nothing below is needed to write, share or run one; it is here for anyone
+working on `ermod` itself.
 
 ```zig
 const modspec = @import("spec");

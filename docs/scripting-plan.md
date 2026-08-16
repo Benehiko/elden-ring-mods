@@ -1,5 +1,12 @@
 # Engine plan: a standalone Lua mod engine for Elden Ring
 
+> **Historical.** This is the plan as written before the work started, kept
+> for the reasoning behind the design. It has since been built: milestones
+> E1–E7 are done and proven in the running game, and E8 (release packaging)
+> is complete bar publication. Where this document says "will", read "does" —
+> and for what actually exists, see [architecture.md](architecture.md) and
+> [scripting.md](scripting.md), which are maintained.
+
 Decision: build our own engine, not a Mod Engine 2 extension. ME2 is archived;
 we want something simpler and fully under our control. The product is:
 

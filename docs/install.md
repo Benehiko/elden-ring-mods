@@ -13,12 +13,15 @@ Anti-Cheat and loads mods into it. It never writes to the game install.
 
 **Put Steam in Offline Mode.** Steam → menu → *Go Offline*.
 
-This is the one step you must not skip. Modded play means playing with
-anti-cheat disabled, and FromSoftware bans accounts that connect to their
-servers with a modified game. The engine enforces its half — it refuses to
-launch while Easy Anti-Cheat is running, and the runtime checks again from
-inside the game before enabling anything, with no bypass flag — but nothing
-outside Steam can guarantee you are offline. That part is yours.
+Modded play means playing with anti-cheat disabled, and FromSoftware bans
+accounts that connect to their servers with a modified game.
+
+The engine never starts anti-cheat: it launches `eldenring.exe` directly and
+never `start_protected_game.exe`, refuses to run at all while Easy Anti-Cheat
+is live, and re-checks from inside the game before enabling anything — no
+bypass flag, in either place. What that does *not* cover is you (or Steam)
+launching the game the normal way afterwards, with mods still installed.
+Offline Mode is what closes that door, which is why it goes first.
 
 You also need:
 
@@ -80,19 +83,36 @@ Mods are Lua files. The examples live in this repository under `test/mods/` —
 you want, or clone the repo:
 
 ```sh
-git clone https://github.com/<user>/elden-ring-mods.git
+git clone https://github.com/Benehiko/elden-ring-mods.git
 ```
 
-Put the `.lua` files somewhere of your own — say `~/ermod-mods/` — and point
-the engine at that directory:
+### Where mods go
+
+The engine reads mods from one directory inside the game's Proton prefix,
+which it creates for you on the first launch:
+
+```
+~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/mods
+```
+
+(That is the Linux path. The game, running under Wine, sees the same
+directory as `C:\ermod\mods` — which is what the log calls it.)
+
+Copy `.lua` files straight in there and they load on the next launch. Nothing
+else is read: one directory, one `.lua` file per mod, no subdirectories, no
+manifest to register them in.
+
+**Or keep your mods anywhere you like** and point the engine at them:
 
 ```sh
 ./ermod-engine --mods ~/ermod-mods
 ```
 
-That both links the directory and launches the game. The link persists, so
-later launches are just `./ermod-engine`. Edit a mod while the game is
-running and it reloads within a second; no relaunch.
+That links the prefix directory at yours and launches the game. The link
+persists, so later launches are just `./ermod-engine`. This is the better
+arrangement if you edit mods: the files you edit are the files the game
+loads, and editing one while the game runs reloads it within a second — no
+relaunch.
 
 Writing your own is documented in [scripting.md](scripting.md).
 

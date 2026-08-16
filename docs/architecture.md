@@ -2,29 +2,62 @@
 
 ## Goal
 
-Build Elden Ring gameplay mods (custom starting level, starting gear, item lots, and
-later more ambitious content) using our own tooling written in Zig, without ever
-modifying the installed game. The vanilla install is treated as read-only input; all
-modified files are written to a separate mod directory that
-[Mod Engine 2](https://github.com/soulsmods/ModEngine2) overlays at runtime.
+Mods for Elden Ring on Linux that a player can write in **Lua** and run in the
+live game, and that can also be shipped as a modified `regulation.bin` for
+people who only want a file. The vanilla install is read-only input in both
+directions; nothing here ever writes to it.
+
+Two halves, one mod format:
+
+- **In-game** — the engine injects a runtime into the running game, which
+  loads `.lua` mods, hooks events, and reads and writes the game's live PARAM
+  tables. Edit a mod and it reloads within a second.
+- **Offline** — `ermod apply` runs the *same* Lua mod against an unpacked
+  `regulation.bin` on the host and writes a modded copy. The engine can load
+  that copy directly, so no ModEngine is required.
+
+The Lua front end (`ermod-lua`) is shared by both, which is what makes
+"author live, ship offline" one code path rather than two implementations
+that drift.
 
 Non-goals:
 
 - We do not modify or redistribute the Seamless Co-op mod (closed source). Co-op
   bug fixes and player-limit changes are upstream feature requests, not our code.
-- We do not touch multiplayer, anti-cheat, or the FromSoftware servers. Modded play
-  is strictly offline (Mod Engine 2 disables EAC).
+- We do not touch multiplayer, anti-cheat, or the FromSoftware servers. Modded
+  play is offline: the engine launches `eldenring.exe` directly, never
+  `start_protected_game.exe`, so EAC never starts.
+
+## What lives where
+
+This repository is the open half. The engine — the launcher, the injected
+runtime, the AOB signatures, the hooks — is a separate, **closed-source**
+repository, and its binaries are published on this repository's Releases page
+because that is where the people who need them are.
+
+The split is deliberate and is drawn at the mod's blast radius:
+
+| | |
+| --- | --- |
+| **Open (here)** | what a mod *is* and what it may touch: the Lua sandbox, the instruction budget, every `sdk.*` binding, the `Host` interface behind them, the paramdefs, and the offline `ermod` tool |
+| **Closed (engine)** | what the game *is*: signature scanning, inline detours, live param-table walking, the D3D12 overlay, process launch and injection |
+
+So a community mod's whole capability surface is `src/sdk/host.zig`, in the
+open, readable without trusting the engine binary. If a capability is not a
+function on that vtable, no mod can reach it.
 
 ## Constraints
 
 1. **Never write into the game install directory.**
    `~/.local/share/Steam/steamapps/common/ELDEN RING/Game/` is read-only input.
-2. **Reproducible output.** Mods are described declaratively and applied by the tool;
-   running the pipeline twice from the same inputs yields the same mod folder.
-   No hand-edited binaries.
+   The engine honours this too: everything it stages lives in the Wine prefix.
+2. **Reproducible output.** Mods are described declaratively or in sandboxed
+   Lua and applied by the tool; running the pipeline twice from the same
+   inputs yields the same mod folder. No hand-edited binaries.
 3. **Zig only** for our code (currently Zig 0.16), plus system `libzstd` for DCX
    compression. No .NET tooling (Smithbox etc.) in the build path — we may use those
    interactively for research, but the pipeline must not depend on them.
+   *Mods themselves are Lua, not Zig* — this constraint is about the tooling.
 4. **Offline safety.** Documentation and output layout must make it hard to
    accidentally run modded files against the live game servers.
 
@@ -98,13 +131,15 @@ src/
   modspec.zig            applies specs to an archive; rejects conflicting patches
   generated/
     paramdefs.zig        field tables generated from the vendored XML
-mods/
-  mods.zig               mod registry
+mods/                    built-in patch specs compiled into `ermod` -- NOT how a
+                         mod is written (a mod is a .lua file; see scripting.md)
+  mods.zig               spec registry
   level60.zig            all classes start at level 60
   class_gear.zig         extra weapon/shield/consumables per class
 paramdefs/               vendored Paramdex XML (see its README)
 tools/gen_paramdef.py    XML -> Zig field tables
-docs/                    architecture (this file), deployment, task breakdown
+test/mods/               .lua reference mods and SDK fixtures -- what a mod looks like
+docs/                    architecture (this file), install, scripting, deployment, tasks
 build_out/, mod/         output, gitignored
 ```
 
@@ -131,9 +166,10 @@ ermod apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
                                                   # launch mod path
 ```
 
-`ermod apply` is the end-user command: reads the game's regulation.bin, applies the
-named mods, and writes a modded copy ready for Mod Engine 2. `make apply` wraps it
-with the default game path and mod list.
+`ermod apply` is the offline command: reads the game's regulation.bin, applies
+the named mods (built-in specs or `.lua` files), and writes a modded copy that
+either the engine (`ermod-engine --regulation`) or Mod Engine 2 can load.
+`make apply` wraps it with the default game path and mod list.
 
 ### Applying Lua mods offline
 
@@ -291,21 +327,49 @@ coverage of all 194 params is not required.
    map file (`.msb`) plus an `ItemLotParam_map` row, and possibly an EMEVD event script
    edit. That drags in two more file formats. Deferred; tracked as a stretch task.
 
-## Deployment (Mod Engine 2)
+## Deployment
 
-Output layout:
+Two ways a mod reaches the game. Both leave the install untouched and both run
+with EAC absent; the difference is what the player has to install.
+
+### The engine (default)
+
+`.lua` mods are read from one directory in the game's Proton prefix, which the
+launcher creates:
 
 ```
-mod/                      ← Mod Engine 2 mod directory (ours, in this repo or ~/games)
+<prefix>/pfx/drive_c/ermod/          ← everything the engine stages, outside the install
+  mods/                              ← .lua files, one per mod; C:\ermod\mods in-game
+  regulation.bin                     ← optional: an `ermod apply` artifact to load
+  store/                             ← per-mod persistent settings
+  captures/                          ← frame captures
+```
+
+where `<prefix>` is `steamapps/compatdata/1245620`. `ermod-engine --mods <dir>`
+symlinks `mods/` at a working tree instead, so an author edits the files the
+game loads; `--regulation <file>` does the same for the artifact.
+
+A modded `regulation.bin` is loaded by hooking the one file open that matters
+(`CreateFileW` through the executable's import table) and returning our copy —
+so the game's own file is never overwritten, and Steam's integrity check has
+nothing to revert. See the engine repo's `docs/e7-regulation-redirect-scoping.md`.
+
+### Mod Engine 2 (alternative)
+
+For players who do not run the engine, `ermod apply` output is an ordinary
+modded `regulation.bin` that [Mod Engine 2](https://github.com/soulsmods/ModEngine2)
+loads:
+
+```
+mod/                      ← Mod Engine 2 mod directory
   regulation.bin          ← produced by `ermod apply`
 modengine2/               ← unpacked Mod Engine 2 release (not committed)
   config_eldenring.toml   ← points at mod/
 ```
 
-On Linux/Proton, Mod Engine 2's launcher is run through the same Proton prefix as the
-game (documented in `docs/deploy.md` once written). Mod Engine 2 loads `mod/regulation.bin`
-in place of the game's own at runtime and disables EAC; the install stays untouched and
-the game stays offline while modded.
+Mod Engine 2 cannot run `.lua` mods — it has no runtime in the game — so this
+route ships only what `apply` baked into the file. [deploy.md](deploy.md) has
+the setup.
 
 ## Testing strategy
 
@@ -351,3 +415,12 @@ the game stays offline while modded.
 - We never distribute FromSoftware's data — the repo holds only tooling and mod specs.
   `build_out/` (which can contain unpacked game data) is gitignored.
 - Modded play stays offline. The README and deploy docs must repeat this warning.
+- **The engine binaries published here are closed-source**, which is a real
+  thing to ask of a user: an injected DLL running inside their game. What
+  offsets that is what is *not* closed — the sandbox a mod runs in, its
+  instruction budget, every `sdk.*` binding and the `Host` vtable that bounds
+  them are all in this repository, so the capability surface of any community
+  mod is auditable without the engine's source. The engine's own guarantees
+  (never `start_protected_game.exe`, EAC re-checked in-process, unknown game
+  build disables every hook, the install never written) are stated in its
+  changelog and observable in the log it writes.

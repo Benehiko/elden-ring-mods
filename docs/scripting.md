@@ -316,16 +316,24 @@ ermod: 90 Lua field write(s) from 1 mod(s)
 applied 0 spec patch(es) across 0 param(s) -> mod/regulation.bin (1765424 bytes)
 ```
 
-Built-in Zig `spec` mods and `.lua` mods mix on one command line
+`ermod`'s two built-in patch specs and `.lua` mods mix on one command line
 (`… level60.lua class-gear`). The specs are applied first; both feed one
 write ledger, so a Zig patch and a Lua write on the same field collide like
 any two mods.
 
 ### In-game
 
-Drop the file in the engine's mods directory and it loads at launch;
-`ermod-engine --mods <dir>` points that directory at your working tree so the
-file you edit is the file the game loads. Save, and the running game picks it
+Drop the file in the engine's mods directory and it loads at launch:
+
+```
+~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/mods
+```
+
+which the game, under Wine, sees as `C:\ermod\mods` — the name the log uses.
+One `.lua` file per mod, no subdirectories, nothing to register them in.
+
+While authoring, prefer `ermod-engine --mods <dir>`: it points that directory
+at your working tree, so the file you edit is the file the game loads. Save, and the running game picks it
 up within about a second — a launch mod re-runs `on_launch`, an event mod
 re-registers its handlers, and the old VM is closed. A reload that fails
 keeps the previous version running and says why.

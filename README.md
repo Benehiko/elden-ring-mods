@@ -57,8 +57,8 @@ examples in [`test/mods/`](test/mods/) each exercise one part of the SDK.
 ## I want to build the tooling
 
 `ermod` is the offline half: it reads `regulation.bin`, runs your Lua mod
-against it on the host, and writes a modded copy the engine (or Mod Engine 2)
-can load — so a mod can ship as a file for people who do not run the engine.
+against it on the host, and writes a modded copy the engine loads directly —
+so a mod can ship as a file, not just as a script.
 Requirements and commands are under [Building](#requirements) below;
 [docs/architecture.md](docs/architecture.md) is the design.
 
@@ -117,7 +117,8 @@ make apply       # writes mod/regulation.bin with level60 + class-gear
 make selftest    # golden checks against your real install
 ```
 
-Then point Mod Engine 2 at the `mod/` directory — see [docs/deploy.md](docs/deploy.md).
+Then load it with `ermod-engine --regulation mod/regulation.bin` — see
+[docs/deploy.md](docs/deploy.md).
 
 ## Included mods
 
@@ -321,6 +322,7 @@ Bypass the hook with `git commit --no-verify` if needed.
 
 ## Safety
 
-Modded play must stay offline; Mod Engine 2 disables Easy Anti-Cheat for you. Loading a
+Modded play must stay offline; the engine launches the game with Easy Anti-Cheat
+absent, running `eldenring.exe` directly rather than the protected launcher. Loading a
 modified `regulation.bin` while connected to FromSoftware's servers risks a ban. This
 repo contains only tooling and mod definitions — no game data.

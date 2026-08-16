@@ -168,7 +168,7 @@ ermod apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
 
 `ermod apply` is the offline command: reads the game's regulation.bin, applies
 the named mods (built-in specs or `.lua` files), and writes a modded copy that
-either the engine (`ermod-engine --regulation`) or Mod Engine 2 can load.
+the engine loads with `ermod-engine --regulation`.
 `make apply` wraps it with the default game path and mod list.
 
 ### Applying Lua mods offline
@@ -354,22 +354,14 @@ A modded `regulation.bin` is loaded by hooking the one file open that matters
 so the game's own file is never overwritten, and Steam's integrity check has
 nothing to revert. See the engine repo's `docs/e7-regulation-redirect-scoping.md`.
 
-### Mod Engine 2 (alternative)
+### Mod Engine 2 (legacy, untested)
 
-For players who do not run the engine, `ermod apply` output is an ordinary
-modded `regulation.bin` that [Mod Engine 2](https://github.com/soulsmods/ModEngine2)
-loads:
-
-```
-mod/                      ← Mod Engine 2 mod directory
-  regulation.bin          ← produced by `ermod apply`
-modengine2/               ← unpacked Mod Engine 2 release (not committed)
-  config_eldenring.toml   ← points at mod/
-```
-
-Mod Engine 2 cannot run `.lua` mods — it has no runtime in the game — so this
-route ships only what `apply` baked into the file. [deploy.md](deploy.md) has
-the setup.
+[Mod Engine 2](https://github.com/soulsmods/ModEngine2) is archived upstream.
+An `ermod apply` artifact is an ordinary modded `regulation.bin`, so it can
+load one — but it has no runtime in the game, meaning no `.lua` mods, no live
+params, no hot reload and no overlay. We do not test this route against
+current game builds. [deploy.md](deploy.md) documents it in an appendix for
+players who already run it.
 
 ## Testing strategy
 
@@ -405,8 +397,10 @@ the setup.
 - **ID validation** — `ermod verify-ids` resolves every weapon, armour and goods ID the
   mods reference against the game's own tables. This is what caught that upgraded
   weapon IDs (`base + 6`) do not exist as rows.
-- **In-game verification**: final acceptance for each mod is loading it through
-  Mod Engine 2 and checking behaviour. Still outstanding — see tasks.md.
+- **In-game verification**: final acceptance for each mod is loading it in the
+  running game through the engine and checking behaviour. Done for the
+  `level60` artifact — the live `CharaInitParam` table reads `soulLv=60` for
+  row 3000 with no mods loaded, through the `--regulation` redirect.
 
 ## Security / legal posture
 

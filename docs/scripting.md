@@ -39,7 +39,7 @@ ermod apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 ```
 
 The file is read, never written. Everything lands in the output copy, which
-Mod Engine 2 loads — see [deploy.md](deploy.md).
+the engine loads with `--regulation` — see [deploy.md](deploy.md).
 
 ## Anatomy
 

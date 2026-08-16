@@ -98,7 +98,13 @@ a physical chest. Gear IDs come from `EquipParamWeapon` / `EquipParamProtector`
 
 ## Milestone 3 — Deployment & project hygiene
 
-### T7. Mod Engine 2 deploy docs + helper ✅🧪 (docs written; launch not yet verified)
+### T7. Mod Engine 2 deploy docs + helper ✅ (superseded by the engine)
+
+> **Superseded.** Mod Engine 2 is archived upstream and the engine's
+> `--regulation` redirect replaced this route entirely (T14/T17, live-proven).
+> `docs/deploy.md` keeps it as a legacy appendix for players who already run
+> it; the acceptance criterion below was never met and will not be — we do not
+> test an archived loader against current game builds.
 
 `docs/deploy.md`: obtaining Mod Engine 2, directory layout (`mod/`, `modengine2/`),
 Proton launch steps for this machine's Steam install, and the offline-safety warning.

@@ -1,9 +1,10 @@
 # Deploying the mod (Linux / Proton)
 
-> **Modded play must stay offline.** Both loaders below launch the game with
-> Easy Anti-Cheat disabled. Never load a modified `regulation.bin` through the
-> normal Steam launcher while connected to FromSoftware's servers — that risks
-> a ban.
+> **Modded play must stay offline.** The engine launches the game with Easy
+> Anti-Cheat absent — it runs `eldenring.exe` directly, never
+> `start_protected_game.exe`. Never load a modified `regulation.bin` through
+> the normal Steam launcher while connected to FromSoftware's servers — that
+> risks a ban.
 
 ## 1. Build the modded regulation
 
@@ -19,38 +20,65 @@ The game directory is only ever read. Verify that for yourself at any time:
 md5sum "$GAME/regulation.bin"   # unchanged before and after
 ```
 
-## 2. Choose a loader
+## 2. Load it
 
 The modded `regulation.bin` is a normal game file; something has to make the
-game read it instead of its own. Two routes:
+game read it instead of its own.
 
-- **The engine** (`ermod-engine --regulation`). It is already in the game's
-  load path, and redirects the one file open that matters — nothing else to
-  download, nothing to configure. It also runs Lua mods in the live game.
-  See [install.md](install.md), which is the whole setup.
-- **Mod Engine 2**, below. The route to use if you are not running the
-  engine, and the one most Elden Ring players already have.
+```sh
+ermod-engine --regulation mod/regulation.bin
+```
 
-Both keep the game install read-only. Do not simply overwrite the game's
-`regulation.bin`: Steam's integrity check reverts it, usually at the least
-convenient moment.
+That is the whole step. The engine is already in the game's load path — it
+launches the game and injects its runtime — so it redirects the single file
+open that matters and hands back your copy. Nothing else to download, nothing
+to configure, and the game's own `regulation.bin` is never touched, so Steam's
+integrity check has nothing to revert. [install.md](install.md) is the setup
+if you do not have the engine yet.
 
-## 3. Install Mod Engine 2
+Do not simply overwrite the game's `regulation.bin`. Steam's integrity check
+reverts it, usually at the least convenient moment.
 
-Download a release from [soulsmods/ModEngine2](https://github.com/soulsmods/ModEngine2)
-and unpack it next to this repo (it is not committed here). You need
-`modengine2_launcher.exe`, the `modengine2/` directory, and
-`config_eldenring.toml`.
+## 3. Verify in game
 
-## 4. Point Mod Engine 2 at `mod/`
+Start a new character and check the class screen: every class should show
+**level 60** with a stat spread that keeps its identity, and the extra weapon,
+shield/catalyst and consumables — the effects of the `level60` and
+`class-gear` mods applied in step 1.
 
-In `config_eldenring.toml`:
+If nothing changed, read the runtime log — it names the redirect explicitly:
+
+```
+regulation redirect — game's regulation.bin -> C:\ermod\regulation.bin
+```
+
+The log lives at
+`<prefix>/pfx/drive_c/windows/system32/ermod-runtime.log`.
+
+---
+
+## Appendix: Mod Engine 2 (legacy)
+
+[Mod Engine 2](https://github.com/soulsmods/ModEngine2) is **archived
+upstream** and is not required by anything here. It is documented only because
+some players already run it for other mods, and a `regulation.bin` produced by
+`ermod apply` is an ordinary file it can load.
+
+Two limitations worth knowing before choosing this route:
+
+- **It cannot run `.lua` mods.** It has no runtime inside the game, so it
+  loads only what `apply` baked into the file — no live params, no hot
+  reload, no overlay, no events.
+- **We do not test it.** The engine route is verified on the live game every
+  milestone; the Mod Engine 2 route has never been booted against a current
+  game build here. If it breaks on a game patch, upstream is archived.
+
+If you still want it: unpack a Mod Engine 2 release beside this repo (it is
+not committed) so you have `modengine2_launcher.exe`, the `modengine2/`
+directory and `config_eldenring.toml`, then point its `config_eldenring.toml`
+at your `mod/` directory:
 
 ```toml
-[modengine]
-debug = false
-external_dlls = []
-
 [extension.mod_loader]
 enabled = true
 loose_params = false
@@ -59,39 +87,10 @@ mods = [
 ]
 ```
 
-`path` must point at the `mod/` directory containing `regulation.bin`, not at the
-file itself.
-
-## 5. Launch through Proton
-
-Mod Engine 2's launcher is a Windows executable, so it has to run in the same
-Proton prefix as the game. Find the prefix (Elden Ring's Steam app ID is
-`1245620`):
-
-```sh
-export STEAM_COMPAT_DATA_PATH="$HOME/.local/share/Steam/steamapps/compatdata/1245620"
-export STEAM_COMPAT_CLIENT_INSTALL_PATH="$HOME/.local/share/Steam"
-
-PROTON="$HOME/.local/share/Steam/steamapps/common/Proton - Experimental/proton"
-"$PROTON" run ./modengine2_launcher.exe -t er -c ./config_eldenring.toml
-```
-
-Adjust the Proton version to whichever one the game is set to use in Steam
-(Properties → Compatibility).
-
-Alternatively, add the launcher to Steam as a non-Steam game, set its
-compatibility tool to the same Proton version, and put
-`-t er -c /absolute/path/to/config_eldenring.toml` in the launch options — this
-gets the environment variables right automatically.
-
-## 6. Verify in game
-
-Start a new character and check the class screen: every class should show
-**level 60** with the stat spread from `mods/level60.zig`, and the extra weapon,
-shield/catalyst and consumables from `mods/class_gear.zig`.
-
-If the game starts but nothing changed, Mod Engine 2 is not loading the mod —
-check that `path` is absolute and that `mod/regulation.bin` exists.
+Its launcher is a Windows executable, so it has to run inside the game's own
+Proton prefix — the same environment plumbing the engine's launcher does for
+you. That plumbing is the fiddly part, and it is the reason the engine route
+exists.
 
 ## Seamless Co-op
 

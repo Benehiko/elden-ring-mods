@@ -39,6 +39,7 @@ pub const perf = @import("perf.zig");
 pub const ui_backend = @import("ui_backend.zig");
 pub const store_format = @import("store_format.zig");
 pub const screen = @import("screen.zig");
+pub const input = @import("input.zig");
 pub const image = @import("image.zig");
 
 test {
@@ -58,5 +59,6 @@ test {
     _ = ui_backend;
     _ = store_format;
     _ = screen;
+    _ = input;
     _ = image;
 }

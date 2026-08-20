@@ -1,7 +1,11 @@
 # elden-ring-mods
 
-Mods for Elden Ring on Linux, written in Lua, that run in the live game —
-and the tooling to build them.
+Mods for Elden Ring on Linux, written in Lua, that run in the live game.
+
+This repository is what a mod author writes *against*: the SDK stubs, ten
+worked examples, the scripting reference, and the param field definitions.
+It builds nothing — the engine that runs mods is a separate, closed-source
+project, published on the [Releases](../../releases) page.
 
 **The game install is only ever read.** Nothing here writes to it, ever.
 
@@ -20,7 +24,7 @@ the Lua sandbox and the `sdk.*` bindings — is part of them. What this
 repository publishes is the surface those bindings present:
 `stubs/ermod.lua` is generated from the engine's binding tables, so it lists
 every `sdk.*` function a mod can call, exhaustively. See
-[The `ermod-lua` package](#the-ermod-lua-package).
+[The published surface](#the-published-surface).
 
 ## I want to write a mod
 
@@ -60,95 +64,32 @@ smallest mod that does anything to a HUD, an in-game settings screen and
 [`hello_launch.lua`](examples/hello_launch.lua); the
 [index](examples/README.md) gives the reading order.
 
-## I want to build the tooling
+## The published surface
 
-`ermod` is the offline half: it reads `regulation.bin`, runs your Lua mod
-against it on the host, and writes a modded copy the engine loads directly —
-so a mod can ship as a file, not just as a script.
-Requirements and commands are under [Building](#requirements) below;
-[docs/architecture.md](docs/architecture.md) is the design.
-
-> **Note on `mods/*.zig`.** Those are *not* how mods are written. They are two
-> built-in patch specs (`level60`, `class-gear`) compiled into `ermod`, kept
-> as the independent implementation the Lua reference mod is checked against.
-> A mod you write is Lua.
-
----
-
-## The `ermod-lua` package
-
-`src/ermod_lua.zig` is a Zig package: everything a Lua mod *is*, independent
-of where it runs.
+This repository holds four things, and nothing that compiles.
 
 | | |
 | --- | --- |
-| `src/lua/` | the sandboxed Lua 5.4 VM, the instruction budget, manifest parsing, the mod loader |
-| `src/sdk/` | every `sdk.*` binding a mod calls — `log`, `params`, `hooks`, `perf`, `store`, `ui`, `screen` — and `host.zig`, the interface they call back into |
-| `src/paramview.zig` | one PARAM table as a view over its bytes, live or unpacked |
-| `src/param_writes.zig` | the write ledger: who wrote which field, and conflicts between mods |
-| `src/perf.zig`, `src/ui_backend.zig`, `src/store_format.zig`, `src/screen.zig`, `src/image.zig` | the pure data and interfaces those bindings are defined over |
-| `vendor/lua/` | Lua 5.4.7, compiled by `build.zig` (no system dependency) |
-| `examples/` | the example mods — one per SDK slice, and the package's test corpus for both consumers |
+| [`stubs/ermod.lua`](stubs/ermod.lua) | LuaLS type annotations for the whole SDK, generated from the engine's binding tables. Point a language server here for completion — nothing to build. |
+| [`examples/`](examples/) | Ten worked mods, one file each, one per SDK slice. Also the engine's own test corpus, so an example that stops working fails a build there before it is republished here. |
+| [`paramdefs/`](paramdefs/) | Paramdex PARAMDEF XML: the field layout of the game's param rows, which is where names like `soulLv` and `baseVit` come from. The engine generates its field tables from these. |
+| [`docs/`](docs/) | The scripting reference, the install page, and the design notes. |
 
-A mod's whole blast radius is the vtable in `src/sdk/host.zig`: if a
-capability is not a function on it, no mod can reach it. The two consumers
-supply the other half:
-
-- **`ermod` (this repo)** implements `Host` over an unpacked
-  `regulation.bin`, so `ermod apply` can run a `.lua` mod offline.
-- **the engine** implements it over the running game — live param tables,
-  the ImGui overlay, frame capture, event hooks — and consumes this package
-  through its `build.zig.zon`.
-
-Same bindings, same sandbox, same paramdefs, both ways. That is what makes
-"author live, ship offline" one code path rather than two.
-
-## Requirements
-
-Only for building `ermod`, the offline tool. **Playing with mods needs none of
-this** — download the engine from [Releases](../../releases) and see
-[docs/install.md](docs/install.md). **Writing a mod needs none of it either** —
-a mod is a `.lua` file.
-
-- Zig 0.16
-- libzstd (system library, for DCX compression)
-- Python 3 (only to regenerate paramdef tables; not needed for a normal build)
-
-## Quick start
-
-```sh
-make build
-make apply       # writes mod/regulation.bin with level60 + class-gear
-make selftest    # golden checks against your real install
-```
-
-Then load it with `ermod-engine --regulation mod/regulation.bin` — see
-[docs/deploy.md](docs/deploy.md).
-
-## Included mods
-
-| Mod | Effect |
-| --- | --- |
-| `level60` | Every starting class begins at level 60, with a stat spread that keeps its identity (Hero 37 Str, Astrologer 38 Int, and so on). |
-| `class-gear` | Each class gains a second weapon, a shield or catalyst, and consumables; the Wretch also gets a full armour set. |
-
-```sh
-./zig-out/bin/ermod mods                    # list them
-make apply MODS="level60"                   # pick a subset
-```
+The stubs are the honest description of what a mod can do. They are generated
+from the binding tables themselves, so a binding that exists and is missing
+from the stubs is a bug the generator catches — which makes them a *complete
+enumeration* of the surface. What they are not is a bound you can verify by
+reading: the implementations live in the closed engine. The sandbox's
+behaviour is still yours to test from outside, and is documented in
+[docs/scripting.md](docs/scripting.md): `base`, `table`, `string` and `math`
+are the only libraries opened, `load`/`dofile`/`require` are stripped, and
+every call into Lua runs under an instruction budget.
 
 ## Writing a mod in Lua
 
-A mod argument to `ermod apply` is either a built-in name above or a path to a
-`.lua` file, and the two mix freely:
-
-```sh
-GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
-./zig-out/bin/ermod apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua class-gear
-```
-
-A mod is a table with a manifest and an entry point. This one raises the
-Vagabond to level 60 — a cut-down `src/lua/examples/level60.lua`:
+A mod is a table with a manifest and an entry point. Drop the file in your
+mods directory and it loads on the next frame. This one raises the Vagabond
+to level 60 — a cut-down [`examples/level60.lua`](examples/level60.lua):
 
 ```lua
 local mod = {
@@ -171,24 +112,25 @@ return mod
 not present in the `sdk` table it receives. Field names are the paramdef's own
 (`soulLv`, `baseVit`, …), and `.param` on a file name is optional.
 
-The same file runs unchanged inside the game through the engine, where the
-writes land in live memory instead of the archive. Offline, though:
+The same file runs unchanged either way: live in the game, or applied
+offline into a `regulation.bin` with `ermod-engine dev apply`, so a mod can
+ship as a file rather than as a script. Offline, though:
 
 - **Only `run_at = "launch"` mods are accepted.** There are no events to fire
   offline, so an event mod is refused rather than silently doing nothing.
 - **`params` and `log` are the modules that work.** `ui`, `perf`, `store` and
   `screen` need a running game and report themselves unavailable.
-- **Two mods writing one field is an error**, not last-wins: `apply` names both
-  mods and the field, refuses to pack, and writes no output file. In-game the
-  same overlap is a warning, because a hot-reloaded mod rewrites its own fields
-  by design.
+- **Two mods writing one field is an error**, not last-wins: `dev apply` names
+  both mods and the field, refuses to pack, and writes no output file. In-game
+  the same overlap is a warning, because a hot-reloaded mod rewrites its own
+  fields by design.
 - **The sandbox and instruction budget are the game's.** `os` and `io` are nil,
   and a mod that cannot finish `on_launch` under budget is cut off here rather
   than in your session.
 
-`apply` is deterministic: the same input and mods produce a byte-identical
+`dev apply` is deterministic: the same input and mods produce a byte-identical
 `regulation.bin` (zero IV, as the game's own file has), so two outputs can be
-compared directly. `ermod unpack` still helps to see *what* differs.
+compared directly.
 
 [docs/scripting.md](docs/scripting.md) is the full reference: the manifest,
 both `run_at` kinds, every SDK module, the sandbox and its budgets, and the
@@ -196,112 +138,31 @@ author loop in-game as well as offline.
 
 ## Author tooling
 
-`check`, `perf` and `stubs` run the game's own mod front end — the same loader,
-sandbox, manifest rules, instruction budget and SDK modules, compiled for the
-host. So "passes `check`" means "would load in-game", and `perf`'s numbers come
-from the real dispatcher rather than an estimate.
+The commands that check a mod are part of the engine, under its development
+tier, because they run the game's own front end on the host — the same loader,
+sandbox, manifest rules, instruction budget and SDK modules. So "passes
+`check`" means "would load in-game", and `perf`'s numbers come from the real
+dispatcher rather than an estimate.
 
 ```sh
-ermod check my_mod.lua other_mod.lua     # syntax, manifest, permissions, entry point
-ermod perf  my_mod.lua                   # synthetic session; cost per event
-ermod perf  my_mod.lua --regulation "$GAME/regulation.bin"
-ermod stubs stubs/ermod.lua              # LuaLS type stubs for editor completion
+ermod-engine dev check my_mod.lua other_mod.lua   # syntax, manifest, permissions, entry point
+ermod-engine dev perf  my_mod.lua                 # synthetic session; cost per event
+ermod-engine dev stubs out.lua                    # regenerate these stubs
+ermod-engine dev apply <regulation.bin> <out.bin> <mod>...
 ```
 
 `check` prints one line per mod and exits 1 if any would fail to load, so it
-drops straight into a pre-commit hook or CI.
+drops straight into a pre-commit hook or CI. `ermod-engine dev --help` lists
+the rest.
 
-`perf` fires a synthetic session (`--frames`, `--runes`, `--deaths`) and reports
-per-event handler cost against the real budget model, ending with the worst
-`on_present` frame as a percentage of a 60 fps frame. It is a pre-flight, not a
-promise: there is no game, so the overlay records instead of drawing and `store`
-lives in memory. Without `--regulation`, `params` is unavailable exactly as it
-is before the game's tables load — which means a launch mod fails at its first
-`params` call. Give it a `regulation.bin` and `on_launch` runs against the
-unpacked archive instead (`apply` without the pack), so launch mods get an
-honest number too. Nothing is written back; `perf` never produces a file.
-
-`stubs` writes LuaLS annotations for the whole SDK. The output is already
-committed at `stubs/ermod.lua`, so editor completion needs no build — point a
-language server at that directory:
+## Editor completion
 
 ```json
 { "workspace.library": ["path/to/elden-ring-mods/stubs"] }
 ```
 
-`img` turns a frame capture into numbers a check can assert on, without eyes on
-the screen. The engine's `ermod-engine shot` and the `screen` SDK module produce
-the PNGs:
-
-```sh
-ermod img stat shot.png                        # size, mean colour, lit coverage, distinct colours
-ermod img stat shot.png --rect 20,20,420,260   # just the overlay window's area
-ermod img diff before.png after.png            # changed pixels and their bbox; exit 1 if none changed
-```
-
-`img diff` exits 1 when nothing changed, so "did this draw?" is a shell test.
-8-bit RGB/RGBA non-interlaced PNGs only — what the engine writes.
-
-## CLI
-
-```
-ermod decrypt <regulation.bin> <out.dcx>          Decrypt only
-ermod encrypt <in.dcx> <out.bin>                  Encrypt only
-ermod unpack  <regulation.bin> <out.bnd>          Decrypt + decompress to BND4
-ermod pack    <in.bnd> <template.bin> <out.bin>   Compress + encrypt back
-ermod ls      <regulation.bin>                    List the 194 param files
-ermod extract <regulation.bin> <name> <out>       Extract one param
-ermod show    <regulation.bin> <row> [field]      Inspect CharaInitParam rows
-ermod mods                                        List available mods
-ermod verify-ids <regulation.bin>                 Check mod item IDs exist
-ermod selftest   <regulation.bin>                 Golden checks against the game
-ermod apply   <regulation.bin> <out.bin> <mod>... Apply mods (a mod is a built-in
-                                                  name or a .lua launch mod path)
-
-ermod check <mod.lua>...                          Would each load in-game?
-ermod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <bin>]
-                                                  Cost per event, real budget model
-ermod stubs [out.lua]                             LuaLS type stubs for the SDK
-ermod img stat <png> [--rect x,y,w,h]             Measure a frame capture
-ermod img diff <a.png> <b.png> [--threshold N] [--rect x,y,w,h]
-                                                  What changed between two captures
-```
-
-`ermod show` is handy for exploring: row IDs 3000–3009 are the ten starting classes.
-
-```sh
-GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
-./zig-out/bin/ermod show "$GAME/regulation.bin" 3000 base   # Vagabond's base stats
-```
-
-## Built-in patch specs (not how you write a mod)
-
-Two mods ship compiled into `ermod` itself — `level60` and `class-gear` — as
-Zig files in `mods/` exporting a `spec`, so their stat tables are computed at
-comptime and checked by unit tests. They exist as the independent
-implementation the Lua reference mod is checked against, and because they
-predate the Lua front end.
-
-**A mod you write is Lua** — see [Writing a mod in Lua](#writing-a-mod-in-lua).
-Nothing below is needed to write, share or run one; it is here for anyone
-working on `ermod` itself.
-
-```zig
-const modspec = @import("spec");
-
-pub const spec = modspec.Spec{
-    .name = "example",
-    .description = "What this mod does.",
-    .patches = &.{
-        .{ .param_file = "CharaInitParam.param", .row = 3000, .field = "soulLv", .value = .{ .int = 60 } },
-    },
-};
-```
-
-Register it in `mods/mods.zig` and in `available_mods` in `src/main.zig`. Mods compose;
-two patches writing the same param/row/field are rejected rather than silently
-last-wins. Field names come from the paramdefs — `ermod show` prints the ones a row
-actually uses.
+That is the whole setup: clone this repository, point a Lua language server at
+`stubs/`, and every `sdk.*` call completes with its types and documentation.
 
 ## How regulation.bin is structured
 
@@ -313,24 +174,29 @@ regulation.bin
             └── *.param files (CharaInitParam, ItemLotParam, ...)
 ```
 
+The engine reads and writes this chain; `paramdefs/` is what turns the bytes
+of a row into named fields.
+
 ## Development
 
+This repository has nothing to build. Both generated artefacts come from the
+engine and are committed here:
+
 ```sh
-make test        # unit tests (no game data needed)
-make selftest    # golden checks against the real install
-make paramdefs   # regenerate field tables from vendored Paramdex XML
-make stubs       # regenerate the committed LuaLS stubs (CI checks for drift)
-make hooks       # activate the pre-commit hook (fmt check + build)
+make -C ../elden-ring-mods-engine stubs       # regenerate stubs/ermod.lua
+make -C ../elden-ring-mods-engine paramdefs   # regenerate the engine's field tables
+make check-stubs                              # are the committed stubs current?
 ```
 
-Bypass the hook with `git commit --no-verify` if needed.
+The examples are also the engine's test corpus, and `ermod-engine dev check
+--examples` asserts that both copies are byte-identical.
 
 ## Safety
 
 Modded play must stay offline; the engine launches the game with Easy Anti-Cheat
 absent, running `eldenring.exe` directly rather than the protected launcher. Loading a
 modified `regulation.bin` while connected to FromSoftware's servers risks a ban. This
-repo contains only tooling and mod definitions — no game data.
+repository contains no game data and no executable code.
 
 ## Licence
 

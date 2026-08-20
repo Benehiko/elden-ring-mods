@@ -131,7 +131,7 @@ Writing your own is documented in [scripting.md](scripting.md).
 ## 4. Or load a modded regulation
 
 Some mods are not scripts but a modified `regulation.bin`, built offline by
-`ermod apply` (see [deploy.md](deploy.md)). The engine loads one directly:
+`ermod-engine dev apply` (see [deploy.md](deploy.md)). The engine loads one directly:
 
 ```sh
 ./ermod-engine --regulation ~/mods/regulation.bin

@@ -4,19 +4,19 @@
     .minimum_zig_version = "0.16.0",
     .fingerprint = 0xbe73ed6d75c923ff,
     .dependencies = .{},
+    // No `build.zig`: this package compiles nothing (E15). What it publishes
+    // is data and documentation — the generated SDK stubs, the worked
+    // examples, and the Paramdex PARAMDEF XML the engine's field tables are
+    // generated from. The engine reads `paramdefs/` and `tools/` at build
+    // time through a sibling checkout; nothing here is built.
     .paths = .{
-        "build.zig",
         "build.zig.zon",
-        "src",
-        "mods",
-        "vendor",
+        "paramdefs",
+        "tools",
         "stubs",
         "examples",
         "README.md",
         "docs",
-        // Apache-2.0 requires the licence and notice to travel with any
-        // redistribution, and a fetched Zig package is one: the engine
-        // consumes this repository through build.zig.zon.
         "LICENSE",
         "NOTICE",
     },

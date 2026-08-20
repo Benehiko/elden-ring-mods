@@ -12,7 +12,7 @@ Two halves, one mod format:
 - **In-game** — the engine injects a runtime into the running game, which
   loads `.lua` mods, hooks events, and reads and writes the game's live PARAM
   tables. Edit a mod and it reloads within a second.
-- **Offline** — `ermod apply` runs the *same* Lua mod against an unpacked
+- **Offline** — `ermod-engine dev apply` runs the *same* Lua mod against an unpacked
   `regulation.bin` on the host and writes a modded copy. The engine can load
   that copy directly, so no ModEngine is required.
 
@@ -39,12 +39,17 @@ The split is deliberate and is drawn at the mod's blast radius:
 
 | | |
 | --- | --- |
-| **Open (here)** | what a mod *is* and what it may touch: the Lua sandbox, the instruction budget, every `sdk.*` binding, the `Host` interface behind them, the paramdefs, and the offline `ermod` tool |
-| **Closed (engine)** | what the game *is*: signature scanning, inline detours, live param-table walking, the D3D12 overlay, process launch and injection |
+| **Open (here)** | the surface a mod is written against: the generated SDK stubs, the worked examples, the paramdefs, and this documentation |
+| **Closed (engine)** | everything executable: the Lua sandbox and every `sdk.*` binding, plus signature scanning, inline detours, live param-table walking, the D3D12 overlay, process launch and injection |
 
-So a community mod's whole capability surface is `src/sdk/host.zig`, in the
-open, readable without trusting the engine binary. If a capability is not a
-function on that vtable, no mod can reach it.
+A community mod's whole capability surface is the `Host` vtable behind the
+`sdk.*` bindings: if a capability is not a function on it, no mod can reach
+it. That interface moved into the engine with the rest of the front end, so
+what is published here is an exhaustive *enumeration* of the surface —
+`stubs/ermod.lua`, generated from the binding tables themselves — rather than
+an implementation you can read. The sandbox's behaviour remains testable from
+outside: `base`, `table`, `string` and `math` only, code-loading globals
+stripped, an instruction budget per call.
 
 ## Constraints
 
@@ -150,26 +155,26 @@ importing files above its root directory, so `mods/` must be its own module.
 
 ### CLI surface (current and planned)
 
+These are `ermod-engine dev` subcommands. They were the `ermod` binary until
+E15 retired it: the front end they run moved into the engine, and a second
+binary would have meant a second copy of the Lua VM and the four param
+formats. The raw codec steps (`decrypt`, `encrypt`, `unpack`, `pack`,
+`extract`) went with it — `apply` runs that whole chain, and nothing else
+needed the intermediate files.
+
 ```
-ermod decrypt <regulation.bin> <out.dcx>          # layer 1 only
-ermod encrypt <in.dcx> <out.bin>                  # layer 1 only
-ermod unpack  <regulation.bin> <out.bnd>          # layers 1+2
-ermod pack    <in.bnd> <template.bin> <out.bin>   # layers 5+6
-ermod ls      <regulation.bin>                    # list BND4 entries
-ermod extract <regulation.bin> <name> <out>       # extract one param
-ermod show    <regulation.bin> <row> [field]      # inspect CharaInitParam rows
-ermod mods                                        # list available mods
-ermod verify-ids <regulation.bin>                 # check mod IDs exist in the game
-ermod selftest   <regulation.bin>                 # golden checks (see Testing)
-ermod apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
+ermod-engine dev ls      <regulation.bin>                    # list BND4 entries
+ermod-engine dev show    <regulation.bin> <row> [field]      # inspect CharaInitParam rows
+ermod-engine dev selftest   <regulation.bin>                 # golden checks (see Testing)
+ermod-engine dev apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
                                                   # built-in spec name or a .lua
                                                   # launch mod path
 ```
 
-`ermod apply` is the offline command: reads the game's regulation.bin, applies
+`ermod-engine dev apply` is the offline command: reads the game's regulation.bin, applies
 the named mods (built-in specs or `.lua` files), and writes a modded copy that
 the engine loads with `ermod-engine --regulation`.
-`make apply` wraps it with the default game path and mod list.
+The engine's `dev` tier is where it lives; `ermod-engine dev --help` lists the rest.
 
 ### Applying Lua mods offline
 
@@ -177,7 +182,7 @@ A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
 launch mod; the two can be mixed on one command line:
 
 ```
-ermod apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
+ermod-engine dev apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
 ```
 
 The Lua mod runs through the shared `ermod-lua` front end — the same loader,
@@ -302,7 +307,7 @@ descriptor, each with its own row data. Both readers resolve a lookup by ID to t
 are reachable only by position (`Table.rowAt`). A mod that edits a duplicated ID
 therefore edits the first row of that ID and no other — consistently offline and live,
 since both paths use the same rule, but worth knowing before writing a mod against a
-param where IDs repeat. This is a case no synthetic fixture had; `ermod selftest`'s
+param where IDs repeat. This is a case no synthetic fixture had; `ermod-engine dev selftest`'s
 reader cross-check over the real archive is what surfaced it.
 
 For editing we only need: find row by ID → patch bytes at known field offsets → write
@@ -340,7 +345,7 @@ launcher creates:
 ```
 <prefix>/pfx/drive_c/ermod/          ← everything the engine stages, outside the install
   mods/                              ← .lua files, one per mod; C:\ermod\mods in-game
-  regulation.bin                     ← optional: an `ermod apply` artifact to load
+  regulation.bin                     ← optional: an `ermod-engine dev apply` artifact to load
   store/                             ← per-mod persistent settings
   captures/                          ← frame captures
 ```
@@ -357,7 +362,7 @@ nothing to revert. See the engine repo's `docs/e7-regulation-redirect-scoping.md
 ### Mod Engine 2 (legacy, untested)
 
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is archived upstream.
-An `ermod apply` artifact is an ordinary modded `regulation.bin`, so it can
+An `ermod-engine dev apply` artifact is an ordinary modded `regulation.bin`, so it can
 load one — but it has no runtime in the game, meaning no `.lua` mods, no live
 params, no hot reload and no overlay. We do not test this route against
 current game builds. [deploy.md](deploy.md) documents it in an appendix for
@@ -369,8 +374,8 @@ players who already run it.
   PARAM parse/serialize on synthetic fixtures, bitfield read/write isolation, and mod
   spec invariants (stat spreads sum to the target level, weapon IDs are base IDs, all
   ten classes covered exactly once). These need no game data, so they run in CI.
-- **Golden checks against the real install** — `ermod selftest`, run via
-  `make selftest`. Needs the game, so it is local-only, never CI:
+- **Golden checks against the real install** — `ermod-engine dev selftest`, run via
+  `ermod-engine dev selftest`. Needs the game, so it is local-only, never CI:
   1. Parsing the real 54 MB BND4 and rebuilding it with no patches is **byte-identical**
      to the original. This is the strong guarantee: any layout mistake in the writer
      shows up immediately instead of as a subtly broken archive.
@@ -394,7 +399,7 @@ players who already run it.
      The comparison is at the BND4 payload, which is what the mods touch; the
      container around it is deterministic too (zero IV, fixed zstd parameters),
      so two `apply` outputs from the same input are byte-identical files.
-- **ID validation** — `ermod verify-ids` resolves every weapon, armour and goods ID the
+- **ID validation** — `ermod-engine dev selftest` resolves every weapon, armour and goods ID the
   mods reference against the game's own tables. This is what caught that upgraded
   weapon IDs (`base + 6`) do not exist as rows.
 - **In-game verification**: final acceptance for each mod is loading it in the

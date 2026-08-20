@@ -11,7 +11,7 @@
 ```sh
 zig build
 GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
-./zig-out/bin/ermod apply "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
+ermod-engine dev apply "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
 ```
 
 The game directory is only ever read. Verify that for yourself at any time:
@@ -62,7 +62,7 @@ The log lives at
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is **archived
 upstream** and is not required by anything here. It is documented only because
 some players already run it for other mods, and a `regulation.bin` produced by
-`ermod apply` is an ordinary file it can load.
+`ermod-engine dev apply` is an ordinary file it can load.
 
 Two limitations worth knowing before choosing this route:
 

@@ -5,36 +5,40 @@ on:
     branches: [main]
   pull_request:
 
+# This repository builds nothing (E15): the executable half — the Lua VM, the
+# SDK bindings and the param pipeline — lives in the engine repository, and
+# what is published here is the surface a mod author writes against. So CI
+# checks the two things that can still go wrong: an example that would no
+# longer load, and a generator whose committed output has drifted from its
+# input.
+
 jobs:
-  build:
+  # Every example must be a well-formed Lua chunk. This is weaker than the
+  # engine's `dev check` — which loads each one through the real sandbox and
+  # manifest rules — but it needs no engine build, and it catches the mistake
+  # that actually happens when editing published examples: a syntax error.
+  # The engine additionally asserts that its copy of these files is
+  # byte-identical to this one (`ermod-engine dev check --examples`).
+  examples:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install libzstd
-        run: sudo apt-get update && sudo apt-get install -y libzstd-dev
+      - name: Install Lua
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
 
-      - uses: mlugg/setup-zig@v1
-        with:
-          version: 0.16.0
-
-      - name: Check formatting
-        run: zig fmt --check .
-
-      - name: Build
-        run: zig build
-
-      - name: Test
-        run: zig build test
-
-      # `stubs/ermod.lua` is committed so an author gets editor completion by
-      # cloning, without building anything. Regenerating it must therefore be
-      # a no-op: a drift here means the checked-in stubs describe an SDK that
-      # no longer exists.
-      - name: Verify committed SDK stubs are up to date
+      - name: Every example parses
         run: |
-          ./zig-out/bin/ermod stubs stubs/ermod.lua
-          git diff --exit-code stubs/ermod.lua
+          status=0
+          for f in examples/*.lua; do
+            if luac5.4 -p "$f" 2>/dev/null || luac -p "$f" 2>/dev/null; then
+              echo "ok   $f"
+            else
+              echo "FAIL $f"
+              status=1
+            fi
+          done
+          exit $status
 
   paramdefs:
     runs-on: ubuntu-latest
@@ -45,17 +49,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: mlugg/setup-zig@v1
-        with:
-          version: 0.16.0
-
-      # The generated field tables are committed; regenerating them must be a
-      # no-op, otherwise the checked-in tables have drifted from the XML.
-      # The generator's raw output is not fmt-clean, so format it first —
-      # the committed file is formatted and `zig fmt --check .` covers it.
-      - name: Verify generated paramdefs are up to date
+      # The generator turns the Paramdex XML here into the engine's field
+      # tables. Its output is committed in the engine repository, so this
+      # cannot diff against a checked-in file; what it can prove is that the
+      # generator still runs against this XML and produces something. A
+      # change here that breaks it would otherwise surface only at the next
+      # engine build.
+      - name: The paramdef generator still runs against the committed XML
         run: |
-          python3 tools/gen_paramdef.py paramdefs src/generated/paramdefs.zig \
+          python3 tools/gen_paramdef.py paramdefs /tmp/paramdefs.zig \
             CharaInitParam ItemLotParam EquipParamWeapon EquipParamProtector EquipParamGoods
-          zig fmt src/generated/paramdefs.zig
-          git diff --exit-code src/generated/paramdefs.zig
+          test -s /tmp/paramdefs.zig

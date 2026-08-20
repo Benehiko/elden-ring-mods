@@ -1,38 +1,28 @@
-GAME ?= $(HOME)/.local/share/Steam/steamapps/common/ELDEN RING/Game
-MODS ?= level60 class-gear
+# This repository builds nothing (E15). It publishes the surface a mod author
+# writes against: the generated SDK stubs, the worked examples, and the
+# Paramdex PARAMDEF XML the engine's field tables come from.
+#
+# Both generated artefacts are produced by the engine and committed here, so
+# an author needs neither a toolchain nor a checkout of the engine:
+#
+#   stubs/ermod.lua        `make stubs`     in elden-ring-mods-engine
+#   the engine's paramdefs `make paramdefs` in elden-ring-mods-engine
+#
+# What is left here is checking that what is committed is what the engine
+# would produce.
 
-.PHONY: hooks build test selftest apply paramdefs stubs clean
+ENGINE ?= ../elden-ring-mods-engine
+
+.PHONY: hooks check-stubs
 
 hooks:
 	git config core.hooksPath .githooks
 	chmod +x .githooks/pre-commit
 
-build:
-	zig build
-
-test:
-	zig build test
-
-# Golden checks against the real install (needs the game; not run in CI).
-selftest: build
-	./zig-out/bin/ermod selftest "$(GAME)/regulation.bin"
-	./zig-out/bin/ermod verify-ids "$(GAME)/regulation.bin"
-
-# Produce mod/regulation.bin for Mod Engine 2. Never writes to the game dir.
-apply: build
-	mkdir -p mod
-	./zig-out/bin/ermod apply "$(GAME)/regulation.bin" mod/regulation.bin $(MODS)
-
-# Regenerate the Zig field tables from the vendored Paramdex XML.
-paramdefs:
-	python3 tools/gen_paramdef.py paramdefs src/generated/paramdefs.zig \
-		CharaInitParam ItemLotParam EquipParamWeapon EquipParamProtector EquipParamGoods
-	zig fmt src/generated/paramdefs.zig
-
-# Regenerate the committed LuaLS stubs. They are checked in so an author gets
-# editor completion by cloning; CI fails if this would change anything.
-stubs: build
-	./zig-out/bin/ermod stubs stubs/ermod.lua
-
-clean:
-	rm -rf .zig-cache zig-out build_out
+# Fails if the committed stubs are not what the engine generates. The engine
+# has the binding tables, so it is the authority; this only detects drift.
+check-stubs:
+	@test -x "$(ENGINE)/zig-out/bin/ermod-engine" || { \
+		echo "check-stubs: build the engine first (make -C $(ENGINE) build)" >&2; exit 1; }
+	@$(ENGINE)/zig-out/bin/ermod-engine dev stubs /tmp/ermod-stubs-check.lua >/dev/null
+	@diff -u stubs/ermod.lua /tmp/ermod-stubs-check.lua && echo "check-stubs: stubs are current"

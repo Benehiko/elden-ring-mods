@@ -1,13 +1,24 @@
 #!/bin/sh
-# Thin pre-commit dispatcher: fast checks only (fmt + build). Full tests run in CI.
+# Thin pre-commit dispatcher: fast checks only. Full checks run in CI.
+#
+# This repository has no toolchain and nothing to build (E15) — it publishes
+# the SDK stubs, the examples, the paramdefs and the docs. So the only fast
+# check worth a hook is that a staged example is still valid Lua.
 set -e
 
-staged_zig=$(git diff --cached --name-only --diff-filter=ACM | grep '\.zig$' || true)
-[ -z "$staged_zig" ] && exit 0
+staged_lua=$(git diff --cached --name-only --diff-filter=ACM | grep '^examples/.*\.lua$' || true)
+[ -z "$staged_lua" ] && exit 0
 
-if ! zig fmt --check $staged_zig; then
-    echo "pre-commit: zig fmt would change the files above — run 'zig fmt .' and re-stage." >&2
-    exit 1
+if ! command -v luac5.4 >/dev/null 2>&1 && ! command -v luac >/dev/null 2>&1; then
+    echo "pre-commit: no luac found; skipping the example syntax check." >&2
+    exit 0
 fi
 
-zig build
+status=0
+for f in $staged_lua; do
+    if ! { luac5.4 -p "$f" 2>/dev/null || luac -p "$f" 2>/dev/null; }; then
+        echo "pre-commit: $f is not valid Lua" >&2
+        status=1
+    fi
+done
+exit $status

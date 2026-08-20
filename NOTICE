@@ -53,6 +53,16 @@ The engine binaries
 Releases of this repository include `ermod-engine` and the two Windows
 binaries it injects. Those are built from a separate, closed-source
 repository and are NOT licensed under Apache-2.0 — their terms are stated
-with the release. Everything in *this* repository is Apache-2.0, including
-the whole of what a community mod can reach: the Lua sandbox, every `sdk.*`
-binding, and the `Host` interface that bounds them.
+with the release. The mod front end — the Lua sandbox, the `sdk.*` bindings
+and the `Host` interface behind them — is part of those binaries and is not
+covered by this licence.
+
+What this repository publishes is the *surface* a mod is written against:
+`stubs/ermod.lua` is generated mechanically from the engine's own binding
+tables, so it is a complete enumeration of every `sdk.*` function a mod can
+call — a binding that exists and is missing from the stubs is a bug the
+generator catches. That is an exhaustive list of the surface, not a readable
+bound on what each function does; the implementations are no longer public.
+The sandbox's behaviour is still documented and still testable from outside:
+only `base`, `table`, `string` and `math` are opened, `load`/`dofile`/
+`require` are stripped, and every call runs under an instruction budget.

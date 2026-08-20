@@ -15,10 +15,11 @@ of `.lua` mods, and play. No toolchain, no build, no ModEngine.
 **→ [docs/install.md](docs/install.md)** is the setup page.
 
 The release includes `ermod-engine` and the two Windows binaries it injects.
-Those are built from a **closed-source** repository; this repository holds
-everything a mod actually touches — the Lua sandbox, every `sdk.*` binding
-and the interface they call into — so what a community mod can and cannot do
-is readable here, by anyone, without trusting the engine binary. See
+Those are built from a **closed-source** repository, and the mod front end —
+the Lua sandbox and the `sdk.*` bindings — is part of them. What this
+repository publishes is the surface those bindings present:
+`stubs/ermod.lua` is generated from the engine's binding tables, so it lists
+every `sdk.*` function a mod can call, exhaustively. See
 [The `ermod-lua` package](#the-ermod-lua-package).
 
 ## I want to write a mod
@@ -89,9 +90,8 @@ of where it runs.
 | `vendor/lua/` | Lua 5.4.7, compiled by `build.zig` (no system dependency) |
 | `examples/` | the example mods — one per SDK slice, and the package's test corpus for both consumers |
 
-A mod's whole blast radius is the vtable in `src/sdk/host.zig`. If a
-capability is not a function on it, no mod can reach it — and that file is
-here, in the open, rather than inside the closed engine. The two consumers
+A mod's whole blast radius is the vtable in `src/sdk/host.zig`: if a
+capability is not a function on it, no mod can reach it. The two consumers
 supply the other half:
 
 - **`ermod` (this repo)** implements `Host` over an unpacked
@@ -338,14 +338,20 @@ repo contains only tooling and mod definitions — no game data.
 trademark reservation — both worth having for a project built on
 reverse-engineered file formats.
 
-That covers everything in this repository, including the whole of what a mod
-can reach: the Lua sandbox, every `sdk.*` binding and the `Host` interface
-behind them.
+That covers everything in this repository. It does not cover the mod front
+end: the Lua sandbox, the `sdk.*` binding implementations and the `Host`
+interface behind them are part of the closed-source engine. This repository
+publishes the *surface* instead — `stubs/ermod.lua`, generated from the
+engine's own binding tables, is a complete enumeration of what a mod can
+call. That is an exhaustive list, not a readable bound: you can see every
+function, but not the implementation behind it. The sandbox's behaviour
+stays documented and independently testable — `base`, `table`, `string` and
+`math` only, code-loading globals stripped, an instruction budget per call.
 
-Two things it does not cover, spelled out in [NOTICE](NOTICE):
+Two further things [NOTICE](NOTICE) spells out:
 
-- **Vendored components** keep their own terms — Lua 5.4.7 (MIT,
-  `vendor/lua/LICENSE`) and the Paramdex PARAMDEF XML in `paramdefs/`.
+- **Vendored components** keep their own terms — the Paramdex PARAMDEF XML
+  in `paramdefs/`.
 - **The engine binaries** published on the Releases page are built from a
   separate closed-source repository and are licensed with the release, not
   under Apache-2.0.

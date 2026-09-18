@@ -1,0 +1,297 @@
+/* ermod-engine — the download page.
+ *
+ * Palette taken from the game's own material culture: aged gilt on weathered
+ * stone. One accent (gilt), used for the download, links and the shell prompt,
+ * and for nothing decorative. */
+
+:root {
+  --stone:     #23211c;  /* page ground: warm dark grey-brown, not black */
+  --stone-up:  #2b2822;  /* raised: the command, code blocks */
+  --parchment: #e8e1d1;  /* primary text */
+  --gilt:      #c9a227;  /* the one accent */
+  --gilt-lit:  #e0bc46;  /* its hover */
+  --moss:      #6f7d63;  /* structural, secondary */
+  --ash:       #97907f;  /* muted text */
+  --rule:      #3a362e;  /* hairlines */
+
+  --measure: 66ch;
+}
+
+:root:not([data-theme="dark"]) {
+  @media (prefers-color-scheme: light) {
+    /* The page is dark by design — it is for a dark fantasy game and the
+     * screenshots it sits beside are dark. A light scheme lifts the ground
+     * just enough to stay comfortable in a bright room without becoming a
+     * different design. */
+    --stone:     #f2ede1;
+    --stone-up:  #e7e0cf;
+    --parchment: #26241e;
+    --gilt:      #8a6d10;
+    --gilt-lit:  #6d5609;
+    --moss:      #56634b;
+    --ash:       #5f5949;
+    --rule:      #d5cdb8;
+  }
+}
+
+:root[data-theme="light"] {
+  --stone:     #f2ede1;
+  --stone-up:  #e7e0cf;
+  --parchment: #26241e;
+  --gilt:      #8a6d10;
+  --gilt-lit:  #6d5609;
+  --moss:      #56634b;
+  --ash:       #5f5949;
+  --rule:      #d5cdb8;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--stone);
+  color: var(--parchment);
+  font-family: "Spectral", Georgia, "Times New Roman", serif;
+  font-weight: 300;
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.075rem);
+  line-height: 1.68;
+  -webkit-font-smoothing: antialiased;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--gilt);
+  color: var(--stone);
+  padding: 0.6rem 1rem;
+  z-index: 10;
+}
+.skip:focus { left: 0; }
+
+/* ── masthead ─────────────────────────────────────────────────────── */
+
+.masthead {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2.5rem 16px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.wordmark {
+  margin: 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--parchment);
+  letter-spacing: 0.01em;
+}
+
+.masthead nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+.masthead nav a,
+footer nav a {
+  color: var(--ash);
+  text-decoration: none;
+  font-size: 0.92rem;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1px;
+}
+.masthead nav a:hover,
+footer nav a:hover { color: var(--parchment); border-bottom-color: var(--gilt); }
+
+/* ── shared column ────────────────────────────────────────────────── */
+
+main {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 16px 4rem;
+}
+
+section { margin: 3.5rem 0; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+h1, h2 {
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 1.5rem + 3vw, 3.3rem);
+  margin-bottom: 2rem;
+}
+
+h2 {
+  font-size: clamp(1.35rem, 1.2rem + 0.7vw, 1.6rem);
+  margin-bottom: 0.85rem;
+}
+
+p { margin: 0 0 1.15rem; }
+p:last-child { margin-bottom: 0; }
+
+b { font-weight: 600; }
+
+a { color: var(--gilt); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { color: var(--gilt-lit); }
+
+:focus-visible {
+  outline: 2px solid var(--gilt);
+  outline-offset: 3px;
+}
+
+.section-lede { color: var(--ash); }
+
+/* The hero's own paragraph is the pitch, so it keeps full contrast — only the
+ * subordinate section ledes are muted. */
+.lede { font-size: 1.1em; color: var(--parchment); }
+
+.aside {
+  color: var(--ash);
+  font-size: 0.95em;
+  border-left: 1px solid var(--rule);
+  padding-left: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+/* ── hero ─────────────────────────────────────────────────────────── */
+
+.hero { margin-top: 3rem; }
+
+/* The one loud element on the page: the command that does the whole job.
+ * Shrink-wrapped to its text rather than stretched across the measure — it is
+ * a plaque, not a banner. */
+.command {
+  background: var(--stone-up);
+  border-left: 2px solid var(--gilt);
+  padding: 1.1rem 1.4rem;
+  margin: 0 0 2rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(0.95rem, 0.8rem + 0.7vw, 1.25rem);
+  overflow-x: auto;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.75em;
+  align-items: baseline;
+}
+
+.command .prompt { color: var(--gilt); user-select: none; }
+.command code { color: var(--parchment); white-space: nowrap; }
+
+.downloads { margin-top: 2.25rem; }
+
+/* Outlined rather than filled: the gilt is the page's one accent and a large
+ * saturated field spends it all in the first screen. The fill arrives on
+ * hover, which is also the affordance. */
+.get {
+  display: inline-block;
+  background: transparent;
+  color: var(--gilt);
+  border: 1px solid var(--gilt);
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-decoration: none;
+  padding: 0.7rem 1.5rem;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.get:hover { background: var(--gilt); color: var(--stone); }
+
+.hosts {
+  margin: 0.85rem 0 0;
+  color: var(--ash);
+  font-size: 0.92rem;
+}
+
+/* ── the three rules ──────────────────────────────────────────────── */
+
+/* A description list, because that is what these are: a claim and its
+ * reason. No numbers — they are not a sequence. */
+.rules dl { margin: 1.75rem 0 0; }
+
+.rules dt {
+  font-weight: 600;
+  color: var(--parchment);
+  margin-top: 1.6rem;
+}
+.rules dt:first-of-type { margin-top: 0; }
+
+.rules dd {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--moss);
+  color: var(--ash);
+}
+
+/* ── code ─────────────────────────────────────────────────────────── */
+
+code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.87em;
+}
+
+p code, dd code, li code {
+  background: var(--stone-up);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+pre {
+  background: var(--stone-up);
+  padding: 1.25rem 1.4rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  border-left: 1px solid var(--rule);
+  line-height: 1.6;
+}
+pre code { background: none; padding: 0; font-size: 0.85rem; }
+
+/* Two syntax colours only — string and number — against the gilt keyword.
+ * Defined as tokens so the light scheme redefines them once, like the rest. */
+:root { --syn-string: #9db58c; --syn-number: #d0a9a0; }
+
+:root:not([data-theme="dark"]) {
+  @media (prefers-color-scheme: light) {
+    --syn-string: #486139;
+    --syn-number: #8a4b3d;
+  }
+}
+:root[data-theme="light"] { --syn-string: #486139; --syn-number: #8a4b3d; }
+
+pre .k { color: var(--gilt); }
+pre .s { color: var(--syn-string); }
+pre .n { color: var(--syn-number); }
+
+/* ── footer ───────────────────────────────────────────────────────── */
+
+footer {
+  border-top: 1px solid var(--rule);
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2rem 16px 3.5rem;
+  color: var(--ash);
+  font-size: 0.9rem;
+}
+
+footer p { margin-bottom: 1rem; }
+footer nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

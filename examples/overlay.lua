@@ -1,4 +1,4 @@
--- Example: a HUD driven by game events — `ui` + `hooks`.
+-- Example: a HUD driven by game events. `ui` + `hooks`.
 --
 -- Shows runes gained and deaths this session, plus a notice that fades out
 -- over the following frames. Nothing here touches the game: it only listens

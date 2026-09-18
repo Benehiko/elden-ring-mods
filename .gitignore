@@ -1,6 +1,6 @@
 .zig-cache/
 zig-out/
 
-# Output derived from the game's own files — never commit game data.
+# Output derived from the game's own files. Never commit game data.
 build_out/
 mod/

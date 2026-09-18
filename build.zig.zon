@@ -5,7 +5,7 @@
     .fingerprint = 0xbe73ed6d75c923ff,
     .dependencies = .{},
     // No `build.zig`: this package compiles nothing (E15). What it publishes
-    // is data and documentation — the generated SDK stubs, the worked
+    // is data and documentation: the generated SDK stubs, the worked
     // examples, and the Paramdex PARAMDEF XML the engine's field tables are
     // generated from. The engine reads `paramdefs/` and `tools/` at build
     // time through a sibling checkout; nothing here is built.

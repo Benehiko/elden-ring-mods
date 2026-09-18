@@ -1,8 +1,8 @@
 # Deploying the mod (Linux / Proton)
 
 > **Modded sessions are offline by construction.** The engine launches the
-> game with Easy Anti-Cheat absent — it runs `eldenring.exe` directly, never
-> `start_protected_game.exe` — and multiplayer runs through anti-cheat, so a
+> game with Easy Anti-Cheat absent, running `eldenring.exe` directly, never
+> `start_protected_game.exe`, and multiplayer runs through anti-cheat, so a
 > modded session never reaches FromSoftware's servers. Steam itself can stay
 > online. What risks a ban is the normal Steam launcher: never leave a
 > modified `regulation.bin` installed over the game's own, because that
@@ -31,8 +31,8 @@ game read it instead of its own.
 ermod-engine --regulation mod/regulation.bin
 ```
 
-That is the whole step. The engine is already in the game's load path — it
-launches the game and injects its runtime — so it redirects the single file
+That is the whole step. The engine is already in the game's load path, since
+it launches the game and injects its runtime, so it redirects the single file
 open that matters and hands back your copy. Nothing else to download, nothing
 to configure, and the game's own `regulation.bin` is never touched, so Steam's
 integrity check has nothing to revert. [install.md](install.md) is the setup
@@ -45,10 +45,10 @@ reverts it, usually at the least convenient moment.
 
 Start a new character and check the class screen: every class should show
 **level 60** with a stat spread that keeps its identity, and the extra weapon,
-shield/catalyst and consumables — the effects of the `level60` and
+shield or catalyst and consumables, the effects of the `level60` and
 `class-gear` mods applied in step 1.
 
-If nothing changed, read the runtime log — it names the redirect explicitly:
+If nothing changed, read the runtime log. It names the redirect explicitly:
 
 ```
 regulation redirect — game's regulation.bin -> C:\ermod\regulation.bin
@@ -69,7 +69,7 @@ some players already run it for other mods, and a `regulation.bin` produced by
 Two limitations worth knowing before choosing this route:
 
 - **It cannot run `.lua` mods.** It has no runtime inside the game, so it
-  loads only what `apply` baked into the file — no live params, no hot
+  loads only what `apply` baked into the file: no live params, no hot
   reload, no overlay, no events.
 - **We do not test it.** The engine route is verified on the live game every
   milestone; the Mod Engine 2 route has never been booted against a current
@@ -90,13 +90,13 @@ mods = [
 ```
 
 Its launcher is a Windows executable, so it has to run inside the game's own
-Proton prefix — the same environment plumbing the engine's launcher does for
+Proton prefix, the same environment plumbing the engine's launcher does for
 you. That plumbing is the fiddly part, and it is the reason the engine route
 exists.
 
 ## Seamless Co-op
 
 Seamless Co-op has its own launcher and its own mod-folder mechanism, and it is
-closed source. Whether these param mods load alongside it has **not been tested**
-— see the backlog in [tasks.md](tasks.md). All players in a session would need
-identical param files, since starting stats and gear must agree.
+closed source. Whether these param mods load alongside it has **not been
+tested**; see the backlog in [tasks.md](tasks.md). All players in a session
+would need identical param files, since starting stats and gear must agree.

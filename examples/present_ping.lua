@@ -1,6 +1,6 @@
 -- Example: run code every frame, without flooding the log.
 --
--- `on_present` fires once per rendered frame — 60+ times a second — so a
+-- `on_present` fires once per rendered frame, 60+ times a second, so a
 -- handler on it must be cheap and must never log unconditionally. The
 -- pattern here is the one to copy: count frames, act every Nth.
 --

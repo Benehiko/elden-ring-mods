@@ -1,7 +1,7 @@
 -- Example (negative): what a mod is NOT allowed to do.
 --
 -- This file exists to be refused. It declares no permissions yet reaches for
--- `os` and `io` — absent from the sandbox entirely — and for an SDK module
+-- `os` and `io`, absent from the sandbox entirely, and for an SDK module
 -- it never asked for. Loading it must fail loudly.
 --
 -- The rule it demonstrates: a mod receives exactly the `sdk.*` modules its

@@ -49,7 +49,7 @@ Vigor, `baseWil` is Mind, `baseMag` is Intelligence, `baseLuc` is Arcane.
 Weapon IDs are `base * 10000 + upgrade level`, but **only the base rows exist** in
 `EquipParamWeapon`; reinforcement is applied at runtime through
 `ReinforceParamWeapon`. Writing an upgraded ID such as `2000006` references a row
-that is not in the table and the weapon fails to equip. Mods must use base IDs.
+that is not in the table, and the weapon fails to equip. Mods must use base IDs.
 
 `ermod-engine dev selftest` checks every ID referenced by the mods against the game's own
 `EquipParamWeapon`, `EquipParamProtector` and `EquipParamGoods` tables.

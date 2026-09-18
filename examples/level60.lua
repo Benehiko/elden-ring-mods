@@ -1,4 +1,4 @@
--- Example: a complete, playable mod — every starting class begins at level 60.
+-- Example: a complete, playable mod. Every starting class begins at level 60.
 --
 -- This is the reference mod: the one to read before writing your own gameplay
 -- change. It looks up rows by ID, reads a field before overwriting it, and
@@ -23,7 +23,7 @@ local mod = {
 
 local target_level = 60
 
--- row, name, vit, wil, end, str, dex, mag, fai, luc — each sums to 139.
+-- row, name, vit, wil, end, str, dex, mag, fai, luc. Each sums to 139.
 local classes = {
   { 3000, "Vagabond",   30, 13, 22, 29, 20,  9,  9,  7 },
   { 3001, "Warrior",    23, 16, 23, 14, 36, 10,  8,  9 },

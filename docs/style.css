@@ -1,4 +1,4 @@
-/* ermod-engine — the download page.
+/* ermod-engine: the download page.
  *
  * Palette taken from the game's own material culture: aged gilt on weathered
  * stone. One accent (gilt), used for the download, links and the shell prompt,
@@ -19,7 +19,7 @@
 
 :root:not([data-theme="dark"]) {
   @media (prefers-color-scheme: light) {
-    /* The page is dark by design — it is for a dark fantasy game and the
+    /* The page is dark by design. It is for a dark fantasy game and the
      * screenshots it sits beside are dark. A light scheme lifts the ground
      * just enough to stay comfortable in a bright room without becoming a
      * different design. */
@@ -155,7 +155,7 @@ a:hover { color: var(--gilt-lit); }
 
 .section-lede { color: var(--ash); }
 
-/* The hero's own paragraph is the pitch, so it keeps full contrast — only the
+/* The hero's own paragraph is the pitch, so it keeps full contrast. Only the
  * subordinate section ledes are muted. */
 .lede { font-size: 1.1em; color: var(--parchment); }
 
@@ -172,7 +172,7 @@ a:hover { color: var(--gilt-lit); }
 .hero { margin-top: 3rem; }
 
 /* The one loud element on the page: the command that does the whole job.
- * Shrink-wrapped to its text rather than stretched across the measure — it is
+ * Shrink-wrapped to its text rather than stretched across the measure. It is
  * a plaque, not a banner. */
 .command {
   background: var(--stone-up);
@@ -219,7 +219,7 @@ a:hover { color: var(--gilt-lit); }
 /* ── the three rules ──────────────────────────────────────────────── */
 
 /* A description list, because that is what these are: a claim and its
- * reason. No numbers — they are not a sequence. */
+ * reason. No numbers, because they are not a sequence. */
 .rules dl { margin: 1.75rem 0 0; }
 
 .rules dt {
@@ -259,7 +259,7 @@ pre {
 }
 pre code { background: none; padding: 0; font-size: 0.85rem; }
 
-/* Two syntax colours only — string and number — against the gilt keyword.
+/* Two syntax colours only, string and number, against the gilt keyword.
  * Defined as tokens so the light scheme redefines them once, like the rest. */
 :root { --syn-string: #9db58c; --syn-number: #d0a9a0; }
 

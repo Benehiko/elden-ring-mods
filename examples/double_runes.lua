@@ -8,7 +8,7 @@
 -- regulation.bin with it, and in the running game it edits the live table.
 --
 -- Note: `GameAreaParam` has no vendored paramdef yet, so this one loads but
--- does not run offline — read it for the shape, run `level60.lua` instead.
+-- does not run offline. Read it for the shape, and run `level60.lua` instead.
 
 local mod = {
   name = "double-runes",

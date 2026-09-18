@@ -1,11 +1,11 @@
--- Example: a tool window rather than a game change — `perf` + `ui`.
+-- Example: a tool window rather than a game change. `perf` + `ui`.
 --
 -- Draws frame rate, a rolling frame-time plot and every loaded mod's script
 -- cost, including its own. This is what a side application in Lua looks
 -- like: read the engine's counters, draw once per frame, never stutter the
 -- game.
 --
--- Handy while developing your own mod — watch your handler's cost in the
+-- Handy while developing your own mod: watch your handler's cost in the
 -- table as you hot-reload it.
 
 local mod = {

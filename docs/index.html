@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ermod-engine — Elden Ring mods on Linux and macOS</title>
+<title>ermod-engine: Elden Ring mods on Linux and macOS</title>
 <meta name="description" content="A mod loader for Elden Ring on Linux and macOS. Lua mods that run in the live game, a modded regulation.bin without ModEngine, and the game install is only ever read.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
 
     <p class="lede">
       Lua mods that run in the live game, and modded params without ModEngine.
-      No toolchain, no Windows, no installer — and your game install is only
+      No toolchain, no Windows, no installer, and your game install is only
       ever read.
     </p>
 
@@ -59,7 +59,7 @@
       <dt>Modded sessions never reach the servers.</dt>
       <dd>
         Elden Ring's multiplayer runs through Easy Anti-Cheat, and the engine
-        never starts it — so a modded session is offline by construction. Steam
+        never starts it, so a modded session is offline by construction. Steam
         stays online; you do not have to change a thing. What still matters is
         the other direction: launch the game the ordinary way, with a modified
         <code>regulation.bin</code> still in place, and you are online with a
@@ -76,7 +76,7 @@
 
       <dt>Your vanilla save is never played on.</dt>
       <dd>
-        Mods run against a profile — a separate save the engine creates. It can
+        Mods run against a profile, a separate save the engine creates. It can
         copy your characters in, reading your save and never writing it.
       </dd>
     </dl>
@@ -96,7 +96,7 @@
     </p>
 
     <p>
-      <b>The game's live parameter tables, readable and writable</b> — the same
+      <b>The game's live parameter tables, readable and writable:</b> the same
       data a <code>regulation.bin</code> holds, edited in the running game.
       Mods can also draw an in-game overlay, report frame timing, and keep
       their own settings between sessions.
@@ -177,7 +177,7 @@ cosign verify-blob SHA256SUMS \
     <h2>When the game updates</h2>
     <p>
       The engine is keyed to exact game builds. On one it does not recognise it
-      says so, disables every hook and lets the vanilla game run — it never
+      says so, disables every hook and lets the vanilla game run. It never
       guesses. <code>ermod-engine check-build</code> answers why, and a newer
       release is the fix.
     </p>

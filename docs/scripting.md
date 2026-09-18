@@ -3,8 +3,8 @@
 A mod is one Lua file. The same file runs two ways: `ermod-engine dev apply` executes it
 on the host and writes a patched `regulation.bin` a player installs, and the
 engine executes it inside the running game, where the writes land in live
-memory. That is the promise the engine is built around — **author live, ship
-offline** — and it is one code path, not two implementations that happen to
+memory. That is the promise the engine is built around, **author live, ship
+offline**, and it is one code path, not two implementations that happen to
 agree.
 
 This document is the reference for writing that file. For how the offline
@@ -39,7 +39,7 @@ ermod-engine dev apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 ```
 
 The file is read, never written. Everything lands in the output copy, which
-the engine loads with `--regulation` — see [deploy.md](deploy.md).
+the engine loads with `--regulation`. See [deploy.md](deploy.md).
 
 ## Anatomy
 
@@ -50,26 +50,26 @@ function is its entry point.
 | --- | --- |
 | `name` | Identity. Appears in every log line (`mod[level60] info: …`) and owns the mod's param writes in the conflict ledger. |
 | `version` | Free-form string; carried, not interpreted. |
-| `run_at` | `"launch"` or `"events"` — when the engine runs it (below). |
+| `run_at` | `"launch"` or `"events"`, which decides when the engine runs it (below). |
 | `permissions` | The SDK modules it may touch. This list is the whole of what the mod can reach. |
 
 The manifest is parsed strictly. A `run_at` that is not one of the two names,
 a permission that is not a real module, a missing field, or a manifest whose
 declared entry point does not exist are each a load-time error rather than a
-surprise later — a mod that declares when it runs but has no function to run
+surprise later. A mod that declares when it runs but has no function to run
 is a packaging mistake worth catching before the game starts.
 
-### `run_at = "launch"` — entry point `on_launch(sdk)`
+### `run_at = "launch"`, entry point `on_launch(sdk)`
 
 Runs once, at load. This is the kind of mod that edits data: params in,
 params out, done. It is the only kind `ermod-engine dev apply` accepts, because it is
 the only kind that means anything without a game running.
 
 In-game, "at load" means the first rendered frame after the game's param
-tables exist, not the moment the runtime attaches — a param mod that ran
+tables exist, not the moment the runtime attaches. A param mod that ran
 earlier would have no tables to write to. A hot reload re-runs `on_launch`.
 
-### `run_at = "events"` — entry point `setup(sdk)`
+### `run_at = "events"`, entry point `setup(sdk)`
 
 `setup` runs once and registers handlers; the handlers do the work when the
 engine fires an event.
@@ -101,7 +101,7 @@ silently doing nothing, because offline there is nothing to fire:
 ermod: rune_counter.lua is an event mod (events); event mods run in-game only
 ```
 
-State kept in an upvalue (`total` above) is private to that mod — each mod
+State kept in an upvalue (`total` above) is private to that mod. Each mod
 gets its own Lua VM, so one mod cannot see or corrupt another's variables. It
 does not survive a hot reload, which is a fresh VM; anything that must
 outlive one belongs in `store`.
@@ -117,7 +117,7 @@ The seven modules are `log`, `hooks`, `params`, `perf`, `store`, `ui` and
 `screen`. What each offers is in [Modules](#modules) below.
 
 Around that, the VM itself is narrow. Only `base`, `table`, `string` and
-`math` are opened — `io`, `os`, `package` and `debug` never are — and the
+`math` are opened. `io`, `os`, `package` and `debug` never are, and the
 code-loading globals (`load`, `loadfile`, `dofile`, `require`, `loadstring`)
 are removed from `base` afterwards, so a mod cannot pull in a new chunk or
 reach native code. There is no `require`: one file is one mod.
@@ -132,11 +132,11 @@ ermod: bad_sandbox.lua errored in on_launch (RuntimeError)
 
 ### Budgets and strikes
 
-Every call into Lua — `on_launch`, `setup`, each handler — runs under an
-instruction budget (10 000 000 instructions by default), counted by the VM
-itself. A runaway loop is cut off and reported instead of hanging the frame
-it was called from. Overrunning the budget disables the mod on the spot; a
-handler that *errors* is given three strikes first, since a bug that fires
+Every call into Lua, meaning `on_launch`, `setup` and each handler, runs
+under an instruction budget (10 000 000 instructions by default), counted by
+the VM itself. A runaway loop is cut off and reported instead of hanging the
+frame it was called from. Overrunning the budget disables the mod on the spot;
+a handler that *errors* is given three strikes first, since a bug that fires
 on one code path should not cost a mod that works the rest of the time. A
 disabled mod stops receiving events and says so once in the log. The other
 mods are unaffected.
@@ -153,7 +153,7 @@ module is *for*, and what it costs.
 ### `log`
 
 `log.info(msg)`, `log.warn(msg)`, `log.error(msg)`. Lines are tagged with the
-mod's name by the engine — a mod cannot forge another's attribution.
+mod's name by the engine, so a mod cannot forge another's attribution.
 
 ### `params`
 
@@ -171,7 +171,7 @@ end
 
 Field names are the paramdef's own (`soulLv`, `baseVit`, …); `.param` on the
 file name is optional. Reads and writes are typed from the vendored
-paramdefs, and a write goes straight into the table's bytes — in-game that is
+paramdefs, and a write goes straight into the table's bytes. In-game that is
 live memory and takes effect immediately; offline it is the unpacked
 archive's bytes, packed at the end.
 
@@ -181,7 +181,7 @@ Two things to know:
   duplicates (`RandomAppearParam` has 26). `row(file, id)` resolves to the
   *first* descriptor with that id; later copies are reachable only by
   iterating with `rows`.
-- **A param needs a vendored paramdef.** Five are generated today —
+- **A param needs a vendored paramdef.** Five are generated today:
   `CharaInitParam`, `ItemLotParam`, `EquipParamWeapon`,
   `EquipParamProtector`, `EquipParamGoods`. Touching a param without one is
   an error naming the file, in-game and offline alike.
@@ -192,7 +192,7 @@ uses, which is the quickest way to find what to write.
 ### `hooks`
 
 `hooks.on(event, handler)`. Three events exist: `on_present` (a frame is
-about to be presented — payload `{}`), `on_rune_gain` (payload
+about to be presented, payload `{}`), `on_rune_gain` (payload
 `{ amount = n }`) and `on_death` (payload `{}`). An unknown event name is an
 error at subscribe time, not a handler that never fires.
 
@@ -213,7 +213,7 @@ end, { x = 20, y = 300, flags = { "auto_size" } })
 ```
 
 Immediate mode means the widgets exist only while you are drawing them, so
-every `ui` call is legal **only inside a frame** — from a handler running
+every `ui` call is legal **only inside a frame**: from a handler running
 during `on_present`, or the state events derived from it. Calling one from
 `on_launch` is an error. Widgets that edit a value take the current value and
 return the new one, so the mod owns the state; labels are unique per window,
@@ -222,26 +222,26 @@ and `"Label##id"` disambiguates two that must read the same.
 `Insert` toggles whether the overlay takes input focus; `ui.focused()` says
 whether it currently has it, and is the one `ui` call legal outside a frame
 (it answers `false` when there is no overlay at all). Offline, `ui` reports
-itself unavailable — there is no frame to draw on.
+itself unavailable, because there is no frame to draw on.
 
 ### `perf`
 
-`frame_ms()`, `fps()`, `frame()`, `now_ms()` and `mods()` — the last returning
+`frame_ms()`, `fps()`, `frame()`, `now_ms()` and `mods()`, the last returning
 every loaded mod's handler cost (`last_ms`, `avg_ms`, `total_ms`, `calls`),
-not only the caller's. A performance-monitor mod is `perf` + `ui` and nothing
-else.
+not only the caller's. A performance-monitor mod is `perf` plus `ui` and
+nothing else.
 
 ### `store`
 
 `get(key, default)`, `set(key, value)` (nil deletes), `keys()`. Strings,
-numbers and booleans; keys match `[A-Za-z0-9_.-]+`. Per-mod and persistent —
-this is the only filesystem access a mod has, and where the file lives is the
+numbers and booleans; keys match `[A-Za-z0-9_.-]+`. Per-mod and persistent.
+This is the only filesystem access a mod has, and where the file lives is the
 engine's business, not the mod's. Read at setup, write when a value changes.
 
 ### `screen`
 
-`capture([name][, scale])` writes the next presented frame — overlay included
-— as a PNG, and returns the path it will appear at (or nil and a reason). It
+`capture([name][, scale])` writes the next presented frame, overlay included,
+as a PNG, and returns the path it will appear at (or nil and a reason). It
 is the engine reading back its own swapchain, so what you get is exactly what
 the game presented. Pair it with `ermod-engine dev img` to turn a capture into numbers a
 test can assert on; see [frame captures](#frame-captures).
@@ -265,7 +265,7 @@ examples/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions
 examples/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
 ```
 
-`check` answers "would it *load*", not "does it work" — `bad_sandbox.lua`
+`check` answers "would it *load*", not "does it work". `bad_sandbox.lua`
 passes `check` and then fails at its first line, which is the distinction.
 
 `perf` fires a synthetic session against the real budget model and the real
@@ -289,7 +289,7 @@ strikes 0/3; mod still active at end of session
 
 It is a pre-flight, not a promise: there is no game, so the overlay records
 instead of drawing and the store lives in memory. Without `--regulation`,
-`params` is unavailable exactly as it is before the tables load — which means
+`params` is unavailable exactly as it is before the tables load, which means
 a *launch* mod dies at its first `params` call. Give it a `regulation.bin`
 and `on_launch` runs against the unpacked archive, so launch mods get an
 honest number too:
@@ -329,14 +329,14 @@ Drop the file in the engine's mods directory and it loads at launch:
 ~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/mods
 ```
 
-which the game, under Wine, sees as `C:\ermod\mods` — the name the log uses.
+which the game, under Wine, sees as `C:\ermod\mods`, the name the log uses.
 One `.lua` file per mod, no subdirectories, nothing to register them in.
 
 While authoring, prefer `ermod-engine --mods <dir>`: it points that directory
-at your working tree, so the file you edit is the file the game loads. Save, and the running game picks it
-up within about a second — a launch mod re-runs `on_launch`, an event mod
-re-registers its handlers, and the old VM is closed. A reload that fails
-keeps the previous version running and says why.
+at your working tree, so the file you edit is the file the game loads. Save,
+and the running game picks it up within about a second. A launch mod re-runs
+`on_launch`, an event mod re-registers its handlers, and the old VM is
+closed. A reload that fails keeps the previous version running and says why.
 
 Remember a reload is a fresh VM: upvalues reset, `store` does not.
 
@@ -366,9 +366,8 @@ ermod: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already writ
 ermod: refusing to pack; resolve the overlap or apply one mod at a time (1 conflicting write(s))
 ```
 
-A half-patched archive is worse than none, so every refusal — an event mod, a
-sandbox escape, a budget overrun, a conflict — exits 1 having written
-nothing.
+A half-patched archive is worse than none, so every refusal exits 1 having
+written nothing: an event mod, a sandbox escape, a budget overrun, a conflict.
 
 **In-game it is a warning.** The later write wins and the overlap is logged.
 That is deliberate: a hot-reloaded mod rewrites its own fields every reload,
@@ -377,7 +376,7 @@ mid-session.
 
 Ownership is keyed by **mod name**, so two mods sharing a name are treated as
 one and never conflict. That is what makes hot reload quiet, and it is why
-`level60.lua` and the built-in `level60` spec — same name, same 90 fields —
+`level60.lua` and the built-in `level60` spec, same name and same 90 fields,
 can be applied together.
 
 ## Editor setup
@@ -393,10 +392,10 @@ Regenerated by the engine (`make stubs` there) after an SDK change; `make check-
 
 ## Example mods
 
-`examples/` holds one worked example per SDK slice — the best place to read
-working code, and the loader's own test corpus. `level60.lua` (params, the
+`examples/` holds one worked example per SDK slice, the best place to read
+working code, and the loader's own test corpus: `level60.lua` (params, the
 reference gameplay mod and the offline golden test's subject),
-`rune_counter.lua` (hooks and per-mod state), `settings.lua` (ui + store),
-`perf_monitor.lua` (ui + perf), `overlay.lua` (ui + hooks), and
+`rune_counter.lua` (hooks and per-mod state), `settings.lua` (ui plus store),
+`perf_monitor.lua` (ui plus perf), `overlay.lua` (ui plus hooks), and
 `bad_sandbox.lua`, which exists to be refused. The reading order is in
 [`examples/README.md`](../examples/README.md).

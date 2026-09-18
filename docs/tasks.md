@@ -2,11 +2,11 @@
 
 Implementation plan for the mod pipeline described in [architecture.md](architecture.md).
 Tasks are ordered by dependency; each is self-contained enough to hand to a separate
-contributor. "AC" = acceptance criteria.
+contributor. "AC" means acceptance criteria.
 
 Status legend: ✅ done · 🔲 open · 🧪 needs in-game verification
 
-## Milestone 0 — Container pipeline ✅
+## Milestone 0: container pipeline ✅
 
 Done and verified (byte-identical roundtrip against the real install):
 
@@ -16,7 +16,7 @@ Done and verified (byte-identical roundtrip against the real install):
 
 ---
 
-## Milestone 1 — Archive & param access
+## Milestone 1: archive and param access
 
 ### T1. BND4 reader/writer ✅
 
@@ -35,7 +35,7 @@ mutable access to a row's byte slice. Writer re-serializes (offsets recomputed i
 count changes; modifying rows in place must not shift anything).
 
 - AC: roundtrip tests as in T1; `ermod extract regulation.bin CharaInitParam.param out.param` works against the real file; extracted param reports the expected param type string.
-- Result: done. The real param type is **`CHARACTER_INIT_PARAM`** (not `CHARA_INIT_PARAM_ST` as guessed when this task was written), 3240 rows, 320-byte stride. Row size is derived from consecutive row offsets since it is not stored in the file.
+- Result: done. The real param type is **`CHARACTER_INIT_PARAM`**, not `CHARA_INIT_PARAM_ST` as guessed when this task was written, with 3240 rows and a 320-byte stride. Row size is derived from consecutive row offsets, since the file does not store it.
 
 ### T3. Paramdef field layouts ✅
 
@@ -44,9 +44,9 @@ Source: Paramdex XML from the Smithbox repo (vendor the XML files for `CharaInit
 `ItemLotParam_map`, `EquipParam*`, `SpEffectParam` under `paramdefs/`, with upstream
 commit noted in a README there).
 
-Decision for the implementer: parse XML at runtime vs. a small codegen step that emits
-Zig structs. Either is fine; prefer whichever stays simpler, and keep bitfields in mind
-(paramdefs contain packed bitfield rows).
+Decision for the implementer: parse XML at runtime, or add a small codegen step that emits
+Zig structs. Either is fine; prefer whichever stays simpler, and keep bitfields in mind,
+because paramdefs contain packed bitfield rows.
 
 - AC: given a real extracted `CharaInitParam.param`, print each class row's `soulLv` (or equivalently named field) with a plausible value; unit test validates offsets against at least three hand-checked fields.
 - Result: done via codegen (`tools/gen_paramdef.py` → `src/generated/paramdefs.zig`), XML vendored under `paramdefs/`. The paramdef source turned out to be **soulsmods/Paramdex**, not Smithbox, and the ER file is `CharaInitParam.xml` / `ItemLotParam.xml` (no `_map` suffix); no `SpEffectParam.xml` exists there, so it was dropped from the vendored set.
@@ -54,9 +54,9 @@ Zig structs. Either is fine; prefer whichever stays simpler, and keep bitfields 
 
 ---
 
-## Milestone 2 — Declarative mods
+## Milestone 2: declarative mods
 
-### T4. Mod spec + `ermod apply` ✅
+### T4. Mod spec and `ermod apply` ✅
 
 `src/modspec.zig`. A mod is a declarative spec in `mods/` describing param patches:
 
@@ -69,8 +69,8 @@ regulation.bin (read-only), apply one or more specs, write the modded copy.
 Multiple specs compose; conflicting writes to the same field are an error, not
 last-wins.
 
-- AC: applying an empty spec reproduces a byte-identical regulation.bin (modulo fresh AES IV — compare after decrypt); applying a spec that sets one known field changes exactly that row's bytes and nothing else (assert with a diff over the unpacked BND4); README section documenting the spec format.
-- Result: done, both ACs verified by `ermod selftest` against the real install — a no-op rebuild of the 54 MB archive is byte-identical, and applying both mods changes exactly 264 bytes, all inside `CharaInitParam.param`.
+- AC: applying an empty spec reproduces a byte-identical regulation.bin (modulo fresh AES IV, so compare after decrypt); applying a spec that sets one known field changes exactly that row's bytes and nothing else (assert with a diff over the unpacked BND4); README section documenting the spec format.
+- Result: done, both ACs verified by `ermod selftest` against the real install. A no-op rebuild of the 54 MB archive is byte-identical, and applying both mods changes exactly 264 bytes, all inside `CharaInitParam.param`.
 - Specs are written as Zig (`mods/*.zig`) rather than ZON, so stat spreads and patch tables are computed at comptime and validated by unit tests. They import `src/spec.zig`, a dependency-free module holding just the patch types; Zig forbids importing files above a module root, so `mods/` is its own module.
 
 ### T5. Mod: level 60 start ✅🧪 (needs in-game verification)
@@ -78,8 +78,8 @@ last-wins.
 `mods/level60`. Set every starting class to level 60 with a sensible stat spread.
 CharaInitParam stores base stats per class; level must equal the sum-derived value the
 game expects (level = stat total − 79 in Elden Ring terms) or character creation
-misbehaves — implementer must verify the exact relation from paramdef/community docs
-and encode per-class stat distributions, not just the level field.
+misbehaves. The implementer must verify the exact relation from paramdef or community
+docs and encode per-class stat distributions, not just the level field.
 
 - AC: spec applies cleanly; in-game: new character of at least two different classes starts at level 60 with the specified stats, runes-to-next-level sane.
 - Result: spec applies cleanly to all ten classes; the `soulLv = stat total − 79` relation was confirmed against every vanilla row (see docs/classes.md) and each level-60 spread is unit-tested to sum to 139 with all stats in 1..99. **In-game verification still outstanding.**
@@ -87,8 +87,8 @@ and encode per-class stat distributions, not just the level field.
 ### T6. Mod: starting gear per class ✅🧪 (needs in-game verification)
 
 `mods/class-gear`. Route 1 from the architecture doc: fill each class's
-`CharaInitParam` equipment/item slots (swords, armor, consumables) instead of spawning
-a physical chest. Gear IDs come from `EquipParamWeapon` / `EquipParamProtector`
+`CharaInitParam` equipment and item slots (swords, armor, consumables) instead of
+spawning a physical chest. Gear IDs come from `EquipParamWeapon` / `EquipParamProtector`
 (read-only lookups; document chosen IDs in the spec's comments).
 
 - AC: spec applies cleanly; in-game: at least two classes spawn with the configured weapons/armor equipped and items in inventory.
@@ -96,15 +96,15 @@ a physical chest. Gear IDs come from `EquipParamWeapon` / `EquipParamProtector`
 
 ---
 
-## Milestone 3 — Deployment & project hygiene
+## Milestone 3: deployment and project hygiene
 
-### T7. Mod Engine 2 deploy docs + helper ✅ (superseded by the engine)
+### T7. Mod Engine 2 deploy docs and helper ✅ (superseded by the engine)
 
 > **Superseded.** Mod Engine 2 is archived upstream and the engine's
 > `--regulation` redirect replaced this route entirely (T14/T17, live-proven).
 > `docs/deploy.md` keeps it as a legacy appendix for players who already run
-> it; the acceptance criterion below was never met and will not be — we do not
-> test an archived loader against current game builds.
+> it. The acceptance criterion below was never met and will not be, because we
+> do not test an archived loader against current game builds.
 
 `docs/deploy.md`: obtaining Mod Engine 2, directory layout (`mod/`, `modengine2/`),
 Proton launch steps for this machine's Steam install, and the offline-safety warning.
@@ -117,19 +117,19 @@ Optionally an `ermod deploy` convenience (copy `regulation.modded.bin` →
 
 GitHub Actions: `zig fmt --check`, `zig build`, `zig build test` on push/PR
 (container or setup-zig action pinned to 0.16; libzstd available). Real game data is
-not available in CI — tests must pass on synthetic fixtures alone.
+not available in CI, so tests must pass on synthetic fixtures alone.
 
 - AC: green pipeline; a PR with a formatting error or failing test is blocked.
-- Result: `.github/workflows/ci.yml` runs fmt/build/test plus a job asserting the committed paramdef tables still match the vendored XML. Not yet exercised on GitHub — no remote is configured.
+- Result: `.github/workflows/ci.yml` runs fmt/build/test plus a job asserting the committed paramdef tables still match the vendored XML. Not yet exercised on GitHub, since no remote is configured.
 
-### T9. Initial commit & repo setup ✅
+### T9. Initial commit and repo setup ✅
 
 Conventional commits. `make hooks` activates the pre-commit hook and marks it
 executable (the sandbox here blocks `chmod`, so it must be run once locally).
 
 ---
 
-## Milestone 4 — Ship offline (engine E6)
+## Milestone 4: ship offline (engine E6)
 
 Closing the engine's core promise from this side: the Lua mod an author
 iterates against the running game is the mod `ermod apply` patches an archive
@@ -138,8 +138,8 @@ are the rows that land here.
 
 ### T10. `ermod-lua` package ✅
 
-The shared mod front end — Lua VM and sandbox, manifest, loader, every SDK
-binding and the `Host` interface — moved into this repo as a Zig package so
+The shared mod front end, meaning the Lua VM and sandbox, the manifest, the loader,
+every SDK binding and the `Host` interface, moved into this repo as a Zig package so
 the engine can consume it (a private repo cannot be depended on). Replaces
 `make sync-paramdefs`: the paramdefs come with the package.
 
@@ -148,16 +148,16 @@ the engine can consume it (a private repo cannot be depended on). Replaces
   `build.zig` calls for its own target (the runtime is `x86_64-windows-gnu`,
   `ermod` is host-native, and a module carries its target).
 
-### T11. `paramview.Table` + two-reader cross-check ✅
+### T11. `paramview.Table` and the two-reader cross-check ✅
 
 `Table` is the in-place PARAM view both backends hand to `sdk.params`.
-`src/paramcheck.zig` compares it against `param.zig` — the reader `apply`
-patches — by position and by id.
+`src/paramcheck.zig` compares it against `param.zig`, the reader `apply`
+patches, by position and by id.
 
 - AC: the two readers agree on every table in the real archive.
 - Result: 194 tables, 178 935 rows, agreeing. Runs over synthetic images in CI
   and over the real archive from `ermod selftest`. Finding: **row IDs are not
-  unique** — `RandomAppearParam` ships 26 duplicates, and both readers resolve
+  unique.** `RandomAppearParam` ships 26 duplicates, and both readers resolve
   an ID to the first descriptor, so a Lua mod's `row(id)` reaches the first
   match only. Documented in `docs/architecture.md`.
 
@@ -189,7 +189,7 @@ The same ten stat spreads written two ways must produce the same archive.
 
 The authoring tools move off the engine's `ermod-dev` onto `ermod`, beside
 `apply`, because the front end they run lives here now. `src/devcmd.zig`.
-`sigs` does not move — it reads the private signature tables, so it stays as
+`sigs` does not move: it reads the private signature tables, so it stays as
 `ermod-engine sigs`.
 
 - AC: same output and exit codes as `ermod-dev`; `stubs/ermod.lua` committed
@@ -197,7 +197,7 @@ The authoring tools move off the engine's `ermod-dev` onto `ermod`, beside
 - Result: the four commands dispatch off the raw argument vector rather than
   `main`'s fixed array, because they take unbounded flag-carrying argument
   lists and answer with an exit code instead of a file. Finding: **`perf`
-  gained `--regulation <bin>`** and it is not a nicety — without params a
+  gained `--regulation <bin>`** and it is not a nicety. Without params a
   *launch* mod dies at its first `sdk.params` call (correct, and exactly what
   happens before the game's tables load), which meant `perf` could not measure
   the one kind of mod `apply` ships. With an archive it reads through the same
@@ -206,14 +206,14 @@ The authoring tools move off the engine's `ermod-dev` onto `ermod`, beside
 
 ### T16. Author documentation ✅
 
-`docs/scripting.md` — the plan's E1 doc: mod anatomy, the two `run_at` kinds,
+`docs/scripting.md`, the plan's E1 doc: mod anatomy, the two `run_at` kinds,
 permissions and the sandbox, every SDK module, the author loop offline and
 in-game, and the two conflict policies. README gains the Lua sections.
 
 - AC: a mod author can write, check and ship a mod from the docs alone; every
   command and output shown is real.
 - Result: examples are transcripts of actual runs against the installed
-  `regulation.bin`, not sketches — including the four refusals (event mod,
+  `regulation.bin`, not sketches, including the four refusals (event mod,
   sandbox escape, budget overrun, conflict), which differ in wording from the
   scoping doc's guesses.
 
@@ -221,26 +221,27 @@ in-game, and the two conflict policies. README gains the Lua sections.
 ### T17. The container the game accepts ✅
 
 The engine's regulation redirect (E7 in the engine repo) delivered `apply`
-output to a running game for the first time, and the game died on it —
-exit `0xC0000005` a moment after the read — while a byte-identical copy of the
-stock file through the same redirect booted. `ermod unpack` accepted every
+output to a running game for the first time, and the game died on it,
+exiting `0xC0000005` a moment after the read, while a byte-identical copy of
+the stock file through the same redirect booted. `ermod unpack` accepted every
 artifact, so the fault was in what our writer emits and our reader forgives.
 
 The obvious differences from the shipped file were removed one at a time
 (random IV → zero IV; one-shot zstd → streaming, no content size; 128 KiB →
 64 KiB blocks; padding; even the file size padded to the byte) and every
 variant died the same way, including a repack of the *unmodified* payload.
-The engine's new crash log relayed the game's own panic — `DLRegularHeap.cpp
-(710): given memory block seems to be improper or freed already` — and the
+The engine's new crash log relayed the game's own panic, `DLRegularHeap.cpp
+(710): given memory block seems to be improper or freed already`, and the
 exe named the decoder, `DLCM::Zstd::ZstdDecompressionStream`. **It keeps
 64 KiB of history.** The shipped frame declares a 64 MiB window but never
 reaches back that far; ours did, at every level. `windowLog` 16 booted the
 game at once.
 
 `dcx.pack` now writes: zero IV, no content-size field, no checksum,
-`windowLog` 16, a flush every 64 KiB (825 blocks + terminator, like stock),
-block splitters off, level 19. ~2.08 MB for the stock payload against the
-shipped 2.04 MB. Deterministic. Tests pin the frame header and the block bound.
+`windowLog` 16, a flush every 64 KiB (825 blocks plus terminator, like stock),
+block splitters off, level 19. That is ~2.08 MB for the stock payload against
+the shipped 2.04 MB. Deterministic. Tests pin the frame header and the block
+bound.
 
 - AC: `apply` output boots through the engine's redirect and the runtime
   reads the modded value from the live table.
@@ -250,8 +251,8 @@ shipped 2.04 MB. Deterministic. Tests pin the frame header and the block bound.
 
 The `level60` artifact through the engine's `--regulation` redirect: game
 boots, live table reads `soulLv=60` for row 3000 with no mods loaded (T17).
-Mod Engine 2 route (`docs/deploy.md`) not separately re-run — the file is the
-same file.
+The Mod Engine 2 route (`docs/deploy.md`) was not separately re-run, because
+the file is the same file.
 
 - AC: same save, creation screen at level 60, vanilla install untouched.
 
@@ -259,13 +260,13 @@ same file.
 
 ## Backlog / stretch (not scheduled)
 
-- **Physical chest near spawn** — route 2: `.msb` map edit + `ItemLotParam_map` +
+- **Physical chest near spawn**, route 2: `.msb` map edit plus `ItemLotParam_map` plus
   possibly EMEVD. Needs two new format modules; research task first.
-- **NPC healer** — research spike: what exists in params alone (SpEffect auras,
-  summon-style NPC via existing params) vs. what needs ESD/EMEVD/HKS scripting; write
-  findings to `docs/npc-healer.md` before any implementation.
-- **Seamless Co-op interplay** — verify param mods load under the co-op launcher
-  (it has its own mod-folder mechanism); document what works. Player cap / respawn
+- **NPC healer**, a research spike: what exists in params alone (SpEffect auras,
+  summon-style NPC via existing params) against what needs ESD/EMEVD/HKS scripting.
+  Write findings to `docs/npc-healer.md` before any implementation.
+- **Seamless Co-op interplay.** Verify param mods load under the co-op launcher
+  (it has its own mod-folder mechanism); document what works. Player cap and respawn
   fixes remain upstream issues, out of scope here.
-- **Latency/party overlay** — separate project (DLL injection, Windows/Proton),
+- **Latency/party overlay**, a separate project (DLL injection, Windows/Proton),
   intentionally not part of this pipeline.

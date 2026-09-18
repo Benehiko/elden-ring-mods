@@ -1,7 +1,7 @@
 -- Example: react to something happening in the game.
 --
 -- An `events` mod gets a `setup` call instead of `on_launch`, and subscribes
--- to named events from there. Handlers receive a typed payload — here the
+-- to named events from there. Handlers receive a typed payload; here the
 -- amount of runes picked up.
 --
 -- State lives in a local upvalue. Each mod runs in its own VM, so this

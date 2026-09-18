@@ -1,7 +1,7 @@
 #!/bin/sh
 # Thin pre-commit dispatcher: fast checks only. Full checks run in CI.
 #
-# This repository has no toolchain and nothing to build (E15) — it publishes
+# This repository has no toolchain and nothing to build (E15). It publishes
 # the SDK stubs, the examples, the paramdefs and the docs. So the only fast
 # check worth a hook is that a staged example is still valid Lua.
 set -e

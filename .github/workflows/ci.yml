@@ -5,8 +5,8 @@ on:
     branches: [main]
   pull_request:
 
-# This repository builds nothing (E15): the executable half — the Lua VM, the
-# SDK bindings and the param pipeline — lives in the engine repository, and
+# This repository builds nothing (E15): the executable half, the Lua VM, the
+# SDK bindings and the param pipeline, lives in the engine repository, and
 # what is published here is the surface a mod author writes against. So CI
 # checks the two things that can still go wrong: an example that would no
 # longer load, and a generator whose committed output has drifted from its
@@ -14,8 +14,8 @@ on:
 
 jobs:
   # Every example must be a well-formed Lua chunk. This is weaker than the
-  # engine's `dev check` — which loads each one through the real sandbox and
-  # manifest rules — but it needs no engine build, and it catches the mistake
+  # engine's `dev check`, which loads each one through the real sandbox and
+  # manifest rules, but it needs no engine build, and it catches the mistake
   # that actually happens when editing published examples: a syntax error.
   # The engine additionally asserts that its copy of these files is
   # byte-identical to this one (`ermod-engine dev check --examples`).

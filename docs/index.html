@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ermod-engine — Elden Ring mods on Linux and macOS</title>
+<meta name="description" content="A mod loader for Elden Ring on Linux and macOS. Lua mods that run in the live game, a modded regulation.bin without ModEngine, and the game install is only ever read.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip" href="#download">Skip to download</a>
+
+<header class="masthead">
+  <p class="wordmark">ermod-engine</p>
+  <nav>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">Writing mods</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1>Elden Ring, modded,<br>on Linux and macOS.</h1>
+
+    <div class="command" role="figure" aria-label="The command that launches the modded game">
+      <span class="prompt" aria-hidden="true">$</span><code>./ermod-engine --mods ~/mods</code>
+    </div>
+
+    <p class="lede">
+      Lua mods that run in the live game, and modded params without ModEngine.
+      No toolchain, no Windows, no installer — and your game install is only
+      ever read.
+    </p>
+
+    <div class="downloads" id="download">
+      <a class="get" href="https://github.com/Benehiko/elden-ring-mods/releases/latest">
+        Download the latest release
+      </a>
+      <p class="hosts">Linux&nbsp;x86-64 and macOS&nbsp;Apple&nbsp;Silicon. Both archives carry the same Windows runtime the game loads.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section class="rules">
+    <h2>Before you play</h2>
+    <p class="section-lede">
+      Modded play means playing with anti-cheat disabled. These three are not
+      fine print.
+    </p>
+
+    <dl>
+      <dt>Put Steam in Offline Mode.</dt>
+      <dd>
+        FromSoftware bans accounts that connect to their servers with a
+        modified game. The engine never starts anti-cheat, but Offline Mode is
+        what stops you or Steam launching the game the ordinary way afterwards
+        with mods still installed.
+      </dd>
+
+      <dt>The engine never touches your install.</dt>
+      <dd>
+        It reads the game directory and writes nothing into it, so Steam's
+        integrity check has nothing to revert. Your own
+        <code>regulation.bin</code> is never overwritten.
+      </dd>
+
+      <dt>Your vanilla save is never played on.</dt>
+      <dd>
+        Mods run against a profile — a separate save the engine creates. It can
+        copy your characters in, reading your save and never writing it.
+      </dd>
+    </dl>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>What it does</h2>
+
+    <p>
+      <b>Lua mods, live.</b> Drop <code>.lua</code> files in the mods directory
+      and they run in the game. Each mod is sandboxed in its own VM with only
+      the modules it declares; one that misbehaves is disabled on the spot and
+      the others carry on. Edit a file while the game runs and it reloads
+      within a second.
+    </p>
+
+    <p>
+      <b>The game's live parameter tables, readable and writable</b> — the same
+      data a <code>regulation.bin</code> holds, edited in the running game.
+      Mods can also draw an in-game overlay, report frame timing, and keep
+      their own settings between sessions.
+    </p>
+
+    <p>
+      <b>A modded <code>regulation.bin</code> without ModEngine.</b> Point the
+      engine at one and the game reads it instead of its own file.
+    </p>
+
+    <p class="aside">
+      On Linux it runs the game under Proton; on macOS, inside a Wine bottle.
+      Either way it launches <code>eldenring.exe</code> directly and never the
+      anti-cheat wrapper, and refuses to run at all while Easy Anti-Cheat is
+      live.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>A mod is one file</h2>
+    <p class="section-lede">
+      This one starts the Vagabond at level 60. Drop it in the mods directory;
+      it loads on the next frame.
+    </p>
+
+<pre><code><span class="k">local</span> mod = {
+  name = <span class="s">"level60"</span>,
+  version = <span class="s">"1.0.0"</span>,
+  run_at = <span class="s">"launch"</span>,
+  permissions = { <span class="s">"params"</span>, <span class="s">"log"</span> },
+}
+
+<span class="k">function</span> mod.on_launch(sdk)
+  <span class="k">local</span> row = sdk.params.row(<span class="s">"CharaInitParam"</span>, <span class="n">3000</span>)
+  row.soulLv = <span class="n">60</span>
+<span class="k">end</span>
+
+<span class="k">return</span> mod</code></pre>
+
+    <p>
+      <code>permissions</code> is the whole of what a mod can reach: a module
+      not listed is absent from the <code>sdk</code> table it receives, so it
+      cannot be called rather than merely refused. Ten worked examples and the
+      full reference are in
+      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">the scripting guide</a>.
+    </p>
+  </section>
+
+  <hr>
+
+  <section class="verify">
+    <h2>Checking the download is ours</h2>
+    <p class="section-lede">
+      Every release is signed. The signature covers <code>SHA256SUMS</code>,
+      which pins each archive by hash, and travels as a Sigstore bundle
+      alongside it.
+    </p>
+
+<pre><code>sha256sum -c SHA256SUMS
+
+cosign verify-blob SHA256SUMS \
+  --bundle SHA256SUMS.sigstore.json \
+  --certificate-identity 18033717+Benehiko@users.noreply.github.com \
+  --certificate-oidc-issuer https://github.com/login/oauth</code></pre>
+
+    <p>
+      Signing is keyless, so there is no private key to leak: the certificate
+      records the identity that signed and is logged publicly in Sigstore's
+      transparency log.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>When the game updates</h2>
+    <p>
+      The engine is keyed to exact game builds. On one it does not recognise it
+      says so, disables every hook and lets the vanilla game run — it never
+      guesses. <code>ermod-engine check-build</code> answers why, and a newer
+      release is the fix.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    The engine is closed source; this repository publishes the SDK stubs, the
+    examples and the param definitions a mod is written against.
+    Not affiliated with FromSoftware or Bandai Namco.
+  </p>
+  <nav>
+    <a href="https://github.com/Benehiko/elden-ring-mods/releases/latest">Releases</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</footer>
+
+</body>
+</html>

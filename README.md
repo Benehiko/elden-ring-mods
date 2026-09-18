@@ -193,10 +193,12 @@ The examples are also the engine's test corpus, and `ermod-engine dev check
 
 ## Safety
 
-Modded play must stay offline; the engine launches the game with Easy Anti-Cheat
-absent, running `eldenring.exe` directly rather than the protected launcher. Loading a
-modified `regulation.bin` while connected to FromSoftware's servers risks a ban. This
-repository contains no game data and no executable code.
+The engine launches the game with Easy Anti-Cheat absent, running
+`eldenring.exe` directly rather than the protected launcher. Multiplayer runs
+through anti-cheat, so a modded session never reaches FromSoftware's servers
+and Steam needs no Offline Mode. What risks a ban is the protected launcher:
+loading a modified `regulation.bin` through it connects to those servers with
+a modified game. This repository contains no game data and no executable code.
 
 ## Licence
 

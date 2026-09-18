@@ -1,10 +1,12 @@
 # Deploying the mod (Linux / Proton)
 
-> **Modded play must stay offline.** The engine launches the game with Easy
-> Anti-Cheat absent — it runs `eldenring.exe` directly, never
-> `start_protected_game.exe`. Never load a modified `regulation.bin` through
-> the normal Steam launcher while connected to FromSoftware's servers — that
-> risks a ban.
+> **Modded sessions are offline by construction.** The engine launches the
+> game with Easy Anti-Cheat absent — it runs `eldenring.exe` directly, never
+> `start_protected_game.exe` — and multiplayer runs through anti-cheat, so a
+> modded session never reaches FromSoftware's servers. Steam itself can stay
+> online. What risks a ban is the normal Steam launcher: never leave a
+> modified `regulation.bin` installed over the game's own, because that
+> launch starts anti-cheat and connects with a modified game.
 
 ## 1. Build the modded regulation
 

@@ -11,17 +11,21 @@ Anti-Cheat and loads mods into it. It never writes to the game install.
 
 ## Before you start
 
-**Put Steam in Offline Mode.** Steam → menu → *Go Offline*.
+**You do not need Steam in Offline Mode.** Elden Ring's multiplayer runs
+through Easy Anti-Cheat, and the engine never starts it, so a modded session
+cannot reach FromSoftware's servers. Leave Steam online.
 
-Modded play means playing with anti-cheat disabled, and FromSoftware bans
-accounts that connect to their servers with a modified game.
+The engine launches `eldenring.exe` directly and never
+`start_protected_game.exe`, refuses to run at all while Easy Anti-Cheat is
+live, and re-checks from inside the game before enabling anything — no bypass
+flag, in either place.
 
-The engine never starts anti-cheat: it launches `eldenring.exe` directly and
-never `start_protected_game.exe`, refuses to run at all while Easy Anti-Cheat
-is live, and re-checks from inside the game before enabling anything — no
-bypass flag, in either place. What that does *not* cover is you (or Steam)
-launching the game the normal way afterwards, with mods still installed.
-Offline Mode is what closes that door, which is why it goes first.
+What that does *not* cover is the other direction: launching the game the
+normal way afterwards with a modified `regulation.bin` still in place. That
+starts anti-cheat, and you are online with a modified game. Keep your modded
+file somewhere of your own and point the engine at it with `--regulation`
+rather than copying it over the game's own — then the ordinary launch is
+vanilla and there is nothing to forget.
 
 You also need:
 

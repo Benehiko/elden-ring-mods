@@ -2,7 +2,7 @@
 
 Mods for Elden Ring on Linux, written in Lua, that run in the live game.
 
-This repository is what a mod author writes *against*: the SDK stubs, ten
+This repository is what a mod author writes *against*: the SDK stubs, eleven
 worked examples, the scripting reference, and the param field definitions.
 It builds nothing. The engine that runs mods is a separate, closed-source
 project, published on the [Releases](../../releases) page.

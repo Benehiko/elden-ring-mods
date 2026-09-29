@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"boss_spectate"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -16,6 +16,7 @@
 ---@field store ermod.sdk.store?
 ---@field ui ermod.sdk.ui?
 ---@field screen ermod.sdk.screen?
+---@field rules ermod.sdk.rules? # present when a rule permission is held
 
 ---The table a mod script returns.
 ---@class ermod.mod
@@ -23,6 +24,7 @@
 ---@field version string
 ---@field run_at ermod.run_at
 ---@field permissions ermod.permission[]
+---@field mods string[]? # makes this mod a pack: the manifest names of its members, which take precedence over standalone mods
 ---@field on_launch fun(sdk: ermod.sdk)? # run_at = "launch": runs once at load (and on hot-reload)
 ---@field setup fun(sdk: ermod.sdk)?     # run_at = "events": registers handlers with sdk.hooks
 
@@ -237,3 +239,10 @@ local screen = {}
 ---@return string? path
 ---@return string? reason
 function screen.capture(name, scale) end
+
+---Engine-wide game rules. Present when the manifest holds a rule
+---permission. Every rule is readable; setting one needs the permission
+---of the same name and works only from the entry point. A mod pack's
+---value wins over a standalone mod's.
+---@class ermod.sdk.rules
+---@field boss_spectate boolean # fog-wall bosses: a dead peer watches a survivor instead of respawning (default true)

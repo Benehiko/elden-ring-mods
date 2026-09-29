@@ -51,7 +51,8 @@ function is its entry point.
 | `name` | Identity. Appears in every log line (`mod[level60] info: …`) and owns the mod's param writes in the conflict ledger. |
 | `version` | Free-form string; carried, not interpreted. |
 | `run_at` | `"launch"` or `"events"`, which decides when the engine runs it (below). |
-| `permissions` | The SDK modules it may touch. This list is the whole of what the mod can reach. |
+| `permissions` | The SDK modules it may touch, and the game rules it may set. This list is the whole of what the mod can reach. |
+| `mods` | Optional. The names of other mods, which makes this mod a [mod pack](#mod-packs). |
 
 The manifest is parsed strictly. A `run_at` that is not one of the two names,
 a permission that is not a real module, a missing field, or a manifest whose
@@ -115,6 +116,10 @@ mod cannot draw, and cannot be made to draw by a bug.
 
 The seven modules are `log`, `hooks`, `params`, `perf`, `store`, `ui` and
 `screen`. What each offers is in [Modules](#modules) below.
+
+Each game rule is a permission too, named after the rule. Holding any rule
+permission puts `sdk.rules` on the table; setting a rule needs that rule's
+own permission. The only rule so far is `boss_spectate`.
 
 Around that, the VM itself is narrow. Only `base`, `table`, `string` and
 `math` are opened. `io`, `os`, `package` and `debug` never are, and the
@@ -246,6 +251,22 @@ is the engine reading back its own swapchain, so what you get is exactly what
 the game presented. Pair it with `ermod-engine dev img` to turn a capture into numbers a
 test can assert on; see [frame captures](#frame-captures).
 
+### `rules`
+
+Engine-wide game rules, read and set as fields: `sdk.rules.boss_spectate =
+false`. Any rule can be read. Setting one needs the permission of the same
+name, takes a boolean, and works only from the entry point. An unknown name
+is an error.
+
+| Rule | Default | Meaning |
+| --- | --- | --- |
+| `boss_spectate` | `true` | In a fog-wall boss fight, a player who dies while a teammate lives is held and watches a survivor. Off, they respawn at the grace. |
+
+A rule set by a mod returns to its default when the mod is unloaded or
+switched off. Rules exist only in the running game; `apply` has nowhere to
+write one, so offline a rule reads as its default and setting it does
+nothing.
+
 ## The author loop
 
 ### Offline
@@ -369,15 +390,64 @@ ermod: refusing to pack; resolve the overlap or apply one mod at a time (1 confl
 A half-patched archive is worse than none, so every refusal exits 1 having
 written nothing: an event mod, a sandbox escape, a budget overrun, a conflict.
 
-**In-game it is a warning.** The later write wins and the overlap is logged.
-That is deliberate: a hot-reloaded mod rewrites its own fields every reload,
-and a warning is the honest report of something a player can still act on
-mid-session.
+**In-game it is checked before anything lands.** The engine runs each mod's
+entry point with its param and rule writes held back. The mod reads back what
+it wrote, so it behaves as it would for real, but the game sees nothing yet.
+When every mod has run, the engine compares what they want and applies only
+what passes:
 
-Ownership is keyed by **mod name**, so two mods sharing a name are treated as
-one and never conflict. That is what makes hot reload quiet, and it is why
-`level60.lua` and the built-in `level60` spec, same name and same 90 fields,
-can be applied together.
+| Two mods set one thing to different values | Result |
+| --- | --- |
+| both standalone | neither loads |
+| both in mod packs, different packs | neither pack loads, nor their members |
+| one in a pack, one standalone | the pack's value lands; the standalone mod loads without that write |
+| the same mod, or the same pack | no conflict; the pack's own script has the last word |
+
+The same value from two mods is never a conflict. A mod already running keeps
+its place: a mod added or edited later that disagrees with it is the one
+refused, and an edited mod that is refused keeps its previous version
+running. Every refusal names both mods, the setting and both values:
+
+```
+mod[engine] warn: b.lua not loaded: it sets rule boss_spectate to true, but a.lua (already running) sets it to false
+```
+
+The check can only see writes made before it runs, so configuration is
+locked once the entry point returns. A `params` or `rules` write from an
+event handler is an error. A mod whose entry point errors lands none of its
+writes.
+
+A mod edited in place is compared as itself, so hot reload never conflicts
+with the version it replaces.
+
+## Mod packs
+
+A mod whose manifest lists `mods` is a mod pack:
+
+```lua
+local pack = {
+  name = "boss-rules-pack", version = "1.0.0", run_at = "launch",
+  permissions = { "boss_spectate", "log" },
+  mods = { "level60" },
+}
+
+function pack.on_launch(sdk)
+  sdk.rules.boss_spectate = false
+end
+
+return pack
+```
+
+Members are named by their manifest `name` and are ordinary mods in the same
+mods directory, each with its own permissions. A pack does not stop other
+mods from loading. It decides the settings it and its members make: against
+a standalone mod the pack's value lands (see [Conflicts](#conflicts)).
+
+A pack loads whole or not at all. A member refused for a conflict refuses
+its pack, and a refused pack refuses its members. A pack that lists a mod
+which is not loaded says so in the log and loads anyway. Within a pack,
+members commit first and the pack's own script last, so a setting both make
+ends at the pack's value and is judged by it.
 
 ## Editor setup
 
@@ -396,6 +466,7 @@ Regenerated by the engine (`make stubs` there) after an SDK change; `make check-
 working code, and the loader's own test corpus: `level60.lua` (params, the
 reference gameplay mod and the offline golden test's subject),
 `rune_counter.lua` (hooks and per-mod state), `settings.lua` (ui plus store),
-`perf_monitor.lua` (ui plus perf), `overlay.lua` (ui plus hooks), and
+`perf_monitor.lua` (ui plus perf), `overlay.lua` (ui plus hooks),
+`boss_rules_pack.lua` (a mod pack setting a game rule), and
 `bad_sandbox.lua`, which exists to be refused. The reading order is in
 [`examples/README.md`](../examples/README.md).

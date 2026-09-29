@@ -93,7 +93,7 @@ is absent from `sdk` entirely, so it cannot be reached rather than merely
 refused. Field names are the paramdef's own (`soulLv`, `baseVit`, …), and
 `.param` on a file name is optional.
 
-The same file also runs offline: `ermod-engine apply` writes it into a
+The same file also runs offline: `ermod-engine mod bake` writes it into a
 `regulation.bin`, so a mod can ship as a file rather than as a script. Only
 launch mods run offline, and two mods writing one field is an error there;
 the scripting guide has the rules.
@@ -112,17 +112,17 @@ Start with [`hello_launch.lua`](examples/hello_launch.lua); the
 
 The commands that check a mod are part of the engine, because they run the
 game's own front end on the host: the same loader, sandbox, manifest rules,
-instruction budget and SDK modules. So "passes `check`" means "would load
-in-game", and `perf`'s numbers come from the real dispatcher rather than an
+instruction budget and SDK modules. So "passes `mod check`" means "would load
+in-game", and `mod perf`'s numbers come from the real dispatcher rather than an
 estimate.
 
 ```sh
-ermod-engine check my_mod.lua other_mod.lua   # syntax, manifest, permissions, entry point
-ermod-engine perf  my_mod.lua                 # synthetic session; cost per event
-ermod-engine apply <regulation.bin> <out.bin> <mod>...
+ermod-engine mod check my_mod.lua other_mod.lua   # syntax, manifest, permissions, entry point
+ermod-engine mod perf  my_mod.lua                 # synthetic session; cost per event
+ermod-engine mod bake <regulation.bin> <out.bin> <mod>...
 ```
 
-`check` prints one line per mod and exits 1 if any would fail to load, so it
+`mod check` prints one line per mod and exits 1 if any would fail to load, so it
 drops straight into a pre-commit hook or CI. `ermod-engine --help` lists
 every command.
 

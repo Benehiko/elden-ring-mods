@@ -12,7 +12,7 @@ Two halves, one mod format:
 - **In-game.** The engine injects a runtime into the running game, which
   loads `.lua` mods, hooks events, and reads and writes the game's live PARAM
   tables. Edit a mod and it reloads within a second.
-- **Offline.** `ermod-engine apply` runs the *same* Lua mod against an
+- **Offline.** `ermod-engine mod bake` runs the *same* Lua mod against an
   unpacked `regulation.bin` on the host and writes a modded copy. The engine
   can load that copy directly, so no ModEngine is required.
 
@@ -122,14 +122,14 @@ fields and file entries we don't edit are copied through unchanged.
 ## The author commands
 
 ```
-ermod-engine check <mod.lua>...                                # would each mod load in-game?
-ermod-engine perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
-ermod-engine apply <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
+ermod-engine mod check <mod.lua>...                                # would each mod load in-game?
+ermod-engine mod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
+ermod-engine mod bake <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
                                                                # built-in spec name or a
                                                                # .lua launch mod path
 ```
 
-`ermod-engine apply` is the offline command: it reads the game's
+`ermod-engine mod bake` is the offline command: it reads the game's
 `regulation.bin`, applies the named mods (built-in specs or `.lua` files), and
 writes a modded copy that the engine loads with `ermod-engine --regulation`.
 `ermod-engine --help` lists every command.
@@ -140,7 +140,7 @@ A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
 launch mod; the two can be mixed on one command line:
 
 ```
-ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
+ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
 ```
 
 The Lua mod runs through the same loader, manifest validation, sandbox and
@@ -155,7 +155,7 @@ one code path, two backends.
 Everything else on the `Host` vtable is unavailable offline and says so. There
 is no frame to draw an overlay on, no session to measure, no game to persist a
 store for. [scripting.md](scripting.md) lists what that means for a mod:
-which mods `apply` accepts, what it refuses, and how it treats two mods
+which mods `mod bake` accepts, what it refuses, and how it treats two mods
 writing one field.
 
 Both halves feed one write ledger keyed by `(table, row, field)`, including
@@ -306,7 +306,7 @@ nothing to revert.
 ### Mod Engine 2 (legacy, untested)
 
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is archived upstream.
-An `ermod-engine apply` artifact is an ordinary modded `regulation.bin`, so it can
+An `ermod-engine mod bake` artifact is an ordinary modded `regulation.bin`, so it can
 load one, but it has no runtime in the game, meaning no `.lua` mods, no live
 params, no hot reload and no overlay. We do not test this route against
 current game builds. [deploy.md](deploy.md) documents it in an appendix for

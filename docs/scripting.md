@@ -1,6 +1,6 @@
 # Writing mods in Lua
 
-A mod is one Lua file. The same file runs two ways: `ermod-engine apply` executes it
+A mod is one Lua file. The same file runs two ways: `ermod-engine mod bake` executes it
 on the host and writes a patched `regulation.bin` the engine loads with
 `--regulation`, and the engine executes it inside the running game, where the writes land in live
 memory. That is the promise the engine is built around, **author live, ship
@@ -34,11 +34,11 @@ Run it against your install:
 ```sh
 GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
 mkdir -p mod
-ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
+ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 ```
 
 The game's file is read, never written. Everything lands in the output copy,
-which the engine loads with `--regulation`. `apply` does not create the output
+which the engine loads with `--regulation`. `mod bake` does not create the output
 directory, hence the `mkdir`. See [deploy.md](deploy.md).
 
 ## Anatomy
@@ -63,7 +63,7 @@ is a packaging mistake worth catching before the game starts.
 ### `run_at = "launch"`, entry point `on_launch(sdk)`
 
 Runs once, at load. This is the kind of mod that edits data: params in,
-params out, done. It is the only kind `ermod-engine apply` accepts, because it is
+params out, done. It is the only kind `ermod-engine mod bake` accepts, because it is
 the only kind that means anything without a game running.
 
 In-game, "at load" means the first rendered frame after the game's param
@@ -95,11 +95,11 @@ end
 return mod
 ```
 
-Event mods are **in-game only**. `ermod-engine apply` refuses one rather than
+Event mods are **in-game only**. `ermod-engine mod bake` refuses one rather than
 silently doing nothing, because offline there is nothing to fire:
 
 ```
-apply: examples/rune_counter.lua is an event mod (events); event mods run in-game only
+bake: examples/rune_counter.lua is an event mod (events); event mods run in-game only
 ```
 
 State kept in an upvalue (`total` above) is private to that mod. Each mod
@@ -132,7 +132,7 @@ exactly as it would in your session, at the same line:
 
 ```
 mod[bad-sandbox] err: bad_sandbox.lua:19: attempt to index a nil value (global 'os')
-apply: examples/bad_sandbox.lua errored in on_launch (RuntimeError)
+bake: examples/bad_sandbox.lua errored in on_launch (RuntimeError)
 ```
 
 ### Budgets and strikes
@@ -147,7 +147,7 @@ disabled mod stops receiving events and says so once in the log. The other
 mods are unaffected.
 
 Offline the same model applies, so a mod too slow to finish `on_launch`
-in-game is refused by `apply` rather than shipping.
+in-game is refused by `mod bake` rather than shipping.
 
 ## Modules
 
@@ -203,7 +203,7 @@ error at subscribe time, not a handler that never fires.
 
 `on_present` runs on the render thread, once per frame. It is the budget's
 sharpest edge: whatever it does is paid every frame, so measure it with
-`ermod-engine perf` before shipping.
+`ermod-engine mod perf` before shipping.
 
 ### `ui`
 
@@ -262,7 +262,7 @@ is an error.
 | `boss_spectate` | `true` | In a fog-wall boss fight, a player who dies while a teammate lives is held and watches a survivor. Off, they respawn at the grace. |
 
 A rule set by a mod returns to its default when the mod is unloaded or
-switched off. Rules exist only in the running game; `apply` has nowhere to
+switched off. Rules exist only in the running game; `mod bake` has nowhere to
 write one, so offline a rule reads as its default and setting it does
 nothing.
 
@@ -271,14 +271,14 @@ nothing.
 ### Offline
 
 ```sh
-ermod-engine check my_mod.lua                    # would it load in-game?
-ermod-engine perf  my_mod.lua                    # what does it cost per event?
+ermod-engine mod check my_mod.lua                    # would it load in-game?
+ermod-engine mod perf  my_mod.lua                    # what does it cost per event?
 mkdir -p mod
-ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
+ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 ```
 
-`check` runs the game's own loader, sandbox and manifest rules on the host,
-so "passes `check`" means "would load in-game". It prints one line per mod
+`mod check` runs the game's own loader, sandbox and manifest rules on the host,
+so "passes `mod check`" means "would load in-game". It prints one line per mod
 and exits 1 if any would fail, which makes it a pre-commit hook:
 
 ```
@@ -286,15 +286,15 @@ examples/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions
 examples/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
 ```
 
-`check` answers "would it *load*", not "does it work". `bad_sandbox.lua`
-passes `check` and then fails at the first line of its entry point, which is
+`mod check` answers "would it *load*", not "does it work". `bad_sandbox.lua`
+passes `mod check` and then fails at the first line of its entry point, which is
 the distinction.
 
-`perf` fires a synthetic session against the real budget model and the real
+`mod perf` fires a synthetic session against the real budget model and the real
 dispatcher:
 
 ```
-$ ermod-engine perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
+$ ermod-engine mod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
 examples/overlay.lua: hud-overlay (events mod) — synthetic session: 120 frames, 5 rune pickups, 1 deaths
 host pre-flight: no live params (params calls fail as they do before the tables load), recording overlay, in-memory store
 
@@ -317,7 +317,7 @@ and `on_launch` runs against the unpacked archive, so launch mods get an
 honest number too:
 
 ```
-$ ermod-engine perf examples/level60.lua --regulation "$GAME/regulation.bin"
+$ ermod-engine mod perf examples/level60.lua --regulation "$GAME/regulation.bin"
 examples/level60.lua: level60 (launch mod) — synthetic session: 600 frames, 10 rune pickups, 1 deaths
 host pre-flight: params from /home/you/.local/share/Steam/steamapps/common/ELDEN RING/Game/regulation.bin (unpacked, never written back), recording overlay, in-memory store
 
@@ -333,17 +333,17 @@ worst on_present frame cost 0.0006 ms = 0.00% of a 60 fps frame
 strikes 0/3; mod still active at end of session
 ```
 
-Nothing is written back; `perf` never produces a file.
+Nothing is written back; `mod perf` never produces a file.
 
-`apply` is the real run. Its log is the mod's own:
+`mod bake` is the real run. Its log is the mod's own:
 
 ```
-$ ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
+$ ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 mod[level60] info: Vagabond: level 9 -> 60
 …
 mod[level60] info: Wretch: level 1 -> 60
 mod[level60] info: level60 applied to 10/10 classes
-apply: 90 Lua field write(s) from 1 mod(s)
+bake: 90 Lua field write(s) from 1 mod(s)
 applied 0 spec patch(es) across 0 param(s) -> mod/regulation.bin (1910224 bytes)
 ```
 
@@ -391,12 +391,12 @@ Every param write is recorded as `(mod, table, row, field)`. When two
 you are:
 
 **Offline it is an error.** The file a player loads must not depend on the
-order two mods were listed in, so `apply` names both mods and the field,
+order two mods were listed in, so `mod bake` names both mods and the field,
 refuses to pack, and writes no output file:
 
 ```
-apply: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already written by level60
-apply: refusing to pack; resolve the overlap or apply one mod at a time (1 conflicting write(s))
+bake: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already written by level60
+bake: refusing to pack; resolve the overlap or bake one mod at a time (1 conflicting write(s))
 ```
 
 A half-patched archive is worse than none, so every refusal exits 1 having

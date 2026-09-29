@@ -9,10 +9,10 @@
 ```sh
 GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
 mkdir -p mod
-ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
+ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
 ```
 
-`apply` does not create the output directory, hence the `mkdir`.
+`mod bake` does not create the output directory, hence the `mkdir`.
 `ermod-engine paths` prints the game directory if yours differs; on macOS
 it is inside the Wine bottle.
 
@@ -56,12 +56,12 @@ ermod-runtime: regulation redirect — game's regulation.bin -> C:\ermod\regulat
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is **archived
 upstream** and is not required by anything here. It is documented only because
 some players already run it for other mods, and a `regulation.bin` produced by
-`ermod-engine apply` is an ordinary file it can load.
+`ermod-engine mod bake` is an ordinary file it can load.
 
 Two limitations worth knowing before choosing this route:
 
 - **It cannot run `.lua` mods.** It has no runtime inside the game, so it
-  loads only what `apply` baked into the file: no live params, no hot
+  loads only what `mod bake` wrote into the file: no live params, no hot
   reload, no overlay, no events.
 - **We do not test it.** The Mod Engine 2 route has never been booted
   against a current game build here. If it breaks on a game patch, upstream

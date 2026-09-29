@@ -226,7 +226,7 @@ covers writing your own.
 ## 4. Or load a modded regulation
 
 Some mods are not scripts but a modified `regulation.bin`, built by
-`ermod-engine apply` (see
+`ermod-engine mod bake` (see
 [deploy.md](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/deploy.md)).
 The engine loads one directly:
 

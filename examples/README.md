@@ -20,12 +20,12 @@ what it teaches and what to try.
 
 | Example | What it teaches |
 | --- | --- |
-| [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod-engine apply` path |
+| [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod-engine mod bake` path |
 | [`double_runes.lua`](double_runes.lua) | `sdk.params.rows` over a whole PARAM table |
 | [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, a rule permission, `sdk.rules`, and precedence over standalone mods |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
-passes `check`, but its entry point fails with "unknown param file" in the
+passes `mod check`, but its entry point fails with "unknown param file" in the
 game and offline alike: read it for the shape. `level60` runs both ways,
 offline against `regulation.bin` and live against the game's own param
 tables.
@@ -59,18 +59,18 @@ which is the point.
 
 ```sh
 # check every example the way the game loads it
-ermod-engine check examples/*.lua
+ermod-engine mod check examples/*.lua
 
 # run one against a synthetic session and report handler cost
-ermod-engine perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
+ermod-engine mod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
 
-# apply a params mod offline, producing a modded regulation.bin
+# bake a params mod offline, producing a modded regulation.bin
 mkdir -p mod
-ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
+ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 ```
 
-`ermod-engine check` passes on all eleven, `bad_sandbox` and `double_runes`
-included: `check` asks whether a mod *loads*, and both fail only when their
+`ermod-engine mod check` passes on all eleven, `bad_sandbox` and `double_runes`
+included: `mod check` asks whether a mod *loads*, and both fail only when their
 entry point runs.
 
 [`docs/scripting.md`](../docs/scripting.md) is the full author-facing

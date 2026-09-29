@@ -14,7 +14,7 @@ on:
 
 jobs:
   # Every example must be a well-formed Lua chunk. This is weaker than
-  # `ermod-engine check`, which loads each one through the real sandbox and
+  # `ermod-engine mod check`, which loads each one through the real sandbox and
   # manifest rules, but it needs no engine build, and it catches the mistake
   # that actually happens when editing published examples: a syntax error.
   # The engine additionally asserts that its copy of these files is

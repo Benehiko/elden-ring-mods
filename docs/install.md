@@ -77,6 +77,9 @@ Proton it names.
 - **Apple Silicon.** The archive's `ermod-engine` is a native arm64 binary.
   The game and the engine's runtime are x86-64 Windows code, which your
   Wine runs through Rosetta 2, as it does for the game alone.
+- **Gatekeeper will refuse the first run** of a browser download, because the
+  engine is not notarized by Apple. Check the download, then clear the
+  quarantine: see [On macOS: clear the quarantine](#on-macos-clear-the-quarantine).
 
 A few things differ on macOS. The settings window is not built yet, so
 `ermod-engine settings` prints the equivalent commands, and the first-launch
@@ -92,7 +95,44 @@ prefix on Linux, the bottle on macOS) and the engine's own data directory.
 
 Releases are published on the
 [Releases page](https://github.com/Benehiko/elden-ring-mods/releases). Each
-archive is named for the engine version and your machine:
+archive is named for the engine version and your machine. Download yours, and
+beside it `SHA256SUMS` and `SHA256SUMS.sigstore.json`, into one directory.
+
+### Check the download is ours
+
+Every release is signed. The signature covers `SHA256SUMS`, which pins each
+archive by hash. Run these two steps from the download directory, **in this
+order**, before you unpack anything.
+
+**1. Check the signature over the checksums.** Install
+[cosign](https://docs.sigstore.dev/cosign/system_config/installation/) (on a
+Mac: `brew install cosign`; on Linux: your distribution's package, or a binary
+from cosign's releases page), then:
+
+```sh
+cosign verify-blob SHA256SUMS \
+  --bundle SHA256SUMS.sigstore.json \
+  --certificate-identity 18033717+Benehiko@users.noreply.github.com \
+  --certificate-oidc-issuer https://github.com/login/oauth
+```
+
+It must print `Verified OK`. Anything else means `SHA256SUMS` was not signed by
+us: stop, and do not run anything from the download.
+
+**2. Check your archive against the checksums.**
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS            # Linux
+shasum -a 256 --ignore-missing -c SHA256SUMS        # macOS
+```
+
+Your archive must be listed as `OK`. `--ignore-missing` skips the archives
+you did not download.
+
+Step 1 is what makes step 2 mean anything: checksums downloaded from the same
+page as the archive only prove the two agree, not that either came from us.
+
+### Unpack
 
 ```sh
 tar -xzf ermod-engine-<version>-linux-x86_64.tar.gz    # or ...-macos-aarch64.tar.gz
@@ -100,9 +140,29 @@ cd ermod-engine-<version>-linux-x86_64
 ```
 
 Keep the three binaries together. `ermod-engine` is the one you run; it finds
-`ermod-launcher.exe` and `ermod-runtime.dll` beside itself. If you verified
-the download, `sha256sum -c SHA256SUMS` in the directory you downloaded to
-checks it against the release's published sums.
+`ermod-launcher.exe` and `ermod-runtime.dll` beside itself.
+
+### On macOS: clear the quarantine
+
+The macOS `ermod-engine` is signed ad hoc, not with an Apple Developer ID, and
+is not notarized. A web browser marks what it downloads as quarantined, and
+Gatekeeper refuses to run a quarantined binary it cannot trace to a registered
+developer. The message reads *"ermod-engine" cannot be opened because the
+developer cannot be verified*, or, on macOS 15 and later, *Apple could not
+verify "ermod-engine" is free of malware*.
+
+Once you have checked the download (above), clear the quarantine from the
+unpacked directory:
+
+```sh
+xattr -dr com.apple.quarantine ermod-engine-<version>-macos-aarch64
+```
+
+Or, after the first refusal: System Settings → Privacy & Security → scroll to
+the message about `ermod-engine` → **Open Anyway**.
+
+Downloads made with `curl` or `gh release download` are not quarantined and
+need neither step. Linux has no equivalent.
 
 ## 2. Check that it finds your game
 
@@ -423,6 +483,10 @@ again. There is no flag to override this.
 three files are not from the same release, usually an unpack of a new
 archive over an old one. Unpack the new archive into an empty directory
 instead.
+
+**On macOS, "cannot be opened" or "Apple could not verify"** when you run
+`ermod-engine`: Gatekeeper has refused a quarantined download. See
+[On macOS: clear the quarantine](#on-macos-clear-the-quarantine).
 
 **On macOS, a black screen and then the game closes**: turn off the Steam
 overlay in the bottle's Steam (see [macOS](#macos)). **`SteamAPI_Init

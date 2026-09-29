@@ -164,12 +164,20 @@
       alongside it.
     </p>
 
-<pre><code>sha256sum -c SHA256SUMS
-
-cosign verify-blob SHA256SUMS \
+<pre><code>cosign verify-blob SHA256SUMS \
   --bundle SHA256SUMS.sigstore.json \
   --certificate-identity 18033717+Benehiko@users.noreply.github.com \
-  --certificate-oidc-issuer https://github.com/login/oauth</code></pre>
+  --certificate-oidc-issuer https://github.com/login/oauth
+
+sha256sum --ignore-missing -c SHA256SUMS        # macOS: shasum -a 256 --ignore-missing -c SHA256SUMS</code></pre>
+
+    <p>
+      Signature first, then checksums: checksums from the same page as the
+      archive only prove the two agree, not that either came from us.
+      On macOS, Gatekeeper refuses the first run of a browser download; the
+      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#on-macos-clear-the-quarantine">install guide</a>
+      says how to clear it.
+    </p>
 
     <p>
       Signing is keyless, so there is no private key to leak: the certificate

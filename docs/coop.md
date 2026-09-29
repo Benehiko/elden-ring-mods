@@ -1,0 +1,315 @@
+# Playing co-op
+
+This page shows you how to play Elden Ring with friends, with mods, through
+the engine. You type a few commands in a terminal. Every command appears
+below, ready to copy.
+
+1. [What co-op is here](#what-co-op-is-here)
+2. [What you need](#what-you-need)
+3. [Two players, step by step](#two-players-step-by-step)
+4. [Three or more players](#three-or-more-players)
+5. [Mods in co-op](#mods-in-co-op)
+6. [Leaving](#leaving)
+7. [When something does not work](#when-something-does-not-work)
+
+---
+
+## What co-op is here
+
+Two to five players share one world. The game's traffic travels directly
+between your machines, peer to peer. No FromSoftware server takes part, and
+Easy Anti-Cheat never runs. [Before you start](install.md#before-you-start)
+in the install guide has the safety rules; read them first.
+
+**Co-op is new.** Sessions of up to three players have been tested.
+
+**What works**
+
+- **Players.** Each player's character appears and moves in the others' games.
+- **Enemies.** Every player sees and fights the host's enemies, in the same
+  places, and the enemies attack every player.
+- **Fog-wall bosses.** One boss appears on every screen, and every player
+  sees it die. Confirmed on Margit.
+- **Sites of grace.** Host and joiners can rest.
+- **Deaths.** A player who dies respawns and stays in the session, and the
+  others see them again. When the host dies, damaged enemies keep their
+  damage and the time of day does not jump.
+- **Spectating a boss fight.** A player who dies in a fog-wall boss fight
+  watches a survivor instead of respawning. **Page Down** switches between
+  survivors. The dead respawn at the grace when the boss dies or everyone is
+  down.
+
+**What does not work yet**
+
+- **World progress is not shared.** The game records events such as a boss
+  kill as flags, and the engine does not sync flags. A joiner's save does
+  not record a boss the host's world killed.
+- **Torrent.** Riding does not work in a session: the rider is thrown off at
+  once.
+- **Giving up while spectating.** A dead player waits for the fight to end.
+
+## What you need
+
+**Every player needs:**
+
+- **The engine installed.** Follow the [install guide](install.md). The
+  commands below use `./ermod-engine`, typed in the directory you unpacked
+  it into, as the install guide does.
+- **Game build 2.7.0.0.** Co-op works on this build only. To check yours:
+
+  ```sh
+  ./ermod-engine check-build
+  ```
+
+- **The same engine release.** `./ermod-engine --version` prints yours.
+  Compare the first line with your friends'.
+- **A character.** The engine reads your Steam ID from your save, so play
+  once through Steam if you never have.
+
+**These must match between players.** The engine checks the game build
+(above) and game-changing mods ([Mods in co-op](#mods-in-co-op)). It does
+not yet check the rest, so a mismatch shows up as strange behaviour rather
+than a refusal:
+
+- **Shadow of the Erdtree:** every player has it installed, or nobody does.
+- **A modded `regulation.bin`:** every player loads the same file with
+  `--regulation`, or nobody loads one. See [deploy.md](deploy.md#co-op).
+
+**Your machines must reach each other.** Each machine listens on UDP port
+7777, and nothing gets through a home router from the internet (NAT). So the
+machines need a direct path:
+
+- **The same home network (LAN).** This works as it is.
+- **A VPN** such as [Tailscale](https://tailscale.com) or
+  [ZeroTier](https://www.zerotier.com), for friends elsewhere. Everyone
+  joins the same VPN network and uses the VPN's addresses.
+
+If a machine runs a firewall, let in UDP on port 7777:
+
+```sh
+sudo ufw allow 7777/udp                                   # Linux, ufw
+sudo firewall-cmd --add-port=7777/udp --permanent && sudo firewall-cmd --reload   # Linux, firewalld
+```
+
+On macOS, if the system asks whether Wine may accept incoming connections,
+allow it.
+
+**Each player needs a different Steam account.** Two machines signed in to
+one account can still play together: give one of them `--as` and a Steam ID
+that nobody in the session uses, for example `--as 76561198000000009`.
+See [Same Steam ID on two machines](#same-steam-id-on-two-machines).
+
+## Two players, step by step
+
+One player **hosts**; the other **joins**. The host goes first, every time.
+
+### 1. Both players: swap IDs
+
+Both of you run:
+
+```sh
+./ermod-engine coop id
+```
+
+It prints your Steam ID, your addresses, and the line a friend types to join
+you. For example (your numbers will differ):
+
+```
+Steam ID   76561198000000001   (from the folder the game keeps your own save in)
+Address    192.168.1.10   (enp5s0)
+           100.101.102.103   (tailscale0)
+Port       7777 (UDP)
+
+A friend joins you with:
+  ermod-engine coop join 76561198000000001@192.168.1.10
+  ermod-engine coop join 76561198000000001@100.101.102.103
+(the address on the network you share with them)
+Host first: run `ermod-engine coop host`, load into your world, then they join.
+```
+
+The host sends its friend the `coop join` line for the network they share:
+the home network's address (often `192.168.…`), or the VPN's address.
+
+### 2. The host starts
+
+```sh
+./ermod-engine coop host
+```
+
+The game starts. At the title screen, press **Continue** (or load the
+character you want). Once your world loads, the command sets up the session.
+Wait for `you are hosting`. The terminal shows, abridged:
+
+```
+info: coop: your Steam ID is 76561198000000001 (from the folder the game keeps your own save in)
+info: coop: [1/4] launch the game
+info: coop: [2/4] wait for a loaded world: at the title screen, press Continue
+info: coop: the game is at the title screen. Press Continue (or load the character you want to play); the co-op steps follow once you are in the world.
+info: coop: the world is loaded
+info: coop: [3/4] repoint the game's networking at UDP and fabricate the co-op lobby
+info: coop: [4/4] host the session (the game's own CreateSession); joiners announce themselves when they join
+info: coop: you are hosting. Your friends can join now, one at a time: ...
+info: coop: this command ends when the game does.
+```
+
+The host does not type the friend's address. The host's game learns it when
+the friend joins.
+
+### 3. The friend joins
+
+Only after the host sees `you are hosting`, the friend types the line the
+host sent, with `./` in front:
+
+```sh
+./ermod-engine coop join 76561198000000001@192.168.1.10
+```
+
+Press **Continue** at the title screen as the host did. The terminal ends
+with, abridged:
+
+```
+info: coop: [4/4] announce this machine to its peers and join the host's session
+info: coop: joined. The host's world loads for you when the game's own join completes.
+info: coop: this command ends when the game does.
+```
+
+It may also print `the host knows you are here. The join waits until your
+game-changing mods match the host's`. If your mods already match, the join
+starts by itself a moment later. If they differ, see
+[Mods in co-op](#mods-in-co-op).
+
+Leave the terminal open while you play.
+
+### 4. Meet up
+
+The engine does not move anyone to the host. Each player starts where their
+own save left them, and you find each other in the world. Torrent does not
+work in a session, so a long way apart means a long walk. The easy way:
+before a session, have each player rest at the same site of grace and quit
+there. You then start side by side.
+
+## Three or more players
+
+The host still names nobody. Each joiner names the host **and every player
+who joined before it**, in any order after the host. Join one at a time.
+
+```sh
+# Friend 1 joins the host:
+./ermod-engine coop join 76561198000000001@192.168.1.10
+
+# Friend 2 joins the host and names friend 1:
+./ermod-engine coop join 76561198000000001@192.168.1.10 76561198000000002@192.168.1.11
+```
+
+Friend 1 learns friend 2 when friend 2 joins. A session holds at most five
+players: the host and four joiners.
+
+If a player uses a port other than 7777 (`--port`), the others add it to
+that player's address: `76561198000000002@192.168.1.11:7790`.
+
+## Mods in co-op
+
+Mods that **change the game** (a game rule, or a param such as a class's
+starting level) must match between players. Mods that only draw, monitor or
+log may differ.
+
+The host's mods are the session's. A joiner whose game-changing mods differ
+from the host's is held at the door. Open the ermod menu with **`` ` ``**
+(backtick). It lists the host's mods, downloaded for you, each with an
+**Enable** button, and a **Switch off** button for each of yours the host
+does not run. Match the host and you join by yourself. Nothing is written to
+your mods directory until you press **Enable**.
+
+The README's [In the game](../README.md#in-the-game) section has the menu's
+keys and the rest of the detail.
+
+## Leaving
+
+- **Quit the game.** The `coop` command ends when the game does.
+- **Or press Leave** in the co-op section of the ermod menu. It ends co-op
+  in the running game.
+
+The game signs in to co-op once per launch, as it loads your world. To play
+co-op again, quit the game and run `coop host` or `coop join` again.
+
+## When something does not work
+
+The terminal says what went wrong on a line starting `error: coop:`. The
+common cases:
+
+### The joiner started before the host
+
+`coop join` needs a host that is already hosting. A joiner that reaches its
+world first gets no session, and cannot get one later. The terminal says
+the join is waiting, and it waits forever. **Quit the game** on the joiner,
+wait for the host's `you are hosting`, and run `coop join` again.
+
+### Wrong game build
+
+Co-op needs build 2.7.0.0 on every machine. On another build the ermod
+menu's co-op section says `not available for this game build`, and the
+`coop` command stops with an error. Run `./ermod-engine check-build`
+and update the game through Steam.
+
+### Mods do not match
+
+The joiner's terminal says:
+
+```
+info: coop: the host knows you are here. The join waits until your game-changing mods match the host's: open the ermod menu (`), enable the host's mods it lists, and the join starts by itself
+```
+
+The host's menu says `co-op: 1 peer(s) waiting to match your game-changing
+mods`. The joiner enables what the menu lists; see
+[Mods in co-op](#mods-in-co-op). A download that reads `download failed
+(bytes did not match)` did not arrive intact.
+
+### The friend never shows up
+
+The host's menu still says `1 in the lobby`, and no peer waits on mods. The
+host never heard from the friend. Check, in order:
+
+1. The friend typed the host's address on the network they share (`coop id`
+   lists them all), and the ID exactly.
+2. Both machines are on the same LAN or the same VPN network.
+3. No firewall blocks UDP port 7777 on either machine
+   ([What you need](#what-you-need)).
+4. The host was hosting before the friend loaded its world.
+
+Then quit the game on the joiner and run `coop join` again.
+
+### Same Steam ID on two machines
+
+```
+error: coop: two players have the same Steam ID. Two machines on one Steam account must be told apart: run one of them with --as <another SteamID64> (any one nobody here uses).
+```
+
+Add `--as` to one machine's command, and give the others that ID in place of
+its own:
+
+```sh
+./ermod-engine coop join 76561198000000001@192.168.1.10 --as 76561198000000009
+```
+
+### Other messages
+
+| Message | What to do |
+| --- | --- |
+| `the game is already running` | `coop` starts the game itself. Quit the game and run the command again. |
+| `cannot tell this machine's Steam ID` | No save of yours exists yet. Play once through Steam, or give an ID with `--as`. |
+| `a player is <SteamID64>@<a.b.c.d>…` | The ID or address is mistyped. Copy the line `coop id` printed. |
+| `no world within 15 minutes` | The game sat at the title screen. Run the command again and press Continue. |
+| `the game is still running, without co-op` | A step failed; the lines above say which. Quit the game and try again. |
+
+### The logs
+
+```sh
+./ermod-engine paths
+```
+
+prints where the logs are, on the two `log` lines. `ermod-runtime.log`
+records what co-op did in the game; on the host, a line with `learned peer`
+means a friend's join arrived. Include both logs and
+`./ermod-engine --version` in a bug report. The install guide's
+[When something does not work](install.md#when-something-does-not-work)
+covers problems outside co-op.

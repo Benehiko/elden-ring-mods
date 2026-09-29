@@ -1,20 +1,20 @@
-# Deploying the mod (Linux / Proton)
+# Shipping a mod as a regulation.bin
 
-> **Modded sessions are offline by construction.** The engine launches the
-> game with Easy Anti-Cheat absent, running `eldenring.exe` directly, never
-> `start_protected_game.exe`, and multiplayer runs through anti-cheat, so a
-> modded session never reaches FromSoftware's servers. Steam itself can stay
-> online. What risks a ban is the normal Steam launcher: never leave a
-> modified `regulation.bin` installed over the game's own, because that
-> launch starts anti-cheat and connects with a modified game.
+> A modded `regulation.bin` is safe to load through the engine and risks a
+> ban only when the game's normal Steam launch loads it. See
+> [Before you start](install.md#before-you-start).
 
 ## 1. Build the modded regulation
 
 ```sh
-zig build
 GAME="$HOME/.local/share/Steam/steamapps/common/ELDEN RING/Game"
-ermod-engine dev apply "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
+mkdir -p mod
+ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin level60 class-gear
 ```
+
+`apply` does not create the output directory, hence the `mkdir`.
+`ermod-engine paths` prints the game directory if yours differs; on macOS
+it is inside the Wine bottle.
 
 The game directory is only ever read. Verify that for yourself at any time:
 
@@ -24,22 +24,15 @@ md5sum "$GAME/regulation.bin"   # unchanged before and after
 
 ## 2. Load it
 
-The modded `regulation.bin` is a normal game file; something has to make the
-game read it instead of its own.
-
 ```sh
 ermod-engine --regulation mod/regulation.bin
 ```
 
-That is the whole step. The engine is already in the game's load path, since
-it launches the game and injects its runtime, so it redirects the single file
-open that matters and hands back your copy. Nothing else to download, nothing
-to configure, and the game's own `regulation.bin` is never touched, so Steam's
-integrity check has nothing to revert. [install.md](install.md) is the setup
-if you do not have the engine yet.
-
-Do not simply overwrite the game's `regulation.bin`. Steam's integrity check
-reverts it, usually at the least convenient moment.
+The game reads your copy instead of its own, and the game's own
+`regulation.bin` is never touched.
+[install.md, step 4](install.md#4-or-load-a-modded-regulation) explains how
+the link works and how to clear it; the rest of install.md sets up the
+engine if you do not have it yet.
 
 ## 3. Verify in game
 
@@ -51,11 +44,10 @@ shield or catalyst and consumables, the effects of the `level60` and
 If nothing changed, read the runtime log. It names the redirect explicitly:
 
 ```
-regulation redirect — game's regulation.bin -> C:\ermod\regulation.bin
+ermod-runtime: regulation redirect — game's regulation.bin -> C:\ermod\regulation.bin
 ```
 
-The log lives at
-`<prefix>/pfx/drive_c/windows/system32/ermod-runtime.log`.
+`ermod-engine paths` prints where the log lives.
 
 ---
 
@@ -64,16 +56,16 @@ The log lives at
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is **archived
 upstream** and is not required by anything here. It is documented only because
 some players already run it for other mods, and a `regulation.bin` produced by
-`ermod-engine dev apply` is an ordinary file it can load.
+`ermod-engine apply` is an ordinary file it can load.
 
 Two limitations worth knowing before choosing this route:
 
 - **It cannot run `.lua` mods.** It has no runtime inside the game, so it
   loads only what `apply` baked into the file: no live params, no hot
   reload, no overlay, no events.
-- **We do not test it.** The engine route is verified on the live game every
-  milestone; the Mod Engine 2 route has never been booted against a current
-  game build here. If it breaks on a game patch, upstream is archived.
+- **We do not test it.** The Mod Engine 2 route has never been booted
+  against a current game build here. If it breaks on a game patch, upstream
+  is archived.
 
 If you still want it: unpack a Mod Engine 2 release beside this repo (it is
 not committed) so you have `modengine2_launcher.exe`, the `modengine2/`
@@ -96,5 +88,6 @@ exists.
 
 ## Co-op
 
-The engine has its own co-op, and its mod sync makes every player run the
-same game-changing mods. See the [co-op guide](coop.md).
+The engine's co-op syncs Lua mods, not a `regulation.bin` loaded with
+`--regulation`. Every player in a session must load the same file, and
+nothing checks that for you. See the [co-op guide](coop.md).

@@ -1,6 +1,6 @@
 # Example mods
 
-Ten mods, one file each, every one readable in a minute. Copy one into your
+Eleven mods, one file each, every one readable in a minute. Copy one into your
 mods directory and it loads on the next frame; edit it and it hot-reloads
 without restarting the game.
 
@@ -22,6 +22,7 @@ what it teaches and what to try.
 | --- | --- |
 | [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod apply` path |
 | [`double_runes.lua`](double_runes.lua) | `sdk.params.rows` over a whole PARAM table |
+| [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, a rule permission, `sdk.rules`, and precedence over standalone mods |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet: it
 loads, but will not run offline. `level60` runs both ways, offline against

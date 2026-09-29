@@ -16,7 +16,7 @@ below, ready to copy.
 
 ## What co-op is here
 
-Two to five players share one world. The game's traffic travels directly
+Two or more players share one world. The game's traffic travels directly
 between your machines, peer to peer. No FromSoftware server takes part, and
 Easy Anti-Cheat never runs. [Before you start](install.md#before-you-start)
 in the install guide has the safety rules; read them first.

@@ -1,8 +1,7 @@
 # Starting classes
 
 `CharaInitParam` rows **3000–3009** are the ten playable starting classes. Values
-below were read out of the shipped `regulation.bin` with `ermod-engine dev show`, not copied
-from a wiki.
+below were read out of the shipped `regulation.bin`, not copied from a wiki.
 
 ## Level formula
 
@@ -51,5 +50,6 @@ Weapon IDs are `base * 10000 + upgrade level`, but **only the base rows exist** 
 `ReinforceParamWeapon`. Writing an upgraded ID such as `2000006` references a row
 that is not in the table, and the weapon fails to equip. Mods must use base IDs.
 
-`ermod-engine dev selftest` checks every ID referenced by the mods against the game's own
-`EquipParamWeapon`, `EquipParamProtector` and `EquipParamGoods` tables.
+Nothing checks the IDs a mod writes for you. A mod can check its own:
+`sdk.params.row("EquipParamWeapon", id)` returns nil for an ID with no row, and
+the same holds for `EquipParamProtector` and `EquipParamGoods`.

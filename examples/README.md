@@ -20,13 +20,15 @@ what it teaches and what to try.
 
 | Example | What it teaches |
 | --- | --- |
-| [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod apply` path |
+| [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod-engine apply` path |
 | [`double_runes.lua`](double_runes.lua) | `sdk.params.rows` over a whole PARAM table |
 | [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, a rule permission, `sdk.rules`, and precedence over standalone mods |
 
-`double_runes` uses `GameAreaParam`, which has no vendored paramdef yet: it
-loads, but will not run offline. `level60` runs both ways, offline against
-`regulation.bin` and live against the game's own param tables.
+`double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
+passes `check`, but its entry point fails with "unknown param file" in the
+game and offline alike: read it for the shape. `level60` runs both ways,
+offline against `regulation.bin` and live against the game's own param
+tables.
 
 ## Drawing on screen
 
@@ -57,17 +59,19 @@ which is the point.
 
 ```sh
 # check every example the way the game loads it
-ermod check examples/*.lua
+ermod-engine check examples/*.lua
 
 # run one against a synthetic session and report handler cost
-ermod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
+ermod-engine perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
 
 # apply a params mod offline, producing a modded regulation.bin
-ermod apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
+mkdir -p mod
+ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 ```
 
-`ermod check` passes on all ten, `bad_sandbox` included. It *loads*; it
-fails when its entry point runs.
+`ermod-engine check` passes on all eleven, `bad_sandbox` and `double_runes`
+included: `check` asks whether a mod *loads*, and both fail only when their
+entry point runs.
 
 [`docs/scripting.md`](../docs/scripting.md) is the full author-facing
 reference for the format, and `stubs/ermod.lua` gives editor completion by
@@ -75,20 +79,8 @@ cloning this repository. Nothing to build.
 
 ## They are also the test corpus
 
-These files double as the engine's own test corpus, one example per SDK
-slice, so a failing test points at a specific capability. They belong to the
-`ermod-lua` package and are reached from `src/lua/examples` (a symlink to
-this directory) as well as from here, so both consumers embed one copy.
-
-Executed by the tests, not merely loaded: `hello_launch`, `rune_counter`,
-`overlay`, `perf_monitor`, `settings` and `bad_sandbox` in
-`src/lua/loader.zig`; `level60` in `src/sdk/params.zig` against a synthetic
-`CharaInitParam` table, and again as the offline golden test where its output
-must be byte-identical to the independent `level60` Zig spec; `settings`
-again in `src/sdk/store.zig` against the in-memory store. The engine runs the
-three UI examples together in its `src/runtime/registry.zig` against the
-recording UI backend (`src/ui_backend.zig` here), a fake clock and the
-in-memory store.
+The engine keeps a copy of these files as its test corpus, one example per
+SDK slice, and checks that its copy matches this one byte for byte.
 
 Live-proven in a running game: `level60` (params), `present_ping`,
 `rune_counter` and `death_ping` (event hooks), and all three UI examples

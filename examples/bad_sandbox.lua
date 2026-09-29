@@ -2,7 +2,7 @@
 --
 -- This file exists to be refused. It declares no permissions yet reaches for
 -- `os` and `io`, absent from the sandbox entirely, and for an SDK module
--- it never asked for. Loading it must fail loudly.
+-- it never asked for. It loads, and its entry point must fail loudly.
 --
 -- The rule it demonstrates: a mod receives exactly the `sdk.*` modules its
 -- manifest lists. An undeclared module is not blocked at the call, it is

@@ -461,8 +461,8 @@ Include both in a bug report, together with `./ermod-engine --version`.
 has been patched and the engine does not yet have verified addresses for the
 new version. The engine warns before launching and names the builds it
 supports. The game still runs, just unmodded; nothing is broken and nothing
-is at risk. The engine never guesses at addresses that may have moved,
-because a wrong guess is what would corrupt a save. To see what the engine
+is at risk. By default the engine never guesses at addresses that may have
+moved, because a wrong guess is what would corrupt a save. To see what the engine
 finds in your game:
 
 ```sh
@@ -473,6 +473,25 @@ It scans your `eldenring.exe` against every table the engine carries, says
 whether one exists for your build, and prints a row per pattern. Check the
 [Releases page](https://github.com/Benehiko/elden-ring-mods/releases) for a
 newer engine.
+
+If you want to run mods on that build anyway, at your own risk, launch with
+`--ignore-build-guard` (engine releases after v0.2.0):
+
+```sh
+./ermod-engine --ignore-build-guard
+```
+
+The engine then treats your game as the newest build it has complete
+addresses for, instead of running it unmodded. Those addresses were not
+checked against your game, and after a patch some of them will have moved.
+**Expect crashes, and wrong reads or writes to the characters in your modded
+profile.** Your own save is still never opened. Both the launcher and
+`ermod-runtime.log` say when the override is in effect. It applies to that
+one launch only; leave the flag off to go back to the safe behaviour.
+
+Every command that launches the game takes it, co-op included:
+`./ermod-engine coop host --ignore-build-guard`, and the same for
+`coop join`. See the [co-op guide](coop.md#wrong-game-build).
 
 **"Easy Anti-Cheat is running"**, followed by a refusal to launch, means a
 copy of the game (or its protected launcher) is still running. Close it,

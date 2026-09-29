@@ -1,48 +1,102 @@
 # Installing the engine
 
-This is the page for playing with mods, not for building anything. You need a
-Steam copy of Elden Ring on Linux, Proton, and the engine archive. No
-toolchain, no checkout, no ModEngine.
+This page is for playing with mods, not for building anything. You need a
+Steam copy of Elden Ring and the engine archive for your machine:
 
-The engine is `ermod-engine`: it starts the game under Proton without Easy
-Anti-Cheat and loads mods into it. It never writes to the game install.
+- **Linux (x86-64):** the game under Proton.
+- **macOS (Apple Silicon):** the game inside a Wine bottle (CrossOver,
+  Whisky, or any Wine you name).
+
+No toolchain, no checkout, no ModEngine.
+
+The engine is `ermod-engine`. It starts the game without Easy Anti-Cheat,
+loads your mods into it, and never writes to the game install.
+
+This file ships inside the release archive as `INSTALL.md`. The latest copy
+lives at
+<https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md>.
 
 ---
 
 ## Before you start
 
-**You do not need Steam in Offline Mode.** Elden Ring's multiplayer runs
-through Easy Anti-Cheat, and the engine never starts it, so a modded session
-cannot reach FromSoftware's servers. Leave Steam online.
+**Anti-cheat and online play.** Read this section in full.
 
-The engine launches `eldenring.exe` directly and never
-`start_protected_game.exe`, refuses to run at all while Easy Anti-Cheat is
-live, and re-checks from inside the game before enabling anything. There is no
-bypass flag, in either place.
-
-What that does *not* cover is the other direction: launching the game the
-normal way afterwards with a modified `regulation.bin` still in place. That
-starts anti-cheat, and you are online with a modified game. Keep your modded
-file somewhere of your own and point the engine at it with `--regulation`
-rather than copying it over the game's own. Then the ordinary launch is
-vanilla and there is nothing to forget.
+- **Easy Anti-Cheat never runs.** The engine launches `eldenring.exe`
+  directly, never `start_protected_game.exe`. It refuses to launch while
+  Easy Anti-Cheat is running, and the runtime checks again from inside the
+  game before it enables anything. Neither check has a bypass flag.
+- **No modded session reaches FromSoftware's servers.** The game's own
+  online play runs through Easy Anti-Cheat, which never starts. Leave Steam
+  online; Offline Mode is not needed.
+- **The engine's co-op is its own.** It runs peer to peer, directly between
+  the players' machines, and never touches FromSoftware's servers. See the
+  [co-op guide](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md).
+- **What risks a ban** is launching the game the normal way, through Steam,
+  with a modified `regulation.bin` installed over the game's own. That launch
+  starts Easy Anti-Cheat and connects to FromSoftware's servers with a
+  modified game. Keep a modded `regulation.bin` in a directory of your own
+  and load it with `--regulation` ([step 4](#4-or-load-a-modded-regulation)).
+  The game's own file then stays vanilla, and a normal launch stays safe.
 
 You also need:
 
-- **The game installed and launched normally at least once.** The first
-  launch is what creates the Proton prefix the engine stages into.
-- **Proton installed for Elden Ring** (Proton Experimental is the usual
-  choice). The engine uses whichever Proton Steam is configured to use for
-  the game: it reads Steam's own setting rather than guessing.
+- **The game installed and launched normally at least once.** On Linux that
+  first launch creates the Proton prefix the engine stages into.
+- **Steam running.** The game talks to a Steam client as it starts. On macOS
+  that is the Windows Steam inside the bottle, not a macOS Steam.
+
+### Linux
+
+**Proton installed for Elden Ring** (Proton Experimental is the usual
+choice). The engine reads Steam's own setting for the game and uses the
+Proton it names.
+
+### macOS
+
+- **A Wine bottle holding Windows Steam and the game.** Elden Ring is not a
+  macOS title, so the Steam that installs it is Windows Steam, running in
+  the same bottle as the game. That Steam must be running, and signed in,
+  when you launch.
+- **The engine finds the bottle and the Wine itself** if you use CrossOver
+  or Whisky. It searches their bottle directories, takes the first bottle
+  that holds a verified Elden Ring install, and prefers the Wine from the
+  same vendor.
+- **Any other Wine** (Game Porting Toolkit, Homebrew, Heroic) works when you
+  name both:
+
+  ```sh
+  ./ermod-engine --prefix ~/path/to/bottle --wine /path/to/wine
+  ```
+
+  `WINEPREFIX` and `WINE` in the environment do the same.
+- **Turn off the Steam overlay.** In the bottle's Steam: Elden Ring →
+  Properties → uncheck "Enable the Steam Overlay while in-game". With it on,
+  the game black-screens and closes itself under Wine on macOS, with or
+  without the engine.
+- **Apple Silicon.** The archive's `ermod-engine` is a native arm64 binary.
+  The game and the engine's runtime are x86-64 Windows code, which your
+  Wine runs through Rosetta 2, as it does for the game alone.
+
+A few things differ on macOS. The settings window is not built yet, so
+`ermod-engine settings` prints the equivalent commands, and the first-launch
+question about your characters is asked in the terminal. The in-game
+overlay draws through the same path as on Linux, but no one has yet seen it
+on a Mac's screen.
 
 ## 1. Unpack
 
 Unpack the archive anywhere you like; your home directory is fine. It has
-no installer and writes nothing outside the game's Proton prefix.
+no installer and writes nothing outside the game's Wine prefix (the Proton
+prefix on Linux, the bottle on macOS) and the engine's own data directory.
+
+Releases are published on the
+[Releases page](https://github.com/Benehiko/elden-ring-mods/releases). Each
+archive is named for the engine version and your machine:
 
 ```sh
-tar -xzf ermod-engine-v0.1.0-linux-x86_64.tar.gz
-cd ermod-engine-v0.1.0-linux-x86_64
+tar -xzf ermod-engine-<version>-linux-x86_64.tar.gz    # or ...-macos-aarch64.tar.gz
+cd ermod-engine-<version>-linux-x86_64
 ```
 
 Keep the three binaries together. `ermod-engine` is the one you run; it finds
@@ -56,35 +110,55 @@ checks it against the release's published sums.
 ./ermod-engine --dry-run
 ```
 
-This resolves everything and stops before starting anything. A good run names
-your install, your Proton and the command it would run:
+This resolves everything and stops before starting anything. A good run on
+Linux names your install, your Proton, the prefix, and what it would stage,
+link and run:
 
 ```
-info: ermod-engine v0.1.0
+info: ermod-engine <version>
 info: found Elden Ring: /home/you/.local/share/Steam/steamapps/common/ELDEN RING/Game
-info: game build 22984413
+info: game build 23850278
 info: using Proton: Proton - Experimental
-info: launching eldenring.exe (never start_protected_game.exe)
+info: prefix /home/you/.local/share/Steam/steamapps/compatdata/1245620/pfx
+info: launching eldenring.exe, never Easy Anti-Cheat
+info: dry run: would stage ermod-launcher.exe and ermod-runtime.dll into /home/you/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/windows/system32
+info: dry run: would run '/home/you/.local/share/Steam/steamapps/common/Proton - Experimental/proton waitforexitandrun C:\windows\system32\ermod-launcher.exe' (ERMOD_GAME_EXE=Z:\home\you\.local\share\Steam\steamapps\common\ELDEN RING\Game\eldenring.exe, ERMOD_RUNTIME_DLL=C:\windows\system32\ermod-runtime.dll)
+info: dry run: would link /home/you/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/profiles -> /home/you/.local/share/ermod/profiles
+info: dry run: would link /home/you/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/ermod/mods -> /home/you/.local/share/ermod/mods
 info: dry run: not launching
 ```
 
-If it cannot find something, this is the output to keep, because it says which
-check failed. Two common cases:
+On macOS the same run names the Wine it chose (`using Wine: …`) and gives
+the bottle as the prefix.
 
-- **`no Proton build found`** means Elden Ring has never been launched through
-  Proton on this machine, or Proton is not installed. Launch the game
-  normally once, then try again.
-- **A warning that your game build is not supported** (see below).
+If it cannot find something, this output says which check failed, so keep
+it. Common cases:
 
-Run `./ermod-engine --version` at any time to see the engine version and the
-game builds it knows.
+- **`no Proton build found`** (Linux) means Elden Ring has never been
+  launched through Proton on this machine, or Proton is not installed.
+  Launch the game normally once, then try again.
+- **`no Wine bottle found`** or **`found a Wine bottle but no Elden Ring
+  inside it`** (macOS) means none of the bottles the engine searched holds
+  the game. Name the right one with `--prefix`.
+- **`no Wine found to run the bottle with`** (macOS): name one with
+  `--wine`.
+- **A warning that your game build is not supported**: see
+  [When something does not work](#when-something-does-not-work).
+
+`./ermod-engine --version` prints the engine version and the game builds it
+supports. `./ermod-engine paths` prints every path the engine uses.
 
 ## 3. Get a mod
 
-Mods are Lua files. The example mods live in this repository under
-[`examples/`](../examples/): `level60.lua` (start at level 60),
-`death_ping.lua` (log every death), `perf_monitor.lua` and `overlay.lua`
-(in-game overlays). Download the ones you want, or clone the repo:
+Mods are Lua files. The example mods live in the
+[`examples/`](https://github.com/Benehiko/elden-ring-mods/tree/main/examples)
+directory of the mods repository. Three worth playing with:
+
+- `level60.lua`: every starting class begins at level 60.
+- `overlay.lua`: a small HUD of runes gained and deaths this session.
+- `perf_monitor.lua`: frame rate and each mod's cost, in a window.
+
+Download the ones you want, or clone the repository:
 
 ```sh
 git clone https://github.com/Benehiko/elden-ring-mods.git
@@ -92,31 +166,44 @@ git clone https://github.com/Benehiko/elden-ring-mods.git
 
 ### Where mods go
 
+Install each one by name:
+
 ```sh
-./ermod-engine install ~/Downloads/level60.lua      # one mod
-./ermod-engine install ~/Downloads/elden-ring-mods/examples   # or a directory of them
+./ermod-engine install elden-ring-mods/examples/level60.lua
+./ermod-engine install elden-ring-mods/examples/overlay.lua
 ```
 
-That is the whole of it. `install` copies `.lua` files into the engine's mods
-directory, and they load on the next launch, or immediately, if the game is
-already running.
+Do not install the whole `examples/` directory. Some of its mods teach
+rather than play: `bad_sandbox.lua` fails on purpose, `double_runes.lua`
+names a param the engine has no definition for and errors, and
+`boss_rules_pack.lua` changes a game rule.
 
-If you would rather copy files yourself, the directory is:
+`install` copies a `.lua` file (or every `.lua` file in a directory you
+name) into the engine's mods directory. The mod loads on the next launch,
+or at once if the game is already running.
+
+If you would rather copy files yourself, the mods directory is:
 
 ```
 ~/.local/share/ermod/mods
 ```
 
-`ermod-engine paths` prints that and every other path the engine uses. The
-game, running under Wine, sees the same directory as `C:\ermod\mods`, which
-is what the log calls it, because the engine links the prefix at your
-home directory. That is deliberate: Proton rebuilds a prefix now and then
-(a Proton version change, a "verify integrity of game files"), and anything
-kept inside one eventually disappears. Your mods and your profile saves live
-outside it.
+The path is the same on Linux and macOS (`$XDG_DATA_HOME/ermod/mods` if you
+set `XDG_DATA_HOME`). One `.lua` file per mod, no subdirectories, no
+manifest to register them in.
 
-One directory, one `.lua` file per mod, no subdirectories, no manifest to
-register them in.
+The game, running under Wine, sees that directory as `C:\ermod\mods`, the
+name the log uses. On every launch the engine links two directories in the
+prefix to your data directory:
+
+```
+<prefix>/drive_c/ermod/mods      -> ~/.local/share/ermod/mods
+<prefix>/drive_c/ermod/profiles  -> ~/.local/share/ermod/profiles
+```
+
+That is deliberate. Proton rebuilds a prefix now and then (a Proton version
+change, a "verify integrity of game files"), and anything kept inside one
+eventually disappears. Your mods and your profile saves live outside it.
 
 **Or keep your mods anywhere you like** and point the engine at them:
 
@@ -124,27 +211,34 @@ register them in.
 ./ermod-engine --mods ~/ermod-mods
 ```
 
-That links the prefix directory at yours and launches the game. The link
-persists, so later launches are just `./ermod-engine`. This is the better
-arrangement if you edit mods: the files you edit are the files the game
-loads, and editing one while the game runs reloads it within a second. No
-relaunch.
+That links `C:\ermod\mods` to your directory for this launch only. A launch
+without `--mods` links it back to `~/.local/share/ermod/mods`, so pass
+`--mods` every time you want your own directory. `install` always copies
+into `~/.local/share/ermod/mods`, never into a `--mods` directory.
 
-Writing your own is documented in [scripting.md](scripting.md).
+This is the better arrangement if you edit mods: the files you edit are the
+files the game loads, and saving one while the game runs reloads it within
+a second. No relaunch.
+
+The [scripting guide](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md)
+covers writing your own.
 
 ## 4. Or load a modded regulation
 
-Some mods are not scripts but a modified `regulation.bin`, built offline by
-`ermod-engine dev apply` (see [deploy.md](deploy.md)). The engine loads one directly:
+Some mods are not scripts but a modified `regulation.bin`, built by
+`ermod-engine apply` (see
+[deploy.md](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/deploy.md)).
+The engine loads one directly:
 
 ```sh
 ./ermod-engine --regulation ~/mods/regulation.bin
 ```
 
-The game reads that file instead of its own. **Your game's own
-`regulation.bin` is never overwritten**, which matters, because Steam's
-integrity check silently reverts a game file you replace by hand, usually at
-the worst moment. `--regulation none` clears it again.
+The game reads that file instead of its own. The link stays in place, so
+later launches keep loading it until you clear it with
+`--regulation none`. **Your game's own `regulation.bin` is never
+overwritten**, which matters, because Steam's integrity check silently
+reverts a game file you replace by hand, usually at the worst moment.
 
 Script mods and a modded regulation can both be active at once.
 
@@ -153,14 +247,14 @@ Script mods and a modded regulation can both be active at once.
 **The modded game never plays on your own save, and never writes it.**
 
 This is not a setting. A mod that grants a hundred levels, a bad regulation
-artifact, a script with a bug in it: none of that can reach the save Steam
-Cloud carries to every machine you own, because the modded game is not
-reading that file at all. It plays on a *profile*, a save of the engine's
-own, kept in `~/.local/share/ermod/profiles/`.
+file, a script with a bug in it: none of that can reach the save Steam Cloud
+carries to every machine you own, because the modded game never reads that
+file. It plays on a *profile*, a save of the engine's own, kept in
+`~/.local/share/ermod/profiles/`.
 
 The first launch creates a profile called `default`, which is empty. Without
-your characters in it, the first thing you would see is a game with
-no characters. **The engine offers to copy them in before that happens.** On
+your characters in it, the first thing you would see is a game with no
+characters. **The engine offers to copy them in before that happens.** On
 the first launch it shows you the characters in your own save and asks
 whether to copy them into the profile: a window if your desktop has one, a
 question in the terminal if not. Answer either way and it does not ask
@@ -184,7 +278,7 @@ You can also open that window whenever you like:
 ```
 
 It lists your own save and every profile, with the characters in each, and
-has buttons for the things below, including backing your own save up.
+has buttons for the commands below, including backing your own save up.
 
 The rest:
 
@@ -197,8 +291,8 @@ The rest:
 ./ermod-engine profile delete no-scaling   # and its save, permanently
 ```
 
-A profile is also where the engine remembers which mods you have switched
-off, so two profiles can run different mods.
+A profile also records which mods you have switched off, so two profiles can
+run different mods.
 
 ### Going the other way
 
@@ -221,21 +315,61 @@ backup, because it may be your only copy.
 
 The game starts as normal, with mods loaded.
 
-In-game, **backtick** (`` ` ``) opens the engine's menu: which mods are
-loaded, what each one costs per frame, and a checkbox to turn any of them off
-or back on without restarting. `Insert` separately toggles whether a *mod's*
-own overlay takes keyboard focus.
+| Key | What it does |
+| --- | --- |
+| `` ` `` (backtick) | Opens and closes the engine's menu: every mod with its state and cost, a switch per mod, profiles, and co-op. |
+| `Insert` | Gives mouse and keyboard to mod windows (an overlay, a settings panel), and hands them back to the game. |
 
-Both keys can be changed. Write `~/.local/share/ermod/engine.cfg`:
+While the menu is open, or `Insert` has given mod windows focus, the mouse
+belongs to them: the pointer moves freely and the camera stays still. The
+game ignores the keyboard and mouse until you close the menu or press
+`Insert` again. A gamepad keeps working. In the menu, `Tab` or the arrow keys
+move between entries, and `Space` or `Enter` presses the highlighted one.
+
+To play with friends, see the
+[co-op guide](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md).
+
+### Settings: `engine.cfg`
+
+The engine keeps its own settings in `~/.local/share/ermod/engine.cfg`.
+`./ermod-engine settings` edits them in a window; you can also write the
+file yourself. The game reads it as it starts, so a change takes effect on
+the next launch.
 
 ```
 menu_key = "F10"
 focus_key = "insert"
+skip_title_cards = true
+skip_boot_cinematics = false
+skip_ingame_cinematics = false
 ```
 
-Names are `grave` (backtick), `insert`, `home`, `end`, `delete`, `pause`,
-`pageup`, `pagedown`, `tab`, the bracket/punctuation keys, `F1`–`F24`, or a
-single letter or digit.
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `menu_key` | `"grave"` | The key that opens and closes the engine's menu. |
+| `focus_key` | `"insert"` | The key that gives mod windows the mouse and keyboard. |
+| `skip_title_cards` | `true` | Skips the publisher and engine logo screens at startup. |
+| `skip_boot_cinematics` | `false` | Skips the cinematics the game plays as it boots. |
+| `skip_ingame_cinematics` | `false` | Skips cinematics that play during the game. |
+
+One setting per line, as `name = value`. Setting names are lowercase,
+exactly as above. A key is a quoted name; a switch is `true` or `false`.
+Lines starting with `#` are comments.
+
+A key name is one of:
+
+- `grave` or `backtick` (the `` ` `` key)
+- `insert`, `home`, `end`, `delete`, `pause`, `scrolllock`, `pageup`,
+  `pagedown`, `tab`
+- `backslash`, `minus`, `equals`, `leftbracket`, `rightbracket`,
+  `semicolon`, `apostrophe`, `comma`, `period`, `slash`
+- `F1` to `F24`
+- a single letter or digit
+
+Key names ignore case: `F10`, `f10`, `Insert` and `INSERT` all work. A key
+name the engine does not know leaves that key at its default, and the log
+says so. A line the engine cannot read at all stops the reading: that line
+and every setting after it keep their defaults.
 
 ---
 
@@ -245,36 +379,55 @@ single letter or digit.
 does not open your save. The first launch offers to copy them into the
 profile; if you declined, or the offer never appeared, run
 `./ermod-engine settings` and use the button beside your own save, or
-`./ermod-engine profile port default`. See [Profiles, and your own
-save](#5-profiles-and-your-own-save). Your own file is untouched throughout,
-and playing through Steam normally still finds it.
+`./ermod-engine profile port default`. See
+[Profiles, and your own save](#5-profiles-and-your-own-save). Your own file
+is untouched throughout, and playing through Steam normally still finds it.
 
-**The log is inside the Proton prefix:**
+**The logs** live inside the game's Wine prefix. `./ermod-engine paths`
+prints where, along with every other path the engine uses. On Linux:
 
 ```
+~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/windows/system32/ermod-launcher.log
 ~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/windows/system32/ermod-runtime.log
 ```
 
-It starts with the engine version and records every decision the runtime
-made, which is usually enough to say what happened. Include it in a bug
-report, together with `./ermod-engine --version`.
+On macOS they sit in the same place inside the bottle,
+`<bottle>/drive_c/windows/system32/`. `ermod-launcher.log` covers starting
+the game and injecting the runtime; `ermod-runtime.log` starts with the
+engine version and records every decision the runtime made in the game.
+Include both in a bug report, together with `./ermod-engine --version`.
 
-**"unsupported build"** means the game has been patched and the engine does
-not yet have verified addresses for the new version. The engine tells you
-before launching and names the builds it does support. The game still runs,
-just unmodded; nothing is broken and nothing is at risk. Check the releases
-page for a newer engine. The engine never guesses at addresses that may have
-moved, because that is what would corrupt a save.
+**"not supported"** (a game build the engine does not know) means the game
+has been patched and the engine does not yet have verified addresses for the
+new version. The engine warns before launching and names the builds it
+supports. The game still runs, just unmodded; nothing is broken and nothing
+is at risk. The engine never guesses at addresses that may have moved,
+because a wrong guess is what would corrupt a save. To see what the engine
+finds in your game:
+
+```sh
+./ermod-engine check-build
+```
+
+It scans your `eldenring.exe` against every table the engine carries, says
+whether one exists for your build, and prints a row per pattern. Check the
+[Releases page](https://github.com/Benehiko/elden-ring-mods/releases) for a
+newer engine.
 
 **"Easy Anti-Cheat is running"**, followed by a refusal to launch, means a
-copy of the game (or its protected launcher) is still running. Close it, including
-anything started through Steam's normal Play button, and try again. There is
-no flag to override this.
+copy of the game (or its protected launcher) is still running. Close it,
+including anything started through Steam's normal Play button, and try
+again. There is no flag to override this.
 
 **A warning that the runtime was built as a different version** means the
 three files are not from the same release, usually an unpack of a new
 archive over an old one. Unpack the new archive into an empty directory
 instead.
+
+**On macOS, a black screen and then the game closes**: turn off the Steam
+overlay in the bottle's Steam (see [macOS](#macos)). **`SteamAPI_Init
+returned false`** in a log means the bottle's Steam is not signed in; sign
+it in and launch again.
 
 ## Removing it
 
@@ -282,10 +435,10 @@ instead.
 ./ermod-engine uninstall
 ```
 
-That removes what the engine staged into the Proton prefix: the two
-binaries, its logs, and the links to your mods, profiles and regulation.
-Add `--all` to also clear `C:\ermod` in the prefix (per-mod settings and
-frame captures).
+That removes what the engine staged into the Wine prefix: the two binaries,
+its logs, and the links to your mods, profiles and regulation. Add `--all`
+to also clear `C:\ermod` in the prefix (per-mod settings and frame
+captures).
 
 **Neither touches your mods or your profile saves**, which live in
 `~/.local/share/ermod/` and are only unlinked. To delete the saves as well,

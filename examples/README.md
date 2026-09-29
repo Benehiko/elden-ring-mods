@@ -36,8 +36,10 @@ loads, but will not run offline. `level60` runs both ways, offline against
 | [`perf_monitor.lua`](perf_monitor.lua) | a tool window: `sdk.perf` counters, plots, per-mod script cost |
 | [`settings.lua`](settings.lua) | an in-game settings screen whose values survive a relaunch: `sdk.ui` plus `sdk.store` |
 
-Press **Insert** to give the overlay keyboard focus, Insert again to hand it
-back to the game.
+Press **Insert** to give the overlay mouse and keyboard focus, Insert again to
+hand it back to the game. While it has focus the pointer moves freely and the
+camera stays still; `Tab` or the arrow keys move between controls and `Space`
+or `Enter` presses one. See [In the game](../README.md#in-the-game).
 
 ## What a mod may not do
 

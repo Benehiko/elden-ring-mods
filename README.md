@@ -26,6 +26,34 @@ repository publishes is the surface those bindings present.
 every `sdk.*` function a mod can call, exhaustively. See
 [The published surface](#the-published-surface).
 
+### In the game
+
+| Key | What it does |
+| --- | --- |
+| `` ` `` (backtick) | Opens and closes the ermod menu: every mod with its state and cost, a switch per mod, profiles, and co-op. |
+| `Insert` | Gives mouse and keyboard to mod windows (an overlay, a settings panel), and hands them back to the game. |
+
+While the menu is open, or `Insert` has given the overlay focus, the mouse
+belongs to the menu: the pointer moves freely and the camera stays still.
+The game ignores the keyboard and mouse until you close the menu or press
+`Insert` again. A gamepad keeps working.
+
+The menu also works from the keyboard alone. `Tab` or the arrow keys move
+between entries, and `Space` or `Enter` presses the highlighted one.
+
+Both keys can be changed with `ermod-engine settings`, or in `engine.cfg`
+(`menu_key`, `focus_key`).
+
+**Co-op.** Players in a session must run the same mods that change the game
+(a game rule, or a param such as a class's starting level). Mods that only
+draw, monitor or log may differ. If the host runs one you do not, you are
+held at the door: the menu lists the host's mods, downloaded for you, each
+with an **Enable** button. Enable them, switch off any game-changing mod the
+host does not run, and you join the session by yourself. Nothing is written
+to your mods directory until you press **Enable**. Once in, a mod that would
+change the game differently from the host's cannot be loaded until you
+leave.
+
 ## I want to write a mod
 
 Mods are **Lua files**. One file per mod, sandboxed, hot-reloaded in the

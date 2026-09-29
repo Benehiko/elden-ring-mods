@@ -11,7 +11,8 @@
 -- (see docs/classes.md).
 --
 -- Run it offline to ship a modded regulation.bin:
---   ermod apply "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
+--   mkdir -p mod
+--   ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 -- or drop it in your mods directory and see level 60 on the creation screen.
 
 local mod = {

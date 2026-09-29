@@ -19,6 +19,7 @@
   <nav>
     <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
     <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">Writing mods</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md">Co-op</a>
     <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
   </nav>
 </header>
@@ -39,8 +40,8 @@
     </p>
 
     <div class="downloads" id="download">
-      <a class="get" href="https://github.com/Benehiko/elden-ring-mods/releases/latest">
-        Download the latest release
+      <a class="get" href="https://github.com/Benehiko/elden-ring-mods/releases">
+        Download from the Releases page
       </a>
       <p class="hosts">Linux&nbsp;x86-64 and macOS&nbsp;Apple&nbsp;Silicon. Both archives carry the same Windows runtime the game loads.</p>
     </div>
@@ -56,15 +57,13 @@
     </p>
 
     <dl>
-      <dt>Modded sessions never reach the servers.</dt>
+      <dt>Modded sessions never reach FromSoftware's servers.</dt>
       <dd>
-        Elden Ring's multiplayer runs through Easy Anti-Cheat, and the engine
-        never starts it, so a modded session is offline by construction. Steam
-        stays online; you do not have to change a thing. What still matters is
-        the other direction: launch the game the ordinary way, with a modified
-        <code>regulation.bin</code> still in place, and you are online with a
-        modified game. Point the engine at your modded file rather than
-        installing it over the game's own.
+        Easy Anti-Cheat never runs, and the one launch that does risk a ban is
+        the game's normal Steam launch with a modified
+        <code>regulation.bin</code> in place.
+        <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#before-you-start">The install guide</a>
+        has the rules.
       </dd>
 
       <dt>The engine never touches your install.</dt>
@@ -107,6 +106,14 @@
       engine at one and the game reads it instead of its own file.
     </p>
 
+    <p>
+      <b>Co-op with the same mods.</b> The engine runs its own co-op, peer to
+      peer between the players' machines, and holds a joiner until its
+      game-changing mods match the host's.
+      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md">The co-op guide</a>
+      covers starting a session.
+    </p>
+
     <p class="aside">
       On Linux it runs the game under Proton; on macOS, inside a Wine bottle.
       Either way it launches <code>eldenring.exe</code> directly and never the
@@ -141,7 +148,7 @@
     <p>
       <code>permissions</code> is the whole of what a mod can reach: a module
       not listed is absent from the <code>sdk</code> table it receives, so it
-      cannot be called rather than merely refused. Ten worked examples and the
+      cannot be called rather than merely refused. Eleven worked examples and the
       full reference are in
       <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">the scripting guide</a>.
     </p>
@@ -192,7 +199,7 @@ cosign verify-blob SHA256SUMS \
     Not affiliated with FromSoftware or Bandai Namco.
   </p>
   <nav>
-    <a href="https://github.com/Benehiko/elden-ring-mods/releases/latest">Releases</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/releases">Releases</a>
     <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
     <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
   </nav>

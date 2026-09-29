@@ -4,11 +4,13 @@
 -- their real names, typed, and a name the paramdef does not know is a hard
 -- error rather than a silent no-op.
 --
--- The same code path runs both ways: offline `ermod apply` patches
+-- The same code path runs both ways: offline `ermod-engine mod bake` patches
 -- regulation.bin with it, and in the running game it edits the live table.
 --
--- Note: `GameAreaParam` has no vendored paramdef yet, so this one loads but
--- does not run offline. Read it for the shape, and run `level60.lua` instead.
+-- Note: `GameAreaParam` has no vendored paramdef yet, so this one passes
+-- `ermod-engine mod check` but its entry point fails with "unknown param file",
+-- in the game and offline alike. Read it for the shape, and run `level60.lua`
+-- instead.
 
 local mod = {
   name = "double-runes",

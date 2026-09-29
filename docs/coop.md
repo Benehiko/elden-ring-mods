@@ -251,6 +251,20 @@ menu's co-op section says `not available for this game build`, and the
 `coop` command stops with an error. Run `./ermod-engine check-build`
 and update the game through Steam.
 
+If a game patch is newer than your engine, you can try co-op anyway with
+`--ignore-build-guard` (engine releases after v0.2.0):
+
+```sh
+./ermod-engine coop host --ignore-build-guard
+./ermod-engine coop join <host-id>@<host-ip> --ignore-build-guard
+```
+
+This runs co-op with addresses that were not checked against your game.
+**Expect crashes**, and wrong reads or writes to the characters in your
+modded profile; your own save is still never opened. Every player needs the
+same game build, the same engine release, and the flag. See
+[When something does not work](install.md#when-something-does-not-work).
+
 ### Mods do not match
 
 The joiner's terminal says:

@@ -489,6 +489,10 @@ profile.** Your own save is still never opened. Both the launcher and
 `ermod-runtime.log` say when the override is in effect. It applies to that
 one launch only; leave the flag off to go back to the safe behaviour.
 
+Every command that launches the game takes it, co-op included:
+`./ermod-engine coop host --ignore-build-guard`, and the same for
+`coop join`. See the [co-op guide](coop.md#wrong-game-build).
+
 **"Easy Anti-Cheat is running"**, followed by a refusal to launch, means a
 copy of the game (or its protected launcher) is still running. Close it,
 including anything started through Steam's normal Play button, and try

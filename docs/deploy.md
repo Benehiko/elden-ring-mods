@@ -94,9 +94,7 @@ Proton prefix, the same environment plumbing the engine's launcher does for
 you. That plumbing is the fiddly part, and it is the reason the engine route
 exists.
 
-## Seamless Co-op
+## Co-op
 
-Seamless Co-op has its own launcher and its own mod-folder mechanism, and it is
-closed source. Whether these param mods load alongside it has **not been
-tested**; see the backlog in [tasks.md](tasks.md). All players in a session
-would need identical param files, since starting stats and gear must agree.
+The engine has its own co-op, and its mod sync makes every player run the
+same game-changing mods. See the [co-op guide](coop.md).

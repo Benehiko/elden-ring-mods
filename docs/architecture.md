@@ -2,31 +2,28 @@
 
 ## Goal
 
-Mods for Elden Ring on Linux that a player can write in **Lua** and run in the
-live game, and that can also be shipped as a modified `regulation.bin` for
-people who only want a file. The vanilla install is read-only input in both
-directions; nothing here ever writes to it.
+Mods for Elden Ring on Linux and macOS that a player can write in **Lua** and
+run in the live game, and that can also be shipped as a modified
+`regulation.bin` for people who only want a file. The vanilla install is
+read-only input in both directions; nothing here ever writes to it.
 
 Two halves, one mod format:
 
 - **In-game.** The engine injects a runtime into the running game, which
   loads `.lua` mods, hooks events, and reads and writes the game's live PARAM
   tables. Edit a mod and it reloads within a second.
-- **Offline.** `ermod-engine dev apply` runs the *same* Lua mod against an unpacked
-  `regulation.bin` on the host and writes a modded copy. The engine can load
-  that copy directly, so no ModEngine is required.
+- **Offline.** `ermod-engine apply` runs the *same* Lua mod against an
+  unpacked `regulation.bin` on the host and writes a modded copy. The engine
+  can load that copy directly, so no ModEngine is required.
 
-The Lua front end (`ermod-lua`) is shared by both, which is what makes
-"author live, ship offline" one code path rather than two implementations
-that drift.
+One Lua front end inside the engine serves both, which is what makes "author
+live, ship offline" one code path rather than two implementations that drift.
 
-Non-goals:
-
-- We do not modify or redistribute the Seamless Co-op mod (closed source). Co-op
-  bug fixes and player-limit changes are upstream feature requests, not our code.
-- We do not touch multiplayer, anti-cheat, or the FromSoftware servers. Modded
-  play is offline: the engine launches `eldenring.exe` directly, never
-  `start_protected_game.exe`, so EAC never starts.
+Non-goal: FromSoftware's servers and anti-cheat. The engine launches
+`eldenring.exe` directly, so Easy Anti-Cheat never runs and no modded session
+reaches FromSoftware's servers. The engine's own co-op runs peer to peer
+between the players' machines. [install.md](install.md#before-you-start)
+states the safety rules in full.
 
 ## What lives where
 
@@ -44,7 +41,7 @@ The split is deliberate and is drawn at the mod's blast radius:
 
 A community mod's whole capability surface is the `Host` vtable behind the
 `sdk.*` bindings: if a capability is not a function on it, no mod can reach
-it. That interface moved into the engine with the rest of the front end, so
+it. That interface lives in the engine with the rest of the front end, so
 what is published here is an exhaustive *enumeration* of the surface,
 `stubs/ermod.lua`, generated from the binding tables themselves, rather than
 an implementation you can read. The sandbox's behaviour remains testable from
@@ -55,16 +52,18 @@ stripped, an instruction budget per call.
 
 1. **Never write into the game install directory.**
    `~/.local/share/Steam/steamapps/common/ELDEN RING/Game/` is read-only input.
-   The engine honours this too: everything it stages lives in the Wine prefix.
+   The engine honours this too: everything it stages lives in the Wine prefix
+   or in its own data directory.
 2. **Reproducible output.** Mods are described declaratively or in sandboxed
    Lua and applied by the tool; running the pipeline twice from the same
-   inputs yields the same mod folder. No hand-edited binaries.
-3. **Zig only** for our code (currently Zig 0.16), plus system `libzstd` for DCX
-   compression. No .NET tooling (Smithbox etc.) in the build path. We may use those
-   interactively for research, but the pipeline must not depend on them.
-   *Mods themselves are Lua, not Zig*; this constraint is about the tooling.
-4. **Offline safety.** Documentation and output layout must make it hard to
-   accidentally run modded files against the live game servers.
+   inputs yields the same file. No hand-edited binaries.
+3. **Zig only** for the engine (currently Zig 0.16), with a vendored
+   `libzstd` for DCX compression. No .NET tooling (Smithbox etc.) in the
+   build path. We may use those interactively for research, but the pipeline
+   must not depend on them. *Mods themselves are Lua, not Zig*; this
+   constraint is about the tooling.
+4. **Safety by layout.** Documentation and output layout must make it hard to
+   launch a modded `regulation.bin` through the protected launcher.
 
 ## The data we are modifying
 
@@ -79,15 +78,15 @@ regulation.bin                      (2 MB, encrypted)
     └── DCX container               big-endian header, "DCP" scheme = ZSTD
         │                           (ZSTD since game patch 1.12; older was DFLT/zlib)
         │                           the game's decoder keeps 64 KiB of history:
-        │                           write with windowLog 16 (see dcx.zig)
+        │                           write with windowLog 16
         └── BND4 archive            ~54 MB, FromSoftware's generic file bundle
-            └── ~250 *.param files  fixed-size row tables (CharaInitParam,
+            └── 194 *.param files   fixed-size row tables (CharaInitParam,
                                     ItemLotParam_map, SpEffectParam, ...)
 ```
 
 Each layer is documented in the format sections below. The layers are independent:
 encrypt/decrypt, compress/decompress, bundle/unbundle, and param row editing are
-separate modules with their own tests.
+separate modules in the engine, each with its own tests.
 
 ## Pipeline
 
@@ -104,13 +103,11 @@ separate modules with their own tests.
              BND4  ──────────────────────────────►   BND4    from step 2)
                │ 3. locate + parse params              ▲
                ▼                                       │ 4. serialize params
-        param rows  ──── apply mod spec ────► modified param rows
-                          (declarative)
+        param rows  ──── apply mods ─────────► modified param rows
 ```
 
-Steps 1–2 and 5–6 are implemented and verified byte-for-byte against the real
-install (see `src/crypto.zig`, `src/dcx.zig`). Steps 3–4 (BND4 and PARAM) and the mod
-spec are the next milestones (see `docs/tasks.md`).
+The engine implements all six steps. Rebuilding the real archive with no
+mods applied is byte-identical to the original.
 
 ### DCX header strategy
 
@@ -122,59 +119,20 @@ across game patches.
 The same "preserve what you don't understand" principle applies to BND4: unknown header
 fields and file entries we don't edit are copied through unchanged.
 
-## Module layout
+## The author commands
 
 ```
-src/
-  main.zig               CLI entry point (subcommands)
-  crypto.zig             AES-256-CBC for regulation.bin (key, IV-prefix layout)
-  dcx.zig                DCX container: parse header, zstd (de)compress via libzstd
-  bnd4.zig               BND4 archive reader/writer
-  param.zig              PARAM file reader (rows as raw bytes, edited in place)
-  paramdef.zig           field access (ints, floats, bitfields) over row bytes
-  spec.zig               declarative patch types, shared with mods/
-  modspec.zig            applies specs to an archive; rejects conflicting patches
-  generated/
-    paramdefs.zig        field tables generated from the vendored XML
-mods/                    built-in patch specs compiled into `ermod` -- NOT how a
-                         mod is written (a mod is a .lua file; see scripting.md)
-  mods.zig               spec registry
-  level60.zig            all classes start at level 60
-  class_gear.zig         extra weapon/shield/consumables per class
-paramdefs/               vendored Paramdex XML (see its README)
-tools/gen_paramdef.py    XML -> Zig field tables
-examples/                the example mods -- what a mod looks like; also the SDK test corpus
-docs/                    architecture (this file), install, scripting, deployment, tasks
-build_out/, mod/         output, gitignored
+ermod-engine check <mod.lua>...                                # would each mod load in-game?
+ermod-engine perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
+ermod-engine apply <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
+                                                               # built-in spec name or a
+                                                               # .lua launch mod path
 ```
 
-Module dependencies are acyclic: `mods/` and `src/modspec.zig` both depend on
-`src/spec.zig`, which depends on nothing. This is why the patch types live in
-their own file rather than in `modspec.zig`. Zig also forbids a module from
-importing files above its root directory, so `mods/` must be its own module.
-
-### CLI surface (current and planned)
-
-These are `ermod-engine dev` subcommands. They were the `ermod` binary until
-E15 retired it: the front end they run moved into the engine, and a second
-binary would have meant a second copy of the Lua VM and the four param
-formats. The raw codec steps (`decrypt`, `encrypt`, `unpack`, `pack`,
-`extract`) went with it, because `apply` runs that whole chain and nothing
-else needed the intermediate files.
-
-```
-ermod-engine dev ls      <regulation.bin>                    # list BND4 entries
-ermod-engine dev show    <regulation.bin> <row> [field]      # inspect CharaInitParam rows
-ermod-engine dev selftest   <regulation.bin>                 # golden checks (see Testing)
-ermod-engine dev apply   <regulation.bin> <out.bin> <mod>... # full pipeline; a mod is a
-                                                  # built-in spec name or a .lua
-                                                  # launch mod path
-```
-
-`ermod-engine dev apply` is the offline command: it reads the game's regulation.bin, applies
-the named mods (built-in specs or `.lua` files), and writes a modded copy that
-the engine loads with `ermod-engine --regulation`.
-The engine's `dev` tier is where it lives; `ermod-engine dev --help` lists the rest.
+`ermod-engine apply` is the offline command: it reads the game's
+`regulation.bin`, applies the named mods (built-in specs or `.lua` files), and
+writes a modded copy that the engine loads with `ermod-engine --regulation`.
+`ermod-engine --help` lists every command.
 
 ### Applying Lua mods offline
 
@@ -182,57 +140,39 @@ A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
 launch mod; the two can be mixed on one command line:
 
 ```
-ermod-engine dev apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
+ermod-engine apply "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
 ```
 
-The Lua mod runs through the shared `ermod-lua` front end, the same loader,
-manifest validation, sandbox and instruction budget the injected runtime uses,
-compiled for the host. What differs is only the `Host`: `src/offline_host.zig`
-implements `param_table` as "BND4 entry name → `paramview.Table` over that
-entry's bytes", where the runtime implements it as a walk of the game's
-`SoloParamRepository`. Both hand back a view over the same on-disk PARAM
-layout, so `sdk.params.row("CharaInitParam", 3000).soulLv = 60` writes the same
-bytes at the same offset in both. That is the whole of "author live, ship
-offline": one code path, two backends.
+The Lua mod runs through the same loader, manifest validation, sandbox and
+instruction budget the injected runtime uses, compiled for the host. Only the
+`Host` differs. Offline, `param_table` returns a view over a BND4 entry's
+bytes; in the game it walks the game's `SoloParamRepository`. Both hand back a
+view over the same on-disk PARAM layout, so
+`sdk.params.row("CharaInitParam", 3000).soulLv = 60` writes the same bytes at
+the same offset in both. That is the whole of "author live, ship offline":
+one code path, two backends.
 
 Everything else on the `Host` vtable is unavailable offline and says so. There
 is no frame to draw an overlay on, no session to measure, no game to persist a
-store for. Consequently **only launch mods are accepted**; an event mod is
-refused with "event mods run in-game only" rather than silently doing nothing,
-because offline has no events to fire.
+store for. [scripting.md](scripting.md) lists what that means for a mod:
+which mods `apply` accepts, what it refuses, and how it treats two mods
+writing one field.
 
-Three refusals exit 1 without writing an output file, since a half-patched
-archive is worse than none: an event mod, a mod that errors or exceeds its
-instruction budget in `on_launch`, and a cross-mod write conflict. The sandbox
-and budget are the game's, not a weaker host copy. A mod calling `os.execute`
-finds `os` nil offline exactly as it does in-game, and a runaway `on_launch` is
-cut off rather than hanging `apply`.
-
-**Conflicts are an error offline, a warning live.** Both halves feed one
-`param_writes.Ledger` keyed by `(table, row, field)`, including the Zig `spec`
-pipeline, so a Zig patch and a Lua write on one field collide like any two
-mods:
-
-```
-ermod: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already written by level60
-ermod: refusing to pack; resolve the overlap or apply one mod at a time (1 conflicting write(s))
-```
-
-In the game, a later write wins and the conflict is logged, because a
-hot-reloaded mod rewrites its own fields by design. Offline, the file a player
-installs must not depend on the order two mods happened to be listed in, so
-`apply` refuses. One ledger, two policies.
-
-Two consequences worth stating:
+Both halves feed one write ledger keyed by `(table, row, field)`, including
+the built-in Zig specs, so a Zig patch and a Lua write on one field collide
+like any two mods. Offline, a collision is an error; in the game, the engine
+checks every mod's writes before any of them land
+([scripting.md, Conflicts](scripting.md#conflicts)). Two consequences worth
+stating:
 
 - The ledger keys ownership by **mod name**, so two mods that share a name are
   treated as one and never conflict with each other. That is the same rule that
   makes a hot reload silent, and it means `level60.lua` and the `level60` spec
   (which deliberately share a name and write the same 90 fields) can be applied
   together without complaint.
-- The Zig `spec` pipeline runs first, then the Lua mods. `modspec` replaces an
-  entry's buffer when it writes a param back, and the Lua host holds views into
-  those buffers, so the specs must settle before any view is taken.
+- The Zig specs run first, then the Lua mods. Writing a param back replaces
+  an entry's buffer, and the Lua host holds views into those buffers, so the
+  specs must settle before any view is taken.
 
 ## Format notes
 
@@ -302,13 +242,13 @@ silently writing to wrong offsets.
 
 **Row IDs are not unique.** They are unique in every param a mod has touched so far,
 but not in general: `RandomAppearParam` ships 26 IDs that appear on more than one
-descriptor, each with its own row data. Both readers resolve a lookup by ID to the
-*first* matching descriptor (`param.findRow`, `paramview.Table.row`); the later copies
-are reachable only by position (`Table.rowAt`). A mod that edits a duplicated ID
-therefore edits the first row of that ID and no other, consistently offline and live,
-since both paths use the same rule, but worth knowing before writing a mod against a
-param where IDs repeat. This is a case no synthetic fixture had; `ermod-engine dev selftest`'s
-reader cross-check over the real archive is what surfaced it.
+descriptor, each with its own row data. Both of the engine's PARAM readers resolve a
+lookup by ID to the *first* matching descriptor; the later copies are reachable only
+by position. A mod that edits a duplicated ID therefore edits the first row of that
+ID and no other, consistently offline and live, since both paths use the same rule,
+but worth knowing before writing a mod against a param where IDs repeat. No
+synthetic fixture had this case; the engine's cross-check of both readers over the
+real archive surfaced it.
 
 For editing we only need: find row by ID → patch bytes at known field offsets → write
 back, in place. Row sizes never change, so no offsets need recomputing. Full paramdef
@@ -318,7 +258,7 @@ coverage of all 194 params is not required.
 
 | Param | Purpose for us |
 | --- | --- |
-| `CharaInitParam` | Starting class definitions: level, stats, equipped gear, items. Rows for the ten playable classes (Vagabond … Wretch). Our level-60 and starting-gear mods are edits here. Exact row IDs to be confirmed against paramdef during implementation. |
+| `CharaInitParam` | Starting class definitions: level, stats, equipped gear, items. Rows 3000 to 3009 are the ten playable classes (Vagabond … Wretch; see [classes.md](classes.md)). Our level-60 and starting-gear mods are edits here. |
 | `EquipParamWeapon` / `EquipParamProtector` | Weapon/armor IDs referenced from CharaInitParam; read-only lookups to pick gear. |
 | `ItemLotParam_map` | Treasure item lots (chests, corpses). Needed if we go the "physical chest in the world" route. |
 | `SpEffectParam` | Buffs/heals; relevant to the later NPC-healer idea. |
@@ -330,7 +270,7 @@ coverage of all 194 params is not required.
    only param edits, fully covered by this architecture.
 2. **Physical chest near spawn (world edit).** Requires a treasure asset placement in a
    map file (`.msb`) plus an `ItemLotParam_map` row, and possibly an EMEVD event script
-   edit. That drags in two more file formats. Deferred; tracked as a stretch task.
+   edit. That drags in two more file formats. Deferred.
 
 ## Deployment
 
@@ -339,87 +279,35 @@ with EAC absent; the difference is what the player has to install.
 
 ### The engine (default)
 
-`.lua` mods are read from one directory in the game's Proton prefix, which the
-launcher creates:
+The runtime reads everything from `C:\ermod` inside the game's Wine prefix
+(`<prefix>/drive_c/ermod`). The mods and profiles there are links to the
+engine's data directory on the host, re-made on every launch, so a rebuilt
+prefix loses nothing:
 
 ```
-<prefix>/pfx/drive_c/ermod/          ← everything the engine stages, outside the install
-  mods/                              ← .lua files, one per mod; C:\ermod\mods in-game
-  regulation.bin                     ← optional: an `ermod-engine dev apply` artifact to load
-  store/                             ← per-mod persistent settings
-  captures/                          ← frame captures
+<prefix>/drive_c/ermod/
+  mods/            → ~/.local/share/ermod/mods (or the --mods directory, for that launch)
+  profiles/        → ~/.local/share/ermod/profiles
+  engine.cfg       → ~/.local/share/ermod/engine.cfg
+  regulation.bin   → the --regulation file, until --regulation none
+  store/           per-mod persistent settings
+  captures/        frame captures
 ```
 
-where `<prefix>` is `steamapps/compatdata/1245620`. `ermod-engine --mods <dir>`
-symlinks `mods/` at a working tree instead, so an author edits the files the
-game loads; `--regulation <file>` does the same for the artifact.
+`<prefix>` is the Proton prefix on Linux
+(`steamapps/compatdata/1245620/pfx`) and the Wine bottle on macOS.
+[install.md](install.md) is the player's view of the same layout.
 
 A modded `regulation.bin` is loaded by hooking the one file open that matters
 (`CreateFileW` through the executable's import table) and returning our copy,
 so the game's own file is never overwritten, and Steam's integrity check has
-nothing to revert. See the engine repo's `docs/e7-regulation-redirect-scoping.md`.
+nothing to revert.
 
 ### Mod Engine 2 (legacy, untested)
 
 [Mod Engine 2](https://github.com/soulsmods/ModEngine2) is archived upstream.
-An `ermod-engine dev apply` artifact is an ordinary modded `regulation.bin`, so it can
+An `ermod-engine apply` artifact is an ordinary modded `regulation.bin`, so it can
 load one, but it has no runtime in the game, meaning no `.lua` mods, no live
 params, no hot reload and no overlay. We do not test this route against
 current game builds. [deploy.md](deploy.md) documents it in an appendix for
 players who already run it.
-
-## Testing strategy
-
-- **Unit tests** per module (`zig build test`): crypto and DCX roundtrips, BND4 and
-  PARAM parse/serialize on synthetic fixtures, bitfield read/write isolation, and mod
-  spec invariants (stat spreads sum to the target level, weapon IDs are base IDs, all
-  ten classes covered exactly once). These need no game data, so they run in CI.
-- **Golden checks against the real install**, run via `ermod-engine dev selftest`.
-  They need the game, so they are local-only, never CI:
-  1. Parsing the real 54 MB BND4 and rebuilding it with no patches is **byte-identical**
-     to the original. This is the strong guarantee: any layout mistake in the writer
-     shows up immediately instead of as a subtly broken archive.
-  2. Applying both mods changes exactly 264 bytes, all within `CharaInitParam.param`,
-     leaving the other 193 params bit-for-bit untouched.
-  3. Row size and param type from the generated paramdefs match the shipped data, so a
-     game patch that changes a param's layout fails loudly.
-  4. The two PARAM readers agree on every table in the archive: 194 tables, 178 935
-     rows. `param.zig` owns a copy of a file and is what `apply` patches; `paramview.zig`
-     (in `ermod-lua`) is a zero-copy view over bytes it does not own, and is what a Lua
-     mod sees through `sdk.params`, live or offline. A mod is authored against the
-     second and shipped through the first, so a divergence between them would mean a
-     field edited in-game lands somewhere else in the packed archive. `src/paramcheck.zig`
-     holds the comparison; it also runs over synthetic images in CI.
-  5. **The golden test for the offline half**: `level60.lua` and `level60.zig` carry
-     the same ten stat spreads written two different ways, one through `sdk.params`
-     against the offline `Host`, one through the Zig `spec` pipeline, and must
-     produce the same BND4, byte for byte. This is the proof that a mod authored
-     against the live backend ships unchanged through the offline one.
-
-     The comparison is at the BND4 payload, which is what the mods touch; the
-     container around it is deterministic too (zero IV, fixed zstd parameters),
-     so two `apply` outputs from the same input are byte-identical files.
-- **ID validation.** `ermod-engine dev selftest` resolves every weapon, armour and goods ID the
-  mods reference against the game's own tables. This is what caught that upgraded
-  weapon IDs (`base + 6`) do not exist as rows.
-- **In-game verification**: final acceptance for each mod is loading it in the
-  running game through the engine and checking behaviour. Done for the
-  `level60` artifact: the live `CharaInitParam` table reads `soulLv=60` for
-  row 3000 with no mods loaded, through the `--regulation` redirect.
-
-## Security / legal posture
-
-- The AES key is community-public (shipped in SoulsFormats and every param editor);
-  including it is standard practice in the modding ecosystem.
-- We never distribute FromSoftware's data. The repo holds only tooling and mod specs.
-  `build_out/` (which can contain unpacked game data) is gitignored.
-- Modded play stays offline. The README and deploy docs must repeat this warning.
-- **The engine binaries published here are closed-source**, which is a real
-  thing to ask of a user: an injected DLL running inside their game. What
-  offsets that is what is *not* closed. The sandbox a mod runs in, its
-  instruction budget, every `sdk.*` binding and the `Host` vtable that bounds
-  them are all in this repository, so the capability surface of any community
-  mod is auditable without the engine's source. The engine's own guarantees
-  (never `start_protected_game.exe`, EAC re-checked in-process, unknown game
-  build disables every hook, the install never written) are stated in its
-  changelog and observable in the log it writes.

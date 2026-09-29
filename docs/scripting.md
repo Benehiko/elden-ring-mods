@@ -8,9 +8,7 @@ offline**, and it is one code path, not two implementations that happen to
 agree.
 
 This document is the reference for writing that file. For how the offline
-backend works underneath, see [architecture.md](architecture.md), "Applying
-Lua mods offline"; for the milestones and the reasoning behind the design,
-see [scripting-plan.md](scripting-plan.md).
+backend works underneath, see [architecture.md](architecture.md#applying-lua-mods-offline).
 
 ## The shortest whole mod
 

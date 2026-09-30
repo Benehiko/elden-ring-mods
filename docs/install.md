@@ -58,10 +58,15 @@ Proton it names.
   macOS title, so the Steam that installs it is Windows Steam, running in
   the same bottle as the game. That Steam must be running, and signed in,
   when you launch.
-- **The engine finds the bottle and the Wine itself** if you use CrossOver
-  or Whisky. It searches their bottle directories, takes the first bottle
-  that holds a verified Elden Ring install, and prefers the Wine from the
-  same vendor.
+- **The engine finds the bottle and the Wine itself** if you use
+  [CrossOver](https://www.codeweavers.com/crossover),
+  [Whisky](https://github.com/Whisky-App/Whisky) or
+  [protium](https://github.com/Benehiko/protium). It searches CrossOver's and
+  Whisky's bottle directories, and protium's prefixes when `protium` is on
+  your `PATH` or at `~/.local/bin/protium`. It takes the first bottle that
+  holds a verified Elden Ring install and prefers the Wine from the same
+  vendor. `--backend crossover|whisky|protium` (or `macos_backend` in
+  `engine.cfg`) limits the search to one of them.
 - **Any other Wine** (Game Porting Toolkit, Homebrew, Heroic) works when you
   name both:
 

@@ -44,6 +44,18 @@ On macOS, clear the download's quarantine before step 3
 ([how](docs/install.md#on-macos-clear-the-quarantine)). The full setup guide is
 **[docs/install.md](docs/install.md)** (also `INSTALL.md` in every archive).
 
+> [!NOTE]
+> **macOS users: your Wine setup is detected automatically.** If you play
+> through [CrossOver](https://www.codeweavers.com/crossover),
+> [Whisky](https://github.com/Whisky-App/Whisky) or
+> [protium](https://github.com/Benehiko/protium), `ermod-engine` finds the
+> bottle that holds Elden Ring and the Wine to run it with. There's nothing to
+> configure. Protium is found when the `protium` program is on your `PATH` or
+> at `~/.local/bin/protium`. To pick one when you have several, use
+> `--backend crossover|whisky|protium` or `macos_backend` in `engine.cfg`. Any
+> other Wine works when you name it
+> ([how](docs/install.md#macos)).
+
 ### Supported game versions
 
 Each engine release supports the Elden Ring builds it has verified addresses

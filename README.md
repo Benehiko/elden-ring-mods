@@ -34,7 +34,8 @@ rules, including the one launch that does risk a ban.
    ./ermod-engine             # play, with the mods in ~/.local/share/ermod/mods
    ```
 
-4. **Co-op**, everyone on the same release and game build:
+4. **Co-op**, everyone on the same engine release (v0.3.1 with v0.3.1) and
+   game build:
    `./ermod-engine coop host` on one machine,
    `./ermod-engine coop join <host-id>@<host-address>` on the others
    (`./ermod-engine coop id` prints both).
@@ -48,17 +49,19 @@ On macOS, clear the download's quarantine before step 3
 Each engine release supports the Elden Ring builds it has verified addresses
 for. A build it does not know runs unmodded, with a warning before launch.
 
-| Game build (`eldenring.exe`) | Steam build ID | [v0.1.0](../../releases/tag/v0.1.0) | [v0.2.0](../../releases/tag/v0.2.0) | [v0.3.0](../../releases/tag/v0.3.0) |
-| --- | --- | :---: | :---: | :---: |
-| **2.7.1.0** (latest patch) | 25080141 | — | — | ✓ mods and co-op |
-| 2.7.0.0 | 23850278 | — | ✓ mods and co-op | ✓ mods and co-op |
-| 2.6.2.0 | 22984413 | ✓ mods | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ |
+| Game build (`eldenring.exe`) | Steam build ID | [v0.1.0](../../releases/tag/v0.1.0) | [v0.2.0](../../releases/tag/v0.2.0) | [v0.3.0](../../releases/tag/v0.3.0) | [v0.3.1](../../releases/tag/v0.3.1) |
+| --- | --- | :---: | :---: | :---: | :---: |
+| **2.7.1.0** (latest patch) | 25080141 | — | — | ✓ mods and co-op | ✓ mods and co-op |
+| 2.7.0.0 | 23850278 | — | ✓ mods and co-op | ✓ mods and co-op | ✓ mods and co-op |
+| 2.6.2.0 | 22984413 | ✓ mods | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ |
 
 ¹ The session forms, but the co-op rule fixes (death, grace, warp, Torrent) and
 character sync are only carried for 2.7.0.0 and later.
 
 Every player in a co-op session needs the same game build and the same engine
-release.
+release. That includes patch releases: a v0.3.1 player waits for the host to
+admit them, which a v0.3.0 host never does, so v0.3.0 and v0.3.1 cannot play
+together.
 
 **Which build do I have?** Ask the engine; it reads your installed game:
 
@@ -119,7 +122,14 @@ with an **Enable** button. Enable them, switch off any game-changing mod the
 host does not run, and you join the session by yourself. Nothing is written
 to your mods directory until you press **Enable**. Once in, a mod that would
 change the game differently from the host's cannot be loaded until you
-leave. [docs/coop.md](docs/coop.md) covers starting a session.
+leave.
+
+A player who connects is not in the session until the host admits them: until
+then they cannot change anything in the host's world. By default the host lets
+in everyone whose mods match. With `coop_join_approval = "ask"` in
+`engine.cfg`, the host is asked instead ("co-op: player … wants to join. Open
+the ermod menu to allow or refuse.") and answers with **Allow** or **Refuse**
+in the ermod menu. [docs/coop.md](docs/coop.md) covers starting a session.
 
 ## I want to write a mod
 

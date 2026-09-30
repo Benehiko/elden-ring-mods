@@ -169,14 +169,22 @@ with, abridged:
 
 ```
 info: coop: [4/4] announce this machine to its peers and join the host's session
-info: coop: joined. The host's world loads for you when the game's own join completes.
+info: coop: joined — the host answered and admitted you. Its world loads for you when the game's own join completes.
 info: coop: this command ends when the game does.
 ```
 
-It may also print `the host knows you are here. The join waits until your
-game-changing mods match the host's`. If your mods already match, the join
-starts by itself a moment later. If they differ, see
-[Mods in co-op](#mods-in-co-op).
+`joined` appears only once the host has admitted you. It may also print `the
+host knows you are here. The join waits until your game-changing mods match
+the host's`. If your mods already match, the join starts by itself a moment
+later. If they differ, see [Mods in co-op](#mods-in-co-op).
+
+If the host has set `coop_join_approval = "ask"` in its `engine.cfg`, the host
+sees `co-op: player … wants to join` and chooses **Allow** or **Refuse** in
+the ermod menu. Your game does not start joining until the host allows you,
+so there is no hurry. If the host refuses, the terminal says `the host (…)
+refused this machine`. If nothing is decided within 15 minutes it says `not
+joined` and why: the host never answered, your mods still differ, or the
+host has not allowed you yet.
 
 Leave the terminal open while you play.
 

@@ -411,6 +411,7 @@ skip_ingame_cinematics = false
 | `skip_title_cards` | `true` | Skips the publisher and engine logo screens at startup. |
 | `skip_boot_cinematics` | `false` | Skips the cinematics the game plays as it boots. |
 | `skip_ingame_cinematics` | `false` | Skips cinematics that play during the game. |
+| `coop_join_approval` | `"auto"` | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
 
 One setting per line, as `name = value`. Setting names are lowercase,
 exactly as above. A key is a quoted name; a switch is `true` or `false`.

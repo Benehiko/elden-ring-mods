@@ -16,6 +16,33 @@ rules, including the one launch that does risk a ban.
 
 ---
 
+## Quickstart
+
+1. **Download** the engine from the
+   **[latest release](../../releases/latest)**:
+   `ermod-engine-<version>-linux-x86_64.tar.gz` (Linux, Steam + Proton) or
+   `ermod-engine-<version>-macos-aarch64.tar.gz` (Apple Silicon, CrossOver,
+   Whisky or protium), plus `SHA256SUMS` and `SHA256SUMS.sigstore.json`.
+2. **Verify** it, as the release notes show (`cosign verify-blob`, then
+   `sha256sum -c`).
+3. **Unpack and run** it; nothing is installed system-wide:
+
+   ```sh
+   tar -xzf ermod-engine-<version>-linux-x86_64.tar.gz
+   cd ermod-engine-<version>-linux-x86_64
+   ./ermod-engine --dry-run   # finds your game and Proton/Wine, launches nothing
+   ./ermod-engine             # play, with the mods in ~/.local/share/ermod/mods
+   ```
+
+4. **Co-op**, everyone on the same release and game build:
+   `./ermod-engine coop host` on one machine,
+   `./ermod-engine coop join <host-id>@<host-address>` on the others
+   (`./ermod-engine coop id` prints both).
+
+On macOS, clear the download's quarantine before step 3
+([how](docs/install.md#on-macos-clear-the-quarantine)). The full setup guide is
+**[docs/install.md](docs/install.md)** (also `INSTALL.md` in every archive).
+
 ## I just want to play with mods
 
 Download the engine from [Releases](../../releases), for Linux x86-64 or

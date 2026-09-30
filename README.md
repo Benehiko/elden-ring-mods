@@ -43,6 +43,37 @@ On macOS, clear the download's quarantine before step 3
 ([how](docs/install.md#on-macos-clear-the-quarantine)). The full setup guide is
 **[docs/install.md](docs/install.md)** (also `INSTALL.md` in every archive).
 
+### Supported game versions
+
+Each engine release supports the Elden Ring builds it has verified addresses
+for. A build it does not know runs unmodded, with a warning before launch.
+
+| Game build (`eldenring.exe`) | Steam build ID | [v0.1.0](../../releases/tag/v0.1.0) | [v0.2.0](../../releases/tag/v0.2.0) | [v0.3.0](../../releases/tag/v0.3.0) |
+| --- | --- | :---: | :---: | :---: |
+| **2.7.1.0** (latest patch) | 25080141 | — | — | ✓ mods and co-op |
+| 2.7.0.0 | 23850278 | — | ✓ mods and co-op | ✓ mods and co-op |
+| 2.6.2.0 | 22984413 | ✓ mods | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ |
+
+¹ The session forms, but the co-op rule fixes (death, grace, warp, Torrent) and
+character sync are only carried for 2.7.0.0 and later.
+
+Every player in a co-op session needs the same game build and the same engine
+release.
+
+**Which build do I have?** Ask the engine; it reads your installed game:
+
+```sh
+./ermod-engine check-build   # "…/eldenring.exe: … file version 2.7.1.0 — a table exists for it"
+./ermod-engine --dry-run     # prints the Steam build ID: "game build 25080141"
+./ermod-engine --version     # the builds this engine release supports
+```
+
+The title screen's **App Ver.** (for example `1.16.2`) is a different
+numbering for the same game and is not what the table uses; see
+[the engine's version notes](docs/install.md#when-something-does-not-work) if a
+launch says your build is not supported. After a game patch, check the
+[Releases](../../releases) page for an engine that supports it.
+
 ## I just want to play with mods
 
 Download the engine from [Releases](../../releases), for Linux x86-64 or

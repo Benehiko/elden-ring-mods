@@ -8,7 +8,7 @@
 -- regulation.bin with it, and in the running game it edits the live table.
 --
 -- Note: `GameAreaParam` has no vendored paramdef yet, so this one passes
--- `ermod-engine mod check` but its entry point fails with "unknown param file",
+-- `ermod-engine mod verify` but its entry point fails with "unknown param file",
 -- in the game and offline alike. Read it for the shape, and run `level60.lua`
 -- instead.
 

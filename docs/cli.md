@@ -8,7 +8,7 @@ Every command here is in the release build, and `ermod-engine --help` prints the
 
 **Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
 
-**Writing a mod:** [`mod check`](#ermod-engine-mod-check) [`mod perf`](#ermod-engine-mod-perf) [`mod bake`](#ermod-engine-mod-bake)
+**Writing a mod:** [`mod verify`](#ermod-engine-mod-verify) [`mod perf`](#ermod-engine-mod-perf) [`mod bake`](#ermod-engine-mod-bake)
 
 ## Usage
 
@@ -202,13 +202,13 @@ ermod-engine --help
 
 ## Writing a mod
 
-### `ermod-engine mod check`
+### `ermod-engine mod verify`
 
 ```text
-ermod-engine mod check <mod.lua>...
+ermod-engine mod verify <mod.lua>...
 ```
 
-Would each mod load in-game? Runs the game's own loader, sandbox, manifest rules and permission gating on this machine, so "passes check" means "would load". One line per mod; exit 1 if any fails.
+Is each mod up to standard? Runs the game's own loader, sandbox, manifest rules and permission gating on this machine, with this process confined first (no files, no programs, no network), so a mod is never trusted while it is verified. A mod that would not load, or is not acceptable, is rejected with the reason. One line per mod; exit 1 if any is rejected.
 
 ### `ermod-engine mod perf`
 

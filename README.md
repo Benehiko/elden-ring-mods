@@ -72,7 +72,7 @@ return mod
 It loads on the next frame. Check a mod before you share it:
 
 ```sh
-./ermod-engine mod check level60.lua   # would it load in the game?
+./ermod-engine mod verify level60.lua   # would it load in the game?
 ```
 
 For completion in your editor, point a Lua language server at

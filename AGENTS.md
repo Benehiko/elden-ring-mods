@@ -10,6 +10,7 @@ closed repository `elden-ring-mods-engine`.
 | Path | What it is | Where it comes from |
 |---|---|---|
 | `stubs/ermod.lua` | LuaLS annotations for every `sdk.*` binding | generated: `make -C ../elden-ring-mods-engine stubs`. Never edit by hand. |
+| `docs/cli.md`, `docs/cli.html` | the command reference, for the repository and the website | generated from the engine's `--help`: `make -C ../elden-ring-mods-engine cli-docs`. Never edit by hand; change the help in the engine. |
 | `examples/*.lua` | worked mods | must stay byte-identical to the engine's `examples/` (`zig build test-examples` there) |
 | `docs/`, `README.md` | the author- and player-facing docs | written here |
 | `LICENSE`, `NOTICE` | Apache-2.0 and what it does not cover | written here |
@@ -32,6 +33,8 @@ closed repository `elden-ring-mods-engine`.
 ## Checks
 
 * `make check-stubs`: the committed stubs are what the engine generates.
+* `make check-cli-docs`: the committed command reference is what the engine
+  generates from its `--help`.
 * CI: every example parses, and no Python or `tools/` exists.
 * `make hooks` once per clone, to install the pre-commit hook.
 

@@ -114,7 +114,9 @@ Host first: run `ermod-engine coop host`, load into your world, then they join.
 ```
 
 The host sends its friend the `coop join` line for the network they share:
-the home network's address (often `192.168.…`), or the VPN's address.
+the home network's address, or the VPN's address. Each address shows its
+interface in brackets; [network.md](network.md#zerotier) shows how to tell
+the VPN's apart (a VPN can hand out `192.168.…` addresses too).
 
 ### 2. The host starts
 

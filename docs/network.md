@@ -64,11 +64,20 @@ ways:
   **Managed IPs**.
 - **Read the interface name.** On Linux, ZeroTier's interface starts with
   `zt` (for example `ztabcd1234`). On macOS it starts with `feth` (for
-  example `feth1234`).
+  example `feth956`).
+
+**Do not go by the number.** A ZeroTier network may hand out `10.…`, `172.…`
+or `192.168.…` addresses, so its address can look just like a home
+network's. Trust the interface name, or the match with `listnetworks`.
 
 ```
-Address    192.168.1.10   (enp5s0)        ← your home network: not this one
-           10.147.20.5    (ztabcd1234)    ← ZeroTier: send this join line
+Linux:
+Address    192.168.1.10      (enp5s0)        ← your home network: not this one
+           10.147.20.5       (ztabcd1234)    ← ZeroTier: send this join line
+
+macOS:
+Address    192.168.1.23      (en0)           ← your home network: not this one
+           192.168.194.177   (feth956)       ← ZeroTier: send this join line
 ```
 
 With three or more players, every address a joiner names (the host's and

@@ -61,11 +61,11 @@ On macOS, clear the download's quarantine before step 3
 Each engine release supports the Elden Ring builds it has verified addresses
 for. A build it does not know runs unmodded, with a warning before launch.
 
-| Game build (`eldenring.exe`) | Steam build ID | [v0.1.0](../../releases/tag/v0.1.0) | [v0.2.0](../../releases/tag/v0.2.0) | [v0.3.0](../../releases/tag/v0.3.0) | [v0.3.1](../../releases/tag/v0.3.1) |
-| --- | --- | :---: | :---: | :---: | :---: |
-| **2.7.1.0** (latest patch) | 25080141 | — | — | ✓ mods and co-op | ✓ mods and co-op |
-| 2.7.0.0 | 23850278 | — | ✓ mods and co-op | ✓ mods and co-op | ✓ mods and co-op |
-| 2.6.2.0 | 22984413 | ✓ mods | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ |
+| Game build (`eldenring.exe`) | Steam build ID | [v0.1.0](../../releases/tag/v0.1.0) | [v0.2.0](../../releases/tag/v0.2.0) | [v0.3.0](../../releases/tag/v0.3.0) | [v0.3.1](../../releases/tag/v0.3.1) | [v0.3.2](../../releases/tag/v0.3.2) |
+| --- | --- | :---: | :---: | :---: | :---: | :---: |
+| **2.7.1.0** (latest patch) | 25080141 | — | — | ✓ mods and co-op | ✓ mods and co-op | ✓ mods and co-op |
+| 2.7.0.0 | 23850278 | — | ✓ mods and co-op | ✓ mods and co-op | ✓ mods and co-op | ✓ mods and co-op |
+| 2.6.2.0 | 22984413 | ✓ mods | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ | ✓ mods, co-op session¹ |
 
 ¹ The session forms, but the co-op rule fixes (death, grace, warp, Torrent) and
 character sync are only carried for 2.7.0.0 and later.

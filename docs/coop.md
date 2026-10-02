@@ -55,7 +55,7 @@ in the install guide has the safety rules; read them first.
 - **The engine installed.** Follow the [install guide](install.md). The
   commands below use `./ermod-engine`, typed in the directory you unpacked
   it into, as the install guide does.
-- **Game build 2.7.0.0.** Co-op works on this build only. To check yours:
+- **Game build 2.7.0.0 or 2.7.1.0.** Co-op works on these builds only. To check yours:
 
   ```sh
   ./ermod-engine check-build
@@ -236,6 +236,11 @@ keys and the rest of the detail.
 - **Quit the game.** The `coop` command ends when the game does.
 - **Or press Leave** in the co-op section of the ermod menu. It ends co-op
   in the running game.
+- **Or run `./ermod-engine coop leave`** from another terminal. It does the same.
+
+On leaving, every other player's game removes you and your character at once,
+and you keep playing alone in your own world. A player whose game crashes cannot
+say goodbye: the others drop that player after 45 seconds of silence.
 
 The game signs in to co-op once per launch, as it loads your world. To play
 co-op again, quit the game and run `coop host` or `coop join` again.
@@ -254,7 +259,7 @@ wait for the host's `you are hosting`, and run `coop join` again.
 
 ### Wrong game build
 
-Co-op needs build 2.7.0.0 on every machine. On another build the ermod
+Co-op needs build 2.7.0.0 or 2.7.1.0 on every machine. On another build the ermod
 menu's co-op section says `not available for this game build`, and the
 `coop` command stops with an error. Run `./ermod-engine check-build`
 and update the game through Steam.
@@ -312,6 +317,15 @@ its own:
 ```sh
 ./ermod-engine coop join 76561198000000001@192.168.1.10 --as 76561198000000009
 ```
+
+### The game sits on a loading screen after you join
+
+The terminal says `your game has sat on a loading screen for about 30 s since
+the join`. This is a known hang: the game moves to another map, for example
+after you warp to the host's grace, and the load stalls. It sometimes clears on
+its own after a short wait. If it does not, quit the game, run `coop join`
+again, and send `ermod-runtime.log` with your bug report (`./ermod-engine paths`
+says where it is).
 
 ### Other messages
 

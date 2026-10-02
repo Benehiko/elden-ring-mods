@@ -1,6 +1,6 @@
 # Example mods
 
-Eleven mods, one file each, every one readable in a minute. Copy one into your
+Twelve mods, one file each, every one readable in a minute. Copy one into your
 mods directory and it loads on the next frame; edit it and it hot-reloads
 without restarting the game.
 
@@ -15,6 +15,7 @@ what it teaches and what to try.
 | [`rune_counter.lua`](rune_counter.lua) | `run_at = "events"`, `sdk.hooks.on`, typed event payloads, per-mod state |
 | [`present_ping.lua`](present_ping.lua) | running code every frame without flooding the log |
 | [`death_ping.lua`](death_ping.lua) | `on_death` and `on_rune_gain` side by side, a live sanity check |
+| [`watch_all.lua`](watch_all.lua) | `sdk.watch`: every watchable stat, its changes and `watch.get`, a live check of what the engine can read |
 
 ## Changing the game
 
@@ -69,7 +70,7 @@ mkdir -p mod
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 ```
 
-`ermod-engine mod check` passes on all eleven, `bad_sandbox` and `double_runes`
+`ermod-engine mod check` passes on all twelve, `bad_sandbox` and `double_runes`
 included: `mod check` asks whether a mod *loads*, and both fail only when their
 entry point runs.
 
@@ -83,5 +84,5 @@ The engine keeps a copy of these files as its test corpus, one example per
 SDK slice, and checks that its copy matches this one byte for byte.
 
 Live-proven in a running game: `level60` (params), `present_ping`,
-`rune_counter` and `death_ping` (event hooks), and all three UI examples
+`rune_counter` and `death_ping` (event hooks), `watch_all` (all thirteen `sdk.watch` stats, 2.7.1.0), and all three UI examples
 (the overlay).

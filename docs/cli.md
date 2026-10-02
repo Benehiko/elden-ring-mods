@@ -6,7 +6,7 @@
 
 Every command here is in the release build, and `ermod-engine --help` prints the same text. A command marked "no launch" never starts the game.
 
-**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
+**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
 
 **Writing a mod:** [`mod check`](#ermod-engine-mod-check) [`mod perf`](#ermod-engine-mod-perf) [`mod bake`](#ermod-engine-mod-bake)
 
@@ -119,6 +119,40 @@ ermod-engine profile export <name> --yes
 ```
 
 Write a profile's save back over your vanilla save, with the game closed. The only command that writes it; the old one is kept.
+
+### `ermod-engine character list`
+
+```text
+ermod-engine character list [--profile NAME | --save FILE]
+```
+
+The characters in a profile's save, slot by slot, with class and level. The active profile unless `--profile` names another.
+
+### `ermod-engine character new`
+
+```text
+ermod-engine character new --class CLASS [--name NAME]
+    [--keepsake KEEPSAKE] [--slot N] [--force] [--profile NAME |
+    --save FILE] [--regulation FILE] [field=value ...]
+```
+
+Make a fresh character of a starting class without the game's character creation, and point the title menu's Continue at it. Takes the first empty slot unless `--slot` names one; a slot that holds a character is only replaced with `--force`. The class kit comes from the save's own regulation, or from `--regulation` (a mod bake output). field=value takes what dev save set takes, e.g. grace="The First Step" level=20 runes=10000. With the game closed. `character classes` lists the classes and keepsakes.
+
+### `ermod-engine character delete`
+
+```text
+ermod-engine character delete --slot N [--profile NAME | --save FILE]
+```
+
+Empty a slot.
+
+### `ermod-engine completion bash|zsh|fish`
+
+```text
+ermod-engine completion bash|zsh|fish
+```
+
+Print the shell completion script. Load it with, for bash, `source <(ermod-engine completion bash)` in ~/.bashrc; for zsh, the same with zsh in ~/.zshrc; for fish, `ermod-engine completion fish | source` in config.fish.
 
 ### `ermod-engine settings`
 

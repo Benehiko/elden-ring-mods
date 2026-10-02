@@ -48,6 +48,10 @@
         <li><a href="#profile-backup"><code>profile backup</code></a></li>
         <li><a href="#profile-port"><code>profile port</code></a></li>
         <li><a href="#profile-export"><code>profile export</code></a></li>
+        <li><a href="#character-list"><code>character list</code></a></li>
+        <li><a href="#character-new"><code>character new</code></a></li>
+        <li><a href="#character-delete"><code>character delete</code></a></li>
+        <li><a href="#completion-bash-zsh-fish"><code>completion bash|zsh|fish</code></a></li>
         <li><a href="#settings"><code>settings</code></a></li>
         <li><a href="#shot"><code>shot</code></a></li>
         <li><a href="#uninstall"><code>uninstall</code></a></li>
@@ -163,6 +167,32 @@
       <h3><code>ermod-engine profile export</code></h3>
       <pre><code>ermod-engine profile export &lt;name&gt; --yes</code></pre>
       <p>Write a profile's save back over your vanilla save, with the game closed. The only command that writes it; the old one is kept.</p>
+    </article>
+
+    <article class="cmd" id="character-list">
+      <h3><code>ermod-engine character list</code></h3>
+      <pre><code>ermod-engine character list [--profile NAME | --save FILE]</code></pre>
+      <p>The characters in a profile's save, slot by slot, with class and level. The active profile unless <code>--profile</code> names another.</p>
+    </article>
+
+    <article class="cmd" id="character-new">
+      <h3><code>ermod-engine character new</code></h3>
+      <pre><code>ermod-engine character new --class CLASS [--name NAME]
+    [--keepsake KEEPSAKE] [--slot N] [--force] [--profile NAME |
+    --save FILE] [--regulation FILE] [field=value ...]</code></pre>
+      <p>Make a fresh character of a starting class without the game's character creation, and point the title menu's Continue at it. Takes the first empty slot unless <code>--slot</code> names one; a slot that holds a character is only replaced with <code>--force</code>. The class kit comes from the save's own regulation, or from <code>--regulation</code> (a mod bake output). field=value takes what dev save set takes, e.g. grace=&quot;The First Step&quot; level=20 runes=10000. With the game closed. <code>character classes</code> lists the classes and keepsakes.</p>
+    </article>
+
+    <article class="cmd" id="character-delete">
+      <h3><code>ermod-engine character delete</code></h3>
+      <pre><code>ermod-engine character delete --slot N [--profile NAME | --save FILE]</code></pre>
+      <p>Empty a slot.</p>
+    </article>
+
+    <article class="cmd" id="completion-bash-zsh-fish">
+      <h3><code>ermod-engine completion bash|zsh|fish</code></h3>
+      <pre><code>ermod-engine completion bash|zsh|fish</code></pre>
+      <p>Print the shell completion script. Load it with, for bash, <code>source &lt;(ermod-engine completion bash)</code> in ~/.bashrc; for zsh, the same with zsh in ~/.zshrc; for fish, <code>ermod-engine completion fish | source</code> in config.fish.</p>
     </article>
 
     <article class="cmd" id="settings">

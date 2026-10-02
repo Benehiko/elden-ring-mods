@@ -13,19 +13,6 @@ compiled into the engine binaries, and its MIT text travels with those
 releases rather than with this repository.
 
 --------------------------------------------------------------------------
-Third-party components distributed with this repository
---------------------------------------------------------------------------
-
-Paramdex PARAMDEF XML                                         paramdefs/
-    From soulsmods/Paramdex (https://github.com/soulsmods/Paramdex), ER/Defs/,
-    fetched 2026-08-14. These files describe the field layout of the game's
-    param rows. They are community reverse-engineering work redistributed
-    here unmodified; see paramdefs/README.md for exactly which files and why.
-    Upstream states no explicit licence. They are included because the
-    tooling is unusable without a field layout and there is no independent
-    source for one; if the upstream authors object, they will be removed.
-
---------------------------------------------------------------------------
 Not covered by this licence
 --------------------------------------------------------------------------
 

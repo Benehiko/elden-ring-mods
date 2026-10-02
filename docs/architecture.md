@@ -36,7 +36,7 @@ The split is deliberate and is drawn at the mod's blast radius:
 
 | | |
 | --- | --- |
-| **Open (here)** | the surface a mod is written against: the generated SDK stubs, the worked examples, the paramdefs, and this documentation |
+| **Open (here)** | the surface a mod is written against: the generated SDK stubs, the worked examples, and this documentation |
 | **Closed (engine)** | everything executable: the Lua sandbox and every `sdk.*` binding, plus signature scanning, inline detours, live param-table walking, the D3D12 overlay, process launch and injection |
 
 A community mod's whole capability surface is the `Host` vtable behind the
@@ -224,8 +224,8 @@ rows' data offsets (320 bytes for `CharaInitParam`), falling back to the strings
 offset when there is only one row.
 
 The row *layout* is likewise absent from the file. Field names, types and offsets
-come from community **paramdefs** (Paramdex XML). We vendor the XML for the params we
-touch and generate Zig field tables from it with `tools/gen_paramdef.py`.
+come from community **paramdefs** (Paramdex XML). The engine keeps the XML for the
+params it touches and generates its Zig field tables from it.
 
 Two details the generator has to get right:
 

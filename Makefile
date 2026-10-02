@@ -1,12 +1,10 @@
 # This repository builds nothing (E15). It publishes the surface a mod author
-# writes against: the generated SDK stubs, the worked examples, and the
-# Paramdex PARAMDEF XML the engine's field tables come from.
+# writes against: the generated SDK stubs, the worked examples and the docs.
 #
-# Both generated artefacts are produced by the engine and committed here, so
-# an author needs neither a toolchain nor a checkout of the engine:
+# The stubs are produced by the engine and committed here, so an author needs
+# neither a toolchain nor a checkout of the engine:
 #
 #   stubs/ermod.lua        `make stubs`     in elden-ring-mods-engine
-#   the engine's paramdefs `make paramdefs` in elden-ring-mods-engine
 #
 # What is left here is checking that what is committed is what the engine
 # would produce.

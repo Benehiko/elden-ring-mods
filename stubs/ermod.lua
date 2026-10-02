@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"boss_spectate"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"boss_spectate"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -16,6 +16,7 @@
 ---@field store ermod.sdk.store?
 ---@field ui ermod.sdk.ui?
 ---@field screen ermod.sdk.screen?
+---@field watch ermod.sdk.watch?
 ---@field rules ermod.sdk.rules? # present when a rule permission is held
 
 ---The table a mod script returns.
@@ -239,6 +240,62 @@ local screen = {}
 ---@return string? path
 ---@return string? reason
 function screen.capture(name, scale) end
+
+---@class ermod.sdk.watch
+local watch = {}
+
+---The stats a mod can watch. Each value is the stat's own name, so
+---`change.stat == watch.stat.hp` compares as expected. Indexing a stat
+---that does not exist is an error, not nil.
+---@enum ermod.stat
+watch.stat = {
+  ---Times the current character has died.
+  deaths = "deaths",
+  ---Runes held (not the ones lying where the character last died).
+  runes = "runes",
+  ---Rune level.
+  level = "level",
+  ---Vigor attribute.
+  vigor = "vigor",
+  ---Mind attribute.
+  mind = "mind",
+  ---Endurance attribute.
+  endurance = "endurance",
+  ---Strength attribute.
+  strength = "strength",
+  ---Dexterity attribute.
+  dexterity = "dexterity",
+  ---Intelligence attribute.
+  intelligence = "intelligence",
+  ---Faith attribute.
+  faith = "faith",
+  ---Arcane attribute.
+  arcane = "arcane",
+  ---Current HP of the local player.
+  hp = "hp",
+  ---Maximum HP of the local player (moves with vigor, buffs and talismans).
+  hp_max = "hp_max",
+}
+
+---@class ermod.watch.change
+---@field stat ermod.stat
+---@field old integer
+---@field new integer
+---@field delta integer # new - old
+
+---Call `handler` on every frame `stat` changes. Nothing fires for the
+---value a save loads with, nor outside a loaded world. Unknown names are
+---an error at subscribe time. Handlers run under the instruction budget
+---and the same strike policy as `hooks.on`.
+---@param stat ermod.stat
+---@param handler fun(change: ermod.watch.change)
+function watch.on(stat, handler) end
+
+---The current value of `stat`, or nil when it cannot be read (no world
+---loaded, or the player not yet placed).
+---@param stat ermod.stat
+---@return integer?
+function watch.get(stat) end
 
 ---Engine-wide game rules. Present when the manifest holds a rule
 ---permission. Every rule is readable; setting one needs the permission

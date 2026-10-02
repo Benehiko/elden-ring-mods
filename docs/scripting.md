@@ -114,8 +114,8 @@ table a mod receives is *built* from it: an undeclared module is not present
 at all, so `sdk.ui` is nil in a mod that did not ask for `ui`. A data-only
 mod cannot draw, and cannot be made to draw by a bug.
 
-The seven modules are `log`, `hooks`, `params`, `perf`, `store`, `ui` and
-`screen`. What each offers is in [Modules](#modules) below.
+The eight modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
+`screen` and `watch`. What each offers is in [Modules](#modules) below.
 
 Each game rule is a permission too, named after the rule. Holding any rule
 permission puts `sdk.rules` on the table; setting a rule needs that rule's
@@ -205,6 +205,47 @@ error at subscribe time, not a handler that never fires.
 `on_present` runs on the render thread, once per frame. It is the budget's
 sharpest edge: whatever it does is paid every frame, so measure it with
 `ermod-engine mod perf` before shipping.
+
+### `watch`
+
+`hooks` reports *events*; `watch` reports *values*: a number the game keeps
+changed, from what to what.
+
+```lua
+sdk.watch.on(sdk.watch.stat.hp, function(ch)
+  sdk.log.info(string.format("%s %d -> %d (%+d)", ch.stat, ch.old, ch.new, ch.delta))
+end)
+local vigor = sdk.watch.get(sdk.watch.stat.vigor)  -- nil when it cannot be read
+```
+
+`watch.on(stat, handler)` calls `handler` with `{ stat, old, new, delta }` on
+the frame the value changes. `watch.get(stat)` reads it now. `sdk.watch.stat`
+is the typed spelling of the names (an `---@enum` in the stubs, so the editor
+checks it); a plain string such as `"hp"` works too. An unknown name is an
+error at subscribe time, and indexing one (`sdk.watch.stat.mana`) is an error
+where it is written.
+
+| Stat | Meaning |
+| --- | --- |
+| `deaths` | Times the current character has died |
+| `runes` | Runes held (not the ones lying where the character last died) |
+| `level` | Rune level |
+| `vigor`, `mind`, `endurance`, `strength`, `dexterity`, `intelligence`, `faith`, `arcane` | The eight attributes, one stat each |
+| `hp` | Current HP of the local player |
+| `hp_max` | Maximum HP; moves with vigor, buffs and talismans |
+
+FP, stamina and flasks are not watchable yet, on purpose: none has an offset
+derived from the game, and a guessed one would report a confident wrong
+number.
+
+Every value is `nil` outside a loaded world, and nothing fires there. The
+first readable frame is a baseline, not a change, so loading a save does not
+report the whole rune balance; a load or a death's reload makes the next
+reading a new baseline. `hp` and `hp_max` read about a second after the world
+loads. Changes fire after `on_death` and `on_rune_gain`, before
+`on_present`, at most once per stat per frame, under the same budget and
+strikes as `hooks`. [`watch_all.lua`](../examples/watch_all.lua) watches
+every stat and is the quickest way to see them move.
 
 ### `ui`
 

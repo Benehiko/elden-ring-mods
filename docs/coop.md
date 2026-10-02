@@ -6,11 +6,12 @@ below, ready to copy.
 
 1. [What co-op is here](#what-co-op-is-here)
 2. [What you need](#what-you-need)
-3. [Two players, step by step](#two-players-step-by-step)
-4. [Three or more players](#three-or-more-players)
-5. [Mods in co-op](#mods-in-co-op)
-6. [Leaving](#leaving)
-7. [When something does not work](#when-something-does-not-work)
+3. [Connecting: LAN or VPN](network.md) (ZeroTier, Tailscale; a separate page)
+4. [Two players, step by step](#two-players-step-by-step)
+5. [Three or more players](#three-or-more-players)
+6. [Mods in co-op](#mods-in-co-op)
+7. [Leaving](#leaving)
+8. [When something does not work](#when-something-does-not-work)
 
 ---
 
@@ -75,24 +76,9 @@ than a refusal:
 - **A modded `regulation.bin`:** every player loads the same file with
   `--regulation`, or nobody loads one. See [deploy.md](deploy.md#co-op).
 
-**Your machines must reach each other.** Each machine listens on UDP port
-7777, and nothing gets through a home router from the internet (NAT). So the
-machines need a direct path:
-
-- **The same home network (LAN).** This works as it is.
-- **A VPN** such as [Tailscale](https://tailscale.com) or
-  [ZeroTier](https://www.zerotier.com), for friends elsewhere. Everyone
-  joins the same VPN network and uses the VPN's addresses.
-
-If a machine runs a firewall, let in UDP on port 7777:
-
-```sh
-sudo ufw allow 7777/udp                                   # Linux, ufw
-sudo firewall-cmd --add-port=7777/udp --permanent && sudo firewall-cmd --reload   # Linux, firewalld
-```
-
-On macOS, if the system asks whether Wine may accept incoming connections,
-allow it.
+**Your machines must reach each other** on UDP port 7777: the same home
+network (LAN), or a VPN such as ZeroTier or Tailscale for friends elsewhere.
+**[network.md](network.md)** sets this up step by step, firewall included.
 
 **Each player needs a different Steam account.** Two machines signed in to
 one account can still play together: give one of them `--as` and a Steam ID
@@ -229,7 +215,13 @@ does not run. Match the host and you join by yourself. Nothing is written to
 your mods directory until you press **Enable**.
 
 The README's [In the game](../README.md#in-the-game) section has the menu's
-keys and the rest of the detail.
+keys.
+
+By default the host admits everyone whose mods match. With
+`coop_join_approval = "ask"` in the host's `engine.cfg`, the host chooses
+**Allow** or **Refuse** in the ermod menu for each player instead. Once you
+are in, a mod that would change the game differently from the host's cannot
+be loaded until you leave.
 
 ## Leaving
 
@@ -300,7 +292,7 @@ host never heard from the friend. Check, in order:
    lists them all), and the ID exactly.
 2. Both machines are on the same LAN or the same VPN network.
 3. No firewall blocks UDP port 7777 on either machine
-   ([What you need](#what-you-need)).
+   ([network.md](network.md#the-firewall)).
 4. The host was hosting before the friend loaded its world.
 
 Then quit the game on the joiner and run `coop join` again.

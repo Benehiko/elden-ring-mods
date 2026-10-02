@@ -175,7 +175,7 @@ end
 ```
 
 Field names are the paramdef's own (`soulLv`, `baseVit`, …); `.param` on the
-file name is optional. Reads and writes are typed from the vendored
+file name is optional. Reads and writes are typed from the engine's
 paramdefs, and a write goes straight into the table's bytes. In-game that is
 live memory and takes effect immediately; offline it is the unpacked
 archive's bytes, packed at the end.
@@ -186,13 +186,14 @@ Two things to know:
   duplicates (`RandomAppearParam` has 26). `row(file, id)` resolves to the
   *first* descriptor with that id; later copies are reachable only by
   iterating with `rows`.
-- **A param needs a vendored paramdef.** Five are generated today:
+- **A param needs a paramdef in the engine.** Five are supported today:
   `CharaInitParam`, `ItemLotParam`, `EquipParamWeapon`,
   `EquipParamProtector`, `EquipParamGoods`. Touching a param without one is
   an error naming the file, in-game and offline alike.
 
-The paramdef XML in [`paramdefs/`](../paramdefs/) lists every field a row
-has, by the name a mod uses, which is the quickest way to find what to write.
+The field names are Paramdex's: each param's PARAMDEF XML in
+[soulsmods/Paramdex `ER/Defs/`](https://github.com/soulsmods/Paramdex/tree/master/ER/Defs)
+lists every field a row has, by the name a mod uses.
 
 ### `hooks`
 

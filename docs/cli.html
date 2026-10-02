@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!-- Generated from `ermod-engine --help` by `make cli-docs` in the engine repository. Do not edit by hand. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command reference · ermod-engine</title>
+<meta name="description" content="Every ermod-engine command and flag: launching, co-op, profiles and the mod author's tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip" href="#reference">Skip to the reference</a>
+
+<header class="masthead">
+  <p class="wordmark"><a href="./">ermod-engine</a></p>
+  <nav>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">Writing mods</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md">Co-op</a>
+    <a href="cli.html" aria-current="page">Commands</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</header>
+
+<main id="reference" class="reference">
+
+  <section class="hero">
+    <h1>Command reference</h1>
+    <p class="lede"><b>ermod-engine</b> — launch Elden Ring under Proton (Linux) or in a Wine bottle (macOS) with the ermod runtime injected.</p>
+    <p class="section-lede">Every command here is in the release build, and <code>ermod-engine --help</code> prints the same text. A command marked &quot;no launch&quot; never starts the game.</p>
+
+    <nav class="toc" aria-label="Commands">
+      <p class="toc-group">Usage</p>
+      <ul>
+        <li><a href="#launch"><code>ermod-engine</code></a></li>
+        <li><a href="#paths"><code>paths</code></a></li>
+        <li><a href="#install"><code>install</code></a></li>
+        <li><a href="#coop-id"><code>coop id</code></a></li>
+        <li><a href="#coop-host"><code>coop host</code></a></li>
+        <li><a href="#coop-join"><code>coop join</code></a></li>
+        <li><a href="#coop-leave"><code>coop leave</code></a></li>
+        <li><a href="#profile"><code>profile</code></a></li>
+        <li><a href="#profile-new-use-delete"><code>profile new|use|delete</code></a></li>
+        <li><a href="#profile-backup"><code>profile backup</code></a></li>
+        <li><a href="#profile-port"><code>profile port</code></a></li>
+        <li><a href="#profile-export"><code>profile export</code></a></li>
+        <li><a href="#character-list"><code>character list</code></a></li>
+        <li><a href="#character-new"><code>character new</code></a></li>
+        <li><a href="#character-delete"><code>character delete</code></a></li>
+        <li><a href="#completion-bash-zsh-fish"><code>completion bash|zsh|fish</code></a></li>
+        <li><a href="#settings"><code>settings</code></a></li>
+        <li><a href="#shot"><code>shot</code></a></li>
+        <li><a href="#uninstall"><code>uninstall</code></a></li>
+        <li><a href="#check-build"><code>check-build</code></a></li>
+        <li><a href="#version"><code>--version</code></a></li>
+        <li><a href="#help"><code>--help</code></a></li>
+      </ul>
+      <p class="toc-group">Writing a mod</p>
+      <ul>
+        <li><a href="#mod-check"><code>mod check</code></a></li>
+        <li><a href="#mod-perf"><code>mod perf</code></a></li>
+        <li><a href="#mod-bake"><code>mod bake</code></a></li>
+      </ul>
+    </nav>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Usage</h2>
+
+    <article class="cmd" id="launch">
+      <h3><code>ermod-engine</code></h3>
+      <pre><code>ermod-engine [--dry-run] [--mods &lt;dir&gt;] [--regulation &lt;file&gt;|none]</code></pre>
+      <p>Locate the game, stage the runtime, launch. Steam must be running — on macOS that means the Windows Steam inside the bottle, which is the client the game's own Steamworks talks to. Offline Mode is not required: the engine never starts the protected launcher. <code>--dry-run</code> reports without launching.</p>
+      <dl class="flags">
+        <dt><code>--mods &lt;dir&gt;</code></dt>
+        <dd>link the prefix's mods directory at &lt;dir&gt;</dd>
+        <dt><code>--regulation &lt;file&gt;</code></dt>
+        <dd>stage an <code>ermod-engine mod bake</code> output; the game reads it instead of its own regulation.bin</dd>
+        <dt><code>--regulation none</code></dt>
+        <dd>clear a staged artifact</dd>
+        <dt><code>--muted</code></dt>
+        <dd>launch with no sound (the runtime mutes the game's audio session in-process; the prefix and the game's own sound options are left alone)</dd>
+        <dt><code>--ignore-build-guard</code></dt>
+        <dd>UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened</dd>
+        <dt><code>--prefix &lt;bottle&gt;</code></dt>
+        <dd>macOS: the Wine bottle holding the game, instead of searching CrossOver's and Whisky's bottle directories</dd>
+        <dt><code>--wine &lt;path&gt;</code></dt>
+        <dd>macOS: the Wine binary to run it with, instead of searching. Together these two flags cover any Wine setup — Game Porting Toolkit, Homebrew, Heroic — without the engine knowing its layout. WINEPREFIX and WINE in the environment do the same.</dd>
+        <dt><code>--backend &lt;name&gt;</code></dt>
+        <dd>macOS: auto, crossover, whisky or protium. auto (the default) uses protium when it is installed and has the game, else CrossOver. Naming one searches only that one. Also macos_backend = &quot;&lt;name&gt;&quot; in engine.cfg.</dd>
+        <dt><code>--no-gui</code></dt>
+        <dd>never open a window; ask in the terminal</dd>
+        <dt><code>--port-vanilla</code></dt>
+        <dd>on a first launch, copy your characters into the profile without asking</dd>
+        <dt><code>--no-port-vanilla</code></dt>
+        <dd>on a first launch, never ask. Without either, you are asked once, in the terminal, and only if there is a choice to make.</dd>
+      </dl>
+    </article>
+
+    <article class="cmd" id="paths">
+      <h3><code>ermod-engine paths</code></h3>
+      <pre><code>ermod-engine paths [--mods &lt;dir&gt;]</code></pre>
+      <p>Print every path the engine uses — data directory, mods, profiles, the active profile's save, the prefix and the logs; no launch. <code>--mods</code> also shows the directory a launch with it would link.</p>
+    </article>
+
+    <article class="cmd" id="install">
+      <h3><code>ermod-engine install</code></h3>
+      <pre><code>ermod-engine install &lt;mod.lua | dir/&gt; [--force]</code></pre>
+      <p>Copy a mod (or every .lua in a directory) into the mods directory.</p>
+    </article>
+
+    <article class="cmd" id="coop-id">
+      <h3><code>ermod-engine coop id</code></h3>
+      <pre><code>ermod-engine coop id [--port N]</code></pre>
+      <p>Print what a friend needs to play with you: this machine's Steam ID, its LAN address(es) and the UDP port (7777 unless <code>--port</code>), and the <code>coop join</code> line they type. No launch.</p>
+    </article>
+
+    <article class="cmd" id="coop-host">
+      <h3><code>ermod-engine coop host</code></h3>
+      <pre><code>ermod-engine coop host [--port N] [--as ID] [&lt;id&gt;@&lt;ip&gt;[:port] ...] [&lt;launch flags&gt;]</code></pre>
+      <p>Launch the game ready to host co-op. Press Continue at the title; once your world is loaded the command hosts the session and says so. Then your friends run <code>coop join</code>. You need not list them: the host learns each one when it joins.</p>
+    </article>
+
+    <article class="cmd" id="coop-join">
+      <h3><code>ermod-engine coop join</code></h3>
+      <pre><code>ermod-engine coop join &lt;host-id&gt;@&lt;ip&gt;[:port] [&lt;id&gt;@&lt;ip&gt;[:port] ...] [--port N] [--as ID] [&lt;launch flags&gt;]</code></pre>
+      <p>Launch the game and join a host. Press Continue at the title; once your world is loaded the command joins. The host must already be hosting: a joiner that comes first gets no session. With three or more players, also list each player who joined before you. For both: &lt;ip&gt; is an IPv4 address and a peer's port defaults to 7777. The machines must reach each other's UDP port directly — a LAN or a VPN; nothing crosses a NAT. Two machines on one Steam account: give one of them <code>--as</code> &lt;another Steam ID&gt; (any SteamID64 no one here uses), so the two are different players. Launch flags: <code>--mods</code>, <code>--regulation</code>, <code>--muted</code>, and on macOS <code>--prefix</code> and <code>--wine</code>. Every machine needs game build 2.7.0.0, and a joiner whose game-changing mods differ from the host's is held until it enables the host's mods in the ermod menu. The command ends when the game does.</p>
+    </article>
+
+    <article class="cmd" id="coop-leave">
+      <h3><code>ermod-engine coop leave</code></h3>
+      <pre><code>ermod-engine coop leave</code></pre>
+      <p>Leave the co-op session the running game is in. Every other player's game drops you at once and you keep playing alone; the engine menu's &quot;Leave co-op&quot; does the same. Quitting the game leaves too. A player whose game crashes is dropped by the others after 45 seconds of silence.</p>
+    </article>
+
+    <article class="cmd" id="profile">
+      <h3><code>ermod-engine profile</code></h3>
+      <pre><code>ermod-engine profile [list]</code></pre>
+      <p>List profiles: the named saves the game plays on, and the characters in each. The active one is marked, and profiles copied from your own save say so. Your vanilla save is never played on or written.</p>
+    </article>
+
+    <article class="cmd" id="profile-new-use-delete">
+      <h3><code>ermod-engine profile new|use|delete</code></h3>
+      <pre><code>ermod-engine profile new|use|delete &lt;name&gt; [--force]</code></pre>
+      <p>Create a profile, choose the one the game plays on, or delete one and its save. <code>--force</code> deletes the active profile.</p>
+    </article>
+
+    <article class="cmd" id="profile-backup">
+      <h3><code>ermod-engine profile backup</code></h3>
+      <pre><code>ermod-engine profile backup</code></pre>
+      <p>Copy your own save aside, under today's date, into the engine's backups directory. Reads it; never writes it.</p>
+    </article>
+
+    <article class="cmd" id="profile-port">
+      <h3><code>ermod-engine profile port</code></h3>
+      <pre><code>ermod-engine profile port &lt;name&gt; [--force]</code></pre>
+      <p>Copy your vanilla save into a profile (reads it, never writes it).</p>
+    </article>
+
+    <article class="cmd" id="profile-export">
+      <h3><code>ermod-engine profile export</code></h3>
+      <pre><code>ermod-engine profile export &lt;name&gt; --yes</code></pre>
+      <p>Write a profile's save back over your vanilla save, with the game closed. The only command that writes it; the old one is kept.</p>
+    </article>
+
+    <article class="cmd" id="character-list">
+      <h3><code>ermod-engine character list</code></h3>
+      <pre><code>ermod-engine character list [--profile NAME | --save FILE]</code></pre>
+      <p>The characters in a profile's save, slot by slot, with class and level. The active profile unless <code>--profile</code> names another.</p>
+    </article>
+
+    <article class="cmd" id="character-new">
+      <h3><code>ermod-engine character new</code></h3>
+      <pre><code>ermod-engine character new --class CLASS [--name NAME]
+    [--keepsake KEEPSAKE] [--slot N] [--force] [--profile NAME |
+    --save FILE] [--regulation FILE] [field=value ...]</code></pre>
+      <p>Make a fresh character of a starting class without the game's character creation, and point the title menu's Continue at it. Takes the first empty slot unless <code>--slot</code> names one; a slot that holds a character is only replaced with <code>--force</code>. The class kit comes from the save's own regulation, or from <code>--regulation</code> (a mod bake output). field=value takes what dev save set takes, e.g. grace=&quot;The First Step&quot; level=20 runes=10000. With the game closed. <code>character classes</code> lists the classes and keepsakes.</p>
+    </article>
+
+    <article class="cmd" id="character-delete">
+      <h3><code>ermod-engine character delete</code></h3>
+      <pre><code>ermod-engine character delete --slot N [--profile NAME | --save FILE]</code></pre>
+      <p>Empty a slot.</p>
+    </article>
+
+    <article class="cmd" id="completion-bash-zsh-fish">
+      <h3><code>ermod-engine completion bash|zsh|fish</code></h3>
+      <pre><code>ermod-engine completion bash|zsh|fish</code></pre>
+      <p>Print the shell completion script. Load it with, for bash, <code>source &lt;(ermod-engine completion bash)</code> in ~/.bashrc; for zsh, the same with zsh in ~/.zshrc; for fish, <code>ermod-engine completion fish | source</code> in config.fish.</p>
+    </article>
+
+    <article class="cmd" id="settings">
+      <h3><code>ermod-engine settings</code></h3>
+      <pre><code>ermod-engine settings</code></pre>
+      <p>Open the settings window: engine switches, and the profiles your characters live in. Falls back to a message if there is no display (or if this build has no window in it); no launch.</p>
+    </article>
+
+    <article class="cmd" id="shot">
+      <h3><code>ermod-engine shot</code></h3>
+      <pre><code>ermod-engine shot [--name N] [--scale S] [--out PATH] [--timeout MS]</code></pre>
+      <p>Ask the running game for a frame capture; no launch.</p>
+    </article>
+
+    <article class="cmd" id="uninstall">
+      <h3><code>ermod-engine uninstall</code></h3>
+      <pre><code>ermod-engine uninstall [--all] [--profiles]</code></pre>
+      <p>Remove what the engine staged into the Wine prefix; no launch. <code>--all</code> also removes C:\ermod (mod store data and captures); your mods and profile saves live on the host and are only unlinked. <code>--profiles</code> deletes those saves too, and says how many.</p>
+    </article>
+
+    <article class="cmd" id="check-build">
+      <h3><code>ermod-engine check-build</code></h3>
+      <pre><code>ermod-engine check-build [&lt;eldenring.exe&gt;]</code></pre>
+      <p>Does the engine know this game build? Scans the exe with every signature table and prints a row per pattern. The answer to &quot;why does the launcher say this build is unsupported&quot;; no launch.</p>
+    </article>
+
+    <article class="cmd" id="version">
+      <h3><code>ermod-engine --version</code></h3>
+      <pre><code>ermod-engine --version</code></pre>
+      <p>Print the engine version (marked when it is a development build) and the game builds it supports; no launch.</p>
+    </article>
+
+    <article class="cmd" id="help">
+      <h3><code>ermod-engine --help</code></h3>
+      <pre><code>ermod-engine --help</code></pre>
+    </article>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Writing a mod</h2>
+
+    <article class="cmd" id="mod-check">
+      <h3><code>ermod-engine mod check</code></h3>
+      <pre><code>ermod-engine mod check &lt;mod.lua&gt;...</code></pre>
+      <p>Would each mod load in-game? Runs the game's own loader, sandbox, manifest rules and permission gating on this machine, so &quot;passes check&quot; means &quot;would load&quot;. One line per mod; exit 1 if any fails.</p>
+    </article>
+
+    <article class="cmd" id="mod-perf">
+      <h3><code>ermod-engine mod perf</code></h3>
+      <pre><code>ermod-engine mod perf &lt;mod.lua&gt; [--frames N] [--runes N] [--deaths N]
+                                [--regulation &lt;regulation.bin&gt;]</code></pre>
+      <p>Fire a synthetic session and report cost per event against the real budget model, ending with the worst on_present frame as a percentage of a 60 fps frame. A pre-flight, not a promise: there is no game, so the overlay records instead of drawing. Without <code>--regulation</code>, <code>params</code> is unavailable exactly as it is before the game's tables load.</p>
+    </article>
+
+    <article class="cmd" id="mod-bake">
+      <h3><code>ermod-engine mod bake</code></h3>
+      <pre><code>ermod-engine mod bake &lt;regulation.bin&gt; &lt;out.bin&gt; &lt;mod&gt;...</code></pre>
+      <p>Run launch mods offline and write a modded regulation.bin the engine loads in place of the game's own (<code>ermod-engine --regulation &lt;out.bin&gt;</code>). A mod is a built-in spec name (level60, class-gear) or a path to a .lua launch mod, and the two mix. Two mods writing one field is an error, not last-wins: bake names both and writes no file.</p>
+    </article>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    Generated from the engine's own help, so it matches the release it
+    describes. Not affiliated with FromSoftware or Bandai Namco.
+  </p>
+  <nav>
+    <a href="https://github.com/Benehiko/elden-ring-mods/releases">Releases</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</footer>
+
+</body>
+</html>

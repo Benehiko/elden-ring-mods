@@ -1,11 +1,17 @@
 # Example mods
 
-Twelve mods, one file each, every one readable in a minute. Copy one into your
+Thirteen mods, one file each, every one readable in a minute. Copy one into your
 mods directory and it loads on the next frame; edit it and it hot-reloads
 without restarting the game.
 
 Read them in roughly the order below. Every example's header comment says
 what it teaches and what to try.
+
+Every example names game things through the SDK's enums:
+`sdk.hooks.on(sdk.hooks.event.on_death, …)`,
+`sdk.watch.on(sdk.watch.stat.hp, …)`,
+`sdk.params.row(sdk.params.file.CharaInitParam, …)`. Copy that habit: the
+editor checks the names, and a typo is an error where it is written.
 
 ## Start here
 
@@ -13,6 +19,7 @@ what it teaches and what to try.
 | --- | --- |
 | [`hello_launch.lua`](hello_launch.lua) | the manifest, `run_at = "launch"`, `sdk.log`: the smallest mod that does anything |
 | [`rune_counter.lua`](rune_counter.lua) | `run_at = "events"`, `sdk.hooks.on`, typed event payloads, per-mod state |
+| [`enums.lua`](enums.lua) | naming game things by enum: `sdk.hooks.event`, `sdk.watch.stat`, `sdk.params.file`, listing them with `pairs`, and what a typo does |
 | [`present_ping.lua`](present_ping.lua) | running code every frame without flooding the log |
 | [`death_ping.lua`](death_ping.lua) | `on_death` and `on_rune_gain` side by side, a live sanity check |
 | [`watch_all.lua`](watch_all.lua) | `sdk.watch`: every watchable stat, its changes and `watch.get`, a live check of what the engine can read |
@@ -70,7 +77,7 @@ mkdir -p mod
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 ```
 
-`ermod-engine mod verify` passes on all twelve, `bad_sandbox` and `double_runes`
+`ermod-engine mod verify` passes on all thirteen, `bad_sandbox` and `double_runes`
 included: `mod verify` asks whether a mod *loads*, and both fail only when their
 entry point runs.
 

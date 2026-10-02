@@ -21,18 +21,18 @@ local last_gain = 0
 local notice, notice_frames = nil, 0
 
 function mod.setup(sdk)
-  sdk.hooks.on("on_rune_gain", function(ev)
+  sdk.hooks.on(sdk.hooks.event.on_rune_gain, function(ev)
     runes_session = runes_session + ev.amount
     last_gain = ev.amount
     notice, notice_frames = string.format("+%d runes", ev.amount), 180
   end)
 
-  sdk.hooks.on("on_death", function()
+  sdk.hooks.on(sdk.hooks.event.on_death, function()
     deaths_session = deaths_session + 1
     notice, notice_frames = "YOU DIED", 240
   end)
 
-  sdk.hooks.on("on_present", function()
+  sdk.hooks.on(sdk.hooks.event.on_present, function()
     sdk.ui.window("##hud", function()
       sdk.ui.text(string.format("Runes this session: %d", runes_session))
       sdk.ui.text(string.format("Deaths this session: %d", deaths_session))

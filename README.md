@@ -63,7 +63,7 @@ Save this as `level60.lua` in your mods directory
 local mod = { name = "level60", version = "1.0.0", run_at = "launch", permissions = { "params" } }
 
 function mod.on_launch(sdk)
-  sdk.params.row("CharaInitParam", 3000).soulLv = 60   -- the Vagabond starts at level 60
+  sdk.params.row(sdk.params.file.CharaInitParam, 3000).soulLv = 60   -- the Vagabond starts at level 60
 end
 
 return mod

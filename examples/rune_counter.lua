@@ -17,7 +17,7 @@ local mod = {
 local total = 0
 
 function mod.setup(sdk)
-  sdk.hooks.on("on_rune_gain", function(event)
+  sdk.hooks.on(sdk.hooks.event.on_rune_gain, function(event)
     total = total + event.amount
     sdk.log.info(string.format("gained %d runes (session total %d)", event.amount, total))
   end)

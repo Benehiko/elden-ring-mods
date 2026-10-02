@@ -26,7 +26,7 @@ what it teaches and what to try.
 | [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, a rule permission, `sdk.rules`, and precedence over standalone mods |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
-passes `mod check`, but its entry point fails with "unknown param file" in the
+passes `mod verify`, but its entry point fails with "unknown param file" in the
 game and offline alike: read it for the shape. `level60` runs both ways,
 offline against `regulation.bin` and live against the game's own param
 tables.
@@ -60,7 +60,7 @@ which is the point.
 
 ```sh
 # check every example the way the game loads it
-ermod-engine mod check examples/*.lua
+ermod-engine mod verify examples/*.lua
 
 # run one against a synthetic session and report handler cost
 ermod-engine mod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
@@ -70,8 +70,8 @@ mkdir -p mod
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 ```
 
-`ermod-engine mod check` passes on all twelve, `bad_sandbox` and `double_runes`
-included: `mod check` asks whether a mod *loads*, and both fail only when their
+`ermod-engine mod verify` passes on all twelve, `bad_sandbox` and `double_runes`
+included: `mod verify` asks whether a mod *loads*, and both fail only when their
 entry point runs.
 
 [`docs/scripting.md`](../docs/scripting.md) is the full author-facing

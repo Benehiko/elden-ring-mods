@@ -313,14 +313,14 @@ nothing.
 ### Offline
 
 ```sh
-ermod-engine mod check my_mod.lua                    # would it load in-game?
+ermod-engine mod verify my_mod.lua                    # would it load in-game?
 ermod-engine mod perf  my_mod.lua                    # what does it cost per event?
 mkdir -p mod
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 ```
 
-`mod check` runs the game's own loader, sandbox and manifest rules on the host,
-so "passes `mod check`" means "would load in-game". It prints one line per mod
+`mod verify` runs the game's own loader, sandbox and manifest rules on the host,
+so "passes `mod verify`" means "would load in-game". It prints one line per mod
 and exits 1 if any would fail, which makes it a pre-commit hook:
 
 ```
@@ -328,8 +328,8 @@ examples/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions
 examples/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
 ```
 
-`mod check` answers "would it *load*", not "does it work". `bad_sandbox.lua`
-passes `mod check` and then fails at the first line of its entry point, which is
+`mod verify` answers "would it *load*", not "does it work". `bad_sandbox.lua`
+passes `mod verify` and then fails at the first line of its entry point, which is
 the distinction.
 
 `mod perf` fires a synthetic session against the real budget model and the real

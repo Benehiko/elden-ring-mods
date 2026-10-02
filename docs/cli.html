@@ -61,7 +61,7 @@
       </ul>
       <p class="toc-group">Writing a mod</p>
       <ul>
-        <li><a href="#mod-check"><code>mod check</code></a></li>
+        <li><a href="#mod-verify"><code>mod verify</code></a></li>
         <li><a href="#mod-perf"><code>mod perf</code></a></li>
         <li><a href="#mod-bake"><code>mod bake</code></a></li>
       </ul>
@@ -236,10 +236,10 @@
   <section>
     <h2>Writing a mod</h2>
 
-    <article class="cmd" id="mod-check">
-      <h3><code>ermod-engine mod check</code></h3>
-      <pre><code>ermod-engine mod check &lt;mod.lua&gt;...</code></pre>
-      <p>Would each mod load in-game? Runs the game's own loader, sandbox, manifest rules and permission gating on this machine, so &quot;passes check&quot; means &quot;would load&quot;. One line per mod; exit 1 if any fails.</p>
+    <article class="cmd" id="mod-verify">
+      <h3><code>ermod-engine mod verify</code></h3>
+      <pre><code>ermod-engine mod verify &lt;mod.lua&gt;...</code></pre>
+      <p>Is each mod up to standard? Runs the game's own loader, sandbox, manifest rules and permission gating on this machine, with this process confined first (no files, no programs, no network), so a mod is never trusted while it is verified. A mod that would not load, or is not acceptable, is rejected with the reason. One line per mod; exit 1 if any is rejected.</p>
     </article>
 
     <article class="cmd" id="mod-perf">

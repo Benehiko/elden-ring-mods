@@ -122,7 +122,7 @@ fields and file entries we don't edit are copied through unchanged.
 ## The author commands
 
 ```
-ermod-engine mod check <mod.lua>...                                # would each mod load in-game?
+ermod-engine mod verify <mod.lua>...                                # would each mod load in-game?
 ermod-engine mod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
 ermod-engine mod bake <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
                                                                # built-in spec name or a

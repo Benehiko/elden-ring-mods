@@ -37,7 +37,7 @@ function mod.setup(sdk)
   end
 
   -- on_present fires every frame: act every 300th, never log every frame.
-  sdk.hooks.on("on_present", function()
+  sdk.hooks.on(sdk.hooks.event.on_present, function()
     frames = frames + 1
     if frames % 300 == 0 then
       local parts = {}

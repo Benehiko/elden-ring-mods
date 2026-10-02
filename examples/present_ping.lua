@@ -17,7 +17,7 @@ local mod = {
 local frames = 0
 
 function mod.setup(sdk)
-  sdk.hooks.on("on_present", function()
+  sdk.hooks.on(sdk.hooks.event.on_present, function()
     frames = frames + 1
     if frames % 600 == 0 then
       sdk.log.info(string.format("on_present fired %d times", frames))

@@ -44,16 +44,23 @@ function log.warn(msg) end
 ---@param msg string
 function log.error(msg) end
 
----@alias ermod.event
----| "on_present"    # a frame is about to be presented; handlers must be cheap. Payload: {}
----| "on_rune_gain"  # the player gained runes. Payload: { amount = integer }
----| "on_death"      # the player died. Payload: {}
+---@class ermod.sdk.hooks
+local hooks = {}
+
+---The events a mod can subscribe to. Each value is the event's own
+---name. Indexing an event that does not exist is an error, not nil.
+---@enum ermod.event
+hooks.event = {
+  ---A frame is about to be presented; handlers must be cheap. Payload: {}
+  on_present = "on_present",
+  ---The player gained runes. Payload: { amount = integer }
+  on_rune_gain = "on_rune_gain",
+  ---The player died. Payload: {}
+  on_death = "on_death",
+}
 
 ---@class ermod.event.payload
 ---@field amount integer? # on_rune_gain only
-
----@class ermod.sdk.hooks
-local hooks = {}
 
 ---Subscribe to a named engine event. Unknown names are an error at
 ---subscribe time. Handlers run under the instruction budget; a handler
@@ -73,16 +80,35 @@ function hooks.on(event, handler) end
 ---@class ermod.sdk.params
 local params = {}
 
+---The param files a mod can name: those with a vendored paramdef. Each
+---value is the file's own name. Indexing a file that does not exist is
+---an error, not nil.
+---@enum ermod.param_file
+params.file = {
+  ---`CHARACTER_INIT_PARAM` rows, 320 bytes each.
+  CharaInitParam = "CharaInitParam",
+  ---`ITEMLOT_PARAM_ST` rows, 152 bytes each.
+  ItemLotParam_enemy = "ItemLotParam_enemy",
+  ---`ITEMLOT_PARAM_ST` rows, 152 bytes each.
+  ItemLotParam_map = "ItemLotParam_map",
+  ---`EQUIP_PARAM_WEAPON_ST` rows, 664 bytes each.
+  EquipParamWeapon = "EquipParamWeapon",
+  ---`EQUIP_PARAM_PROTECTOR_ST` rows, 416 bytes each.
+  EquipParamProtector = "EquipParamProtector",
+  ---`EQUIP_PARAM_GOODS_ST` rows, 176 bytes each.
+  EquipParamGoods = "EquipParamGoods",
+}
+
 ---One row of a param file by id, or nil if there is no such row.
 ---Errors if the file is unknown, not loaded yet, or the live table
 ---does not match the vendored paramdef.
----@param file string # e.g. "CharaInitParam" (".param" optional)
+---@param file ermod.param_file # e.g. params.file.CharaInitParam
 ---@param id integer
 ---@return ermod.params.row?
 function params.row(file, id) end
 
 ---Iterate every row of a param file in table order.
----@param file string
+---@param file ermod.param_file
 ---@return fun(): ermod.params.row?
 function params.rows(file) end
 

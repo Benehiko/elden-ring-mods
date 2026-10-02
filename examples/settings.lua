@@ -24,7 +24,7 @@ function mod.setup(sdk)
   sdk.log.info(string.format("settings loaded: enabled=%s volume=%.2f name=%s mode=%d",
     tostring(enabled), volume, name, mode))
 
-  sdk.hooks.on("on_present", function()
+  sdk.hooks.on(sdk.hooks.event.on_present, function()
     sdk.ui.window("Example Settings", function()
       local v
       v = sdk.ui.checkbox("Enabled", enabled)

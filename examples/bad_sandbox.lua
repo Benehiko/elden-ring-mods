@@ -18,7 +18,7 @@ local mod = {
 function mod.on_launch(sdk)
   os.execute("echo pwned")            -- os not in the sandbox
   local f = io.open("/etc/passwd")    -- io not in the sandbox
-  sdk.params.rows("EquipParamWeapon.param") -- params not declared in permissions
+  sdk.params.rows(sdk.params.file.EquipParamWeapon) -- params not declared in permissions
 end
 
 return mod

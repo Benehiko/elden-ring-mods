@@ -148,7 +148,7 @@ instruction budget the injected runtime uses, compiled for the host. Only the
 `Host` differs. Offline, `param_table` returns a view over a BND4 entry's
 bytes; in the game it walks the game's `SoloParamRepository`. Both hand back a
 view over the same on-disk PARAM layout, so
-`sdk.params.row("CharaInitParam", 3000).soulLv = 60` writes the same bytes at
+`sdk.params.row(sdk.params.file.CharaInitParam, 3000).soulLv = 60` writes the same bytes at
 the same offset in both. That is the whole of "author live, ship offline":
 one code path, two backends.
 

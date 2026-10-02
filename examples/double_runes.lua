@@ -7,9 +7,9 @@
 -- The same code path runs both ways: offline `ermod-engine mod bake` patches
 -- regulation.bin with it, and in the running game it edits the live table.
 --
--- Note: `GameAreaParam` has no vendored paramdef yet, so this one passes
--- `ermod-engine mod verify` but its entry point fails with "unknown param file",
--- in the game and offline alike. Read it for the shape, and run `level60.lua`
+-- Note: `GameAreaParam` has no vendored paramdef yet, so `sdk.params.file`
+-- has no entry for it: this one passes `ermod-engine mod verify` but its entry
+-- point fails with "unknown param file", in the game and offline alike. Read it for the shape, and run `level60.lua`
 -- instead.
 
 local mod = {
@@ -21,7 +21,7 @@ local mod = {
 
 function mod.on_launch(sdk)
   local n = 0
-  for row in sdk.params.rows("GameAreaParam.param") do
+  for row in sdk.params.rows(sdk.params.file.GameAreaParam) do
     row.bonusSoul_single = row.bonusSoul_single * 2
     n = n + 1
   end

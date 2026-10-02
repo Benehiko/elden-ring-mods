@@ -51,5 +51,5 @@ Weapon IDs are `base * 10000 + upgrade level`, but **only the base rows exist** 
 that is not in the table, and the weapon fails to equip. Mods must use base IDs.
 
 Nothing checks the IDs a mod writes for you. A mod can check its own:
-`sdk.params.row("EquipParamWeapon", id)` returns nil for an ID with no row, and
+`sdk.params.row(sdk.params.file.EquipParamWeapon, id)` returns nil for an ID with no row, and
 the same holds for `EquipParamProtector` and `EquipParamGoods`.

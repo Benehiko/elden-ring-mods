@@ -43,7 +43,7 @@ local fields = { "baseVit", "baseWil", "baseEnd", "baseStr", "baseDex", "baseMag
 function mod.on_launch(sdk)
   local done = 0
   for _, class in ipairs(classes) do
-    local row = sdk.params.row("CharaInitParam", class[1])
+    local row = sdk.params.row(sdk.params.file.CharaInitParam, class[1])
     if row == nil then
       sdk.log.warn(string.format("CharaInitParam row %d (%s) missing", class[1], class[2]))
     else

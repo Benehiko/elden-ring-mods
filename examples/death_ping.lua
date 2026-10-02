@@ -17,11 +17,11 @@ local mod = {
 local deaths = 0
 
 function mod.setup(sdk)
-  sdk.hooks.on("on_death", function()
+  sdk.hooks.on(sdk.hooks.event.on_death, function()
     deaths = deaths + 1
     sdk.log.info(string.format("on_death fired (session deaths %d)", deaths))
   end)
-  sdk.hooks.on("on_rune_gain", function(event)
+  sdk.hooks.on(sdk.hooks.event.on_rune_gain, function(event)
     sdk.log.info(string.format("on_rune_gain fired: +%d", event.amount))
   end)
 end

@@ -21,7 +21,7 @@ local pos = 1
 local show_mods = true
 
 function mod.setup(sdk)
-  sdk.hooks.on("on_present", function()
+  sdk.hooks.on(sdk.hooks.event.on_present, function()
     local ms = sdk.perf.frame_ms()
     history[pos] = ms
     pos = pos % history_len + 1

@@ -75,7 +75,6 @@ Proton it names.
   ```
 
   `WINEPREFIX` and `WINE` in the environment do the same.
-
 - **Turn off the Steam overlay.** In the bottle's Steam: Elden Ring →
   Properties → uncheck "Enable the Steam Overlay while in-game". With it on,
   the game black-screens and closes itself under Wine on macOS, with or
@@ -180,7 +179,7 @@ This resolves everything and stops before starting anything. A good run on
 Linux names your install, your Proton, the prefix, and what it would stage,
 link and run:
 
-```
+```text
 info: ermod-engine <version>
 info: found Elden Ring: /home/you/.local/share/Steam/steamapps/common/ELDEN RING/Game
 info: game build 23850278
@@ -250,7 +249,7 @@ or at once if the game is already running.
 
 If you would rather copy files yourself, the mods directory is:
 
-```
+```text
 ~/.local/share/ermod/mods
 ```
 
@@ -262,7 +261,7 @@ The game, running under Wine, sees that directory as `C:\ermod\mods`, the
 name the log uses. On every launch the engine links two directories in the
 prefix to your data directory:
 
-```
+```text
 <prefix>/drive_c/ermod/mods      -> ~/.local/share/ermod/mods
 <prefix>/drive_c/ermod/profiles  -> ~/.local/share/ermod/profiles
 ```
@@ -402,7 +401,7 @@ The engine keeps its own settings in `~/.local/share/ermod/engine.cfg`.
 file yourself. The game reads it as it starts, so a change takes effect on
 the next launch.
 
-```
+```text
 menu_key = "F10"
 focus_key = "insert"
 skip_title_cards = true
@@ -453,7 +452,7 @@ is untouched throughout, and playing through Steam normally still finds it.
 **The logs** live inside the game's Wine prefix. `./ermod-engine paths`
 prints where, along with every other path the engine uses. On Linux:
 
-```
+```text
 ~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/windows/system32/ermod-launcher.log
 ~/.local/share/Steam/steamapps/compatdata/1245620/pfx/drive_c/windows/system32/ermod-runtime.log
 ```

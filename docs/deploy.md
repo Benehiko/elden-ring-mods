@@ -43,7 +43,7 @@ shield or catalyst and consumables, the effects of the `level60` and
 
 If nothing changed, read the runtime log. It names the redirect explicitly:
 
-```
+```text
 ermod-runtime: regulation redirect — game's regulation.bin -> C:\ermod\regulation.bin
 ```
 

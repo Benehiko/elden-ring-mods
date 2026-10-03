@@ -70,7 +70,7 @@ ways:
 or `192.168.…` addresses, so its address can look just like a home
 network's. Trust the interface name, or the match with `listnetworks`.
 
-```
+```text
 Linux:
 Address    192.168.1.10      (enp5s0)        ← your home network: not this one
            10.147.20.5       (ztabcd1234)    ← ZeroTier: send this join line

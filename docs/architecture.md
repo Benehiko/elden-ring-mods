@@ -70,7 +70,7 @@ stripped, an instruction budget per call.
 Nearly all "gameplay numbers" in Elden Ring live in `regulation.bin`, a ~2 MB file in
 the game root. It is a nested container:
 
-```
+```text
 regulation.bin                      (2 MB, encrypted)
 └── AES-256-CBC                     key: community-known 32-byte key (SoulsFormats),
     │                               IV: first 16 bytes of the file (the game
@@ -90,7 +90,7 @@ separate modules in the engine, each with its own tests.
 
 ## Pipeline
 
-```
+```text
                  read-only                          our output
  ┌────────────────────────────┐        ┌─────────────────────────────────┐
  │ $GAME/regulation.bin       │        │ mod/regulation.bin              │
@@ -121,7 +121,7 @@ fields and file entries we don't edit are copied through unchanged.
 
 ## The author commands
 
-```
+```text
 ermod-engine mod verify <mod.lua>...                                # would each mod load in-game?
 ermod-engine mod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
 ermod-engine mod bake <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
@@ -139,7 +139,7 @@ writes a modded copy that the engine loads with `ermod-engine --regulation`.
 A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
 launch mod; the two can be mixed on one command line:
 
-```
+```text
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
 ```
 
@@ -284,7 +284,7 @@ The runtime reads everything from `C:\ermod` inside the game's Wine prefix
 engine's data directory on the host, re-made on every launch, so a rebuilt
 prefix loses nothing:
 
-```
+```text
 <prefix>/drive_c/ermod/
   mods/            → ~/.local/share/ermod/mods (or the --mods directory, for that launch)
   profiles/        → ~/.local/share/ermod/profiles

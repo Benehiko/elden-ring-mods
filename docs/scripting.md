@@ -98,7 +98,7 @@ return mod
 Event mods are **in-game only**. `ermod-engine mod bake` refuses one rather than
 silently doing nothing, because offline there is nothing to fire:
 
-```
+```text
 bake: examples/rune_counter.lua is an event mod (events); event mods run in-game only
 ```
 
@@ -130,7 +130,7 @@ reach native code. There is no `require`: one file is one mod.
 The sandbox is the same offline. A mod reaching for `os` fails on the host
 exactly as it would in your session, at the same line:
 
-```
+```text
 mod[bad-sandbox] err: bad_sandbox.lua:19: attempt to index a nil value (global 'os')
 bake: examples/bad_sandbox.lua errored in on_launch (RuntimeError)
 ```
@@ -450,7 +450,7 @@ ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin my_mod.lua
 so "passes `mod verify`" means "would load in-game". It prints one line per mod
 and exits 1 if any would fail, which makes it a pre-commit hook:
 
-```
+```text
 examples/level60.lua: ok  name=level60 run_at=launch entry=on_launch permissions=params,log
 examples/rune_counter.lua: ok  name=rune-counter run_at=events entry=setup permissions=hooks,log
 ```
@@ -462,7 +462,7 @@ the distinction.
 `mod perf` fires a synthetic session against the real budget model and the real
 dispatcher:
 
-```
+```text
 $ ermod-engine mod perf examples/overlay.lua --frames 120 --runes 5 --deaths 1
 examples/overlay.lua: hud-overlay (events mod) — synthetic session: 120 frames, 5 rune pickups, 1 deaths
 host pre-flight: no live params (params calls fail as they do before the tables load), recording overlay, in-memory store
@@ -485,7 +485,7 @@ a _launch_ mod dies at its first `params` call. Give it a `regulation.bin`
 and `on_launch` runs against the unpacked archive, so launch mods get an
 honest number too:
 
-```
+```text
 $ ermod-engine mod perf examples/level60.lua --regulation "$GAME/regulation.bin"
 examples/level60.lua: level60 (launch mod) — synthetic session: 600 frames, 10 rune pickups, 1 deaths
 host pre-flight: params from /home/you/.local/share/Steam/steamapps/common/ELDEN RING/Game/regulation.bin (unpacked, never written back), recording overlay, in-memory store
@@ -506,7 +506,7 @@ Nothing is written back; `mod perf` never produces a file.
 
 `mod bake` is the real run. Its log is the mod's own:
 
-```
+```text
 $ ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin examples/level60.lua
 mod[level60] info: Vagabond: level 9 -> 60
 …
@@ -525,7 +525,7 @@ write on the same field collide like any two mods.
 
 Drop the file in the engine's mods directory and it loads at launch:
 
-```
+```text
 ~/.local/share/ermod/mods
 ```
 
@@ -563,7 +563,7 @@ you are:
 order two mods were listed in, so `mod bake` names both mods and the field,
 refuses to pack, and writes no output file:
 
-```
+```text
 bake: conflict — class-tweaks wrote CharaInitParam[3000].soulLv, already written by level60
 bake: refusing to pack; resolve the overlap or bake one mod at a time (1 conflicting write(s))
 ```
@@ -589,7 +589,7 @@ its place: a mod added or edited later that disagrees with it is the one
 refused, and an edited mod that is refused keeps its previous version
 running. Every refusal names both mods, the setting and both values:
 
-```
+```text
 mod[engine] warn: b.lua not loaded: it sets rule boss_spectate to true, but a.lua (already running) sets it to false
 ```
 

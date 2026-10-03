@@ -1,0 +1,636 @@
+# Changelog
+
+What the engine does, in the words of someone using it rather than building
+it. Engine releases are published on the open repo's Releases page; the
+supported game build is part of every entry, because it decides whether the
+engine does anything at all.
+
+## v0.4.0 (2026-10-03)
+
+Game build **2.7.1.0**, as in v0.3.2. Every player in a co-op session needs the
+same game build and this engine version.
+
+### Before you update: two changes for mod authors
+
+- **One `rules` permission for every game rule.** A mod that changes a rule
+  now asks for `"rules"`, instead of a permission named after the rule
+  (`boss_spectate`). A manifest that still lists a rule's name is refused as
+  an unknown permission. Which rules a mod changes is still checked, and a
+  conflict between two mods still names the rule.
+- **`ermod-engine mod check` is now `mod verify`**, with no alias.
+
+### Every mod is verified before the game loads it
+
+`mod verify` runs each mod on your machine in a sandboxed process that can
+open no files, start no programs and reach no network, and the game loads only
+mods whose exact bytes this engine build has verified. A mod that crashes or
+misbehaves in the check is rejected. The engine menu shows each mod's
+verification.
+
+### Co-op: spirit ashes are shared
+
+A spirit one player summons now appears in every player's game, and leaves
+when it is dismissed. A Mimic Tear looks like its owner on
+every screen, and the blob it starts as goes away once the copy appears.
+
+### Co-op: the whole map is open
+
+A session was confined to the area it began in: a white wall at the area's
+edge and a warp back inside past it, so a host could not even leave the
+Stranded Graveyard. In co-op there is no wall and no warp back.
+
+### Co-op: arriving together
+
+- Two players who load onto the same spot are moved a step apart instead of
+  standing inside each other, which could trap and kill one of them.
+- A joiner whose save was written on horseback stays mounted, on their own
+  Torrent. They used to land on the host's horse and be thrown.
+- A character that had spent time joining as a guest could make a co-op load
+  drop both players from the sky. Every launch now repairs the save.
+- A player who drops out and rejoins quickly gets their character and horse
+  again.
+
+### Co-op: losing to the Grafted Scion
+
+While a teammate fights on, losing to the Grafted Scion in the Chapel of
+Anticipation is a death you spectate from, as for any boss. Your loss
+cutscene used to carry the living teammate into the next map with you. The
+last player's loss plays as usual.
+
+### Summon spirits anywhere
+
+The new rule `spirit_summon_anywhere` (off by default) lets spirit ashes be
+summoned outside summoning pools, and the spirit stays. See
+`examples/summon_anywhere.lua`.
+
+### Every item by name: `sdk.items`
+
+`sdk.items.<table>.<name>` is the row id of any item, spell, skill, Ash of
+War or class, named as the game names it (6794 of them), and
+`sdk.items.file.<table>` is its param file, so a mod can write
+`sdk.params` rows by name. See `examples/class_flasks.lua`.
+
+### Fixed: "?" in the engine menu
+
+Dashes in menu text, the join-request window's title among them, showed as
+"?". They draw correctly.
+
+### Mods can bring bosses back
+
+A mod with the `bosses` permission can revive any boss in the base game or
+Shadow of the Erdtree, the one-off field bosses included:
+`sdk.bosses.revive(10000850)` brings Margit back, and
+`sdk.bosses.revive_all({ dlc = false })` brings back every base-game boss.
+`sdk.bosses.all` lists all 212 encounters (map, DLC or not, rune reward), taken
+from the game's own data. A revived boss is back the next time its map loads:
+rest at a grace, warp or die. Its one-off drop does not come back. See
+[`bosses` in the scripting guide](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md#bosses)
+and `examples/boss_rematch.lua`.
+
+### Events and param files are enums, like stats
+
+Every game property a mod names now has a typed spelling on the SDK:
+`sdk.hooks.on(sdk.hooks.event.on_death, fn)` and
+`sdk.params.row(sdk.params.file.CharaInitParam, 3000)`, alongside the existing
+`sdk.watch.stat.hp`. The type stubs declare each one as a LuaLS `---@enum`,
+so an editor completes the names and flags one that does not exist; in the
+game, indexing a name that does not exist (`sdk.hooks.event.on_levelup`) is an
+error where it is written. `sdk.params.file` lists only files the engine has
+a paramdef for, under the names the game loads them by (`ItemLotParam_map`,
+`ItemLotParam_enemy`). Existing mods that pass plain strings keep working.
+
+### Mods can watch HP, stats, runes and deaths
+
+A mod with the `watch` permission can call `sdk.watch.on(sdk.watch.stat.hp, fn)` and be
+told the old and new value on the frame it changes, or `sdk.watch.get("vigor")`
+to read one at any time. Watchable: `deaths`, `runes`, `level`, the eight
+stats, `hp` and `hp_max`. FP, stamina and flasks are not yet available. See
+[`watch` in the scripting guide](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md#watch).
+
+### Make a character without character creation
+
+`ermod-engine character new --class samurai --keepsake golden-seed --name Sam`
+writes a fresh character of any of the ten starting classes into your
+profile's save and points Continue at it. It loads in the Chapel of
+Anticipation with the class's weapons, armour, spells and stats, read from
+the game's own regulation. `character list` and `character delete` manage the
+slots. `--regulation` builds the class as a baked mod defines it, and the
+`dev save set` fields (`grace=`, `level=`, `runes=` …) apply in the same
+command. See
+[Profiles, and your own save](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#5-profiles-and-your-own-save).
+
+### Shell completion
+
+`ermod-engine completion bash|zsh|fish` prints a completion script. Every
+command, option, class, keepsake, profile and path completes.
+
+### Fixed: "Save data is corrupted" after authoring a fresh character
+
+Changing the Steam id, grace or level of a character that had not yet picked
+up a tutorial message wrote those fields 0x3FC bytes from where they belong.
+The game then refused the save. Such characters now walk and write
+correctly.
+
+## v0.3.2 (2026-10-02)
+
+Game build **2.7.1.0**, as in v0.3.1. Every player in a co-op session needs the
+same game build and this engine version: an older engine neither says goodbye
+nor drops a player who left.
+
+### Co-op: leaving actually leaves, and a crashed player is dropped
+
+"Leave co-op" in the engine menu, the new `ermod-engine coop leave`, and
+quitting the game now tell every other player. Their games remove you and
+despawn your character at once, and you keep playing alone in your own
+world. Until now Leave told no one, and your character stood frozen in every
+other world for the rest of their session.
+
+A player whose game crashes cannot say goodbye. The others now drop it after
+45 seconds without a word from it, and its character disappears. A joiner
+whose host is gone leaves the session as well.
+
+Every player needs this version: an older engine neither says goodbye nor
+drops anyone.
+
+### Co-op: `coop join` stops when the game closes
+
+If the game exits while `coop join` waits for the host to admit you, the command
+now says so and ends. It used to print `still waiting` until its 15-minute limit.
+
+### Co-op: a joiner no longer hangs on a map load on game build 2.7.1.0
+
+A player who joined a host and then warped to another map (for example from a
+dungeon grace to the host's grace) could freeze on a loading screen. The engine
+used an address from the previous game build to tell the game who hosts the
+session, so the game never learned it. On 2.7.1.0 the load now finishes after a
+short wait.
+
+### Co-op: `coop join` says when your game is stuck on a loading screen
+
+After you join, `coop join` keeps watching your game. If the game sits in one
+map-load step for about 30 seconds, it says so, calls it the known joiner hang,
+and points you to `ermod-runtime.log` to send with a bug report. It says so once,
+and says when the load finishes.
+
+### Logs live in the data directory
+
+The engine now writes `ermod-runtime.log` and `ermod-launcher.log` to
+`~/.local/share/ermod/logs/`, beside your mods and profiles. To report a
+problem, copy them from there. Deleting or rebuilding the Wine prefix keeps
+them. The first launch moves any logs an older engine left in the prefix's
+`system32`. `ermod-engine paths` prints both paths.
+
+## v0.3.1 (2026-09-30)
+
+Game build **2.7.1.0**, as in v0.3.0. Every player in a co-op session needs
+the same game build **and this engine version**: a v0.3.1 joiner waits for
+the host to admit it, which a v0.3.0 host never does.
+
+### Co-op: a player joins only once the host has let them in (2026-09-30)
+
+A player who connects to your session is no longer part of it straight away.
+They become a member only once their game-changing mods are exactly yours and
+the host has let them in. Until then they cannot change anything in your world
+(respawns, resting, enemy health, spectating), and a player the host refused
+never reaches the game at all. If a member's mods stop matching mid-session,
+they are paused until they match again.
+
+`coop join` says `joined` only once the host has admitted you. If the host
+refuses you, or does not answer in time, it names the host and gives the
+reason.
+
+### Co-op: the host can approve each player who joins (2026-09-30)
+
+Set in `engine.cfg`:
+
+```text
+coop_join_approval = "ask"   # default "auto": every player whose mods match is let in
+```
+
+With `ask`, a player whose mods match waits. While the ermod menu is closed,
+a notice tells the host who is waiting; the menu lists them with **Allow** and
+**Refuse**. The joiner's game does not start joining until the host allows
+it, so the host can take as long as they need. Allow has been tested live;
+Refuse is covered by tests but has not yet been run in a live session.
+
+### Skipping the title menu no longer plays the title music in the world (2026-09-30)
+
+With the title menu skipped, the title theme kept playing over the world. It
+now stops the same way it does when you press Continue yourself.
+
+### Faster, checked address updates after a game patch (2026-09-30)
+
+Behind the scenes: the addresses the engine uses are now carried from one game
+build to the next by a tool that compares the two game executables, with every
+carried address checked against the hand-verified tables. This release changes
+nothing for supported builds; it makes support for the next game patch quicker
+to deliver and less likely to be wrong.
+
+## v0.3.0 (2026-09-29)
+
+### Game build 2.7.1.0, with co-op (2026-09-29)
+
+The engine now supports Elden Ring **2.7.1.0**, the latest game patch. Mods
+load, param edits apply, the intro logos are skipped, the character sheet reads
+correctly, and **co-op works**: `coop host` and `coop join` form a session, and
+the co-op rule fixes (death, grace, warp, Torrent) and character sync are
+active. Tested host + joiner on 2.7.1.0, in both a development and a release
+build.
+
+Grace travel and skipping the title menu work on 2.7.1.0 too. Every address
+the patch moved was re-derived and checked against the 2.7.1.0 game before use;
+anything that could not be checked is switched off rather than guessed. Every
+player in a session needs the same game build.
+
+### Co-op players see each other again after a warp (2026-09-29)
+
+After one player travelled, host and joiner could stand side by side and each
+see only themselves: the other player's character was not rebuilt after the
+load. It now is, after a warp as well as after a death.
+
+### Co-op joiners no longer crash on release builds (2026-09-29)
+
+A joiner running a release build crashed the moment it joined a session, on
+its first co-op message to the host. The cause was a diagnostic in the engine,
+not the game, and it only misbehaved in optimised builds; it is gone. Debug and
+release builds now behave the same.
+
+### The engine refuses to call a game function at a wrong address (2026-09-29)
+
+If a game function the engine calls is not where this game build puts it, the
+engine now refuses the call and says so, instead of jumping into the middle of
+other code and crashing the game.
+
+### `--ignore-build-guard`: run an unsupported game build anyway (2026-09-29)
+
+A game build the engine has no verified addresses for normally runs unmodded.
+`--ignore-build-guard` runs it anyway, as the newest build the engine does
+have complete addresses for (2.7.0.0). Every command that launches the game
+takes it: `ermod-engine --ignore-build-guard`, `coop host
+--ignore-build-guard`, `coop join … --ignore-build-guard`. It applies to that
+one launch, and both the launcher and `ermod-runtime.log` say when it is in
+effect.
+
+It is unsafe by design: after a patch some of those addresses will have
+moved. Expect crashes, and wrong reads or writes to the characters in your
+modded profile; your own save is still never opened. A supported build runs as
+itself with or without the flag; it only matters after a game patch the engine
+does not know yet.
+
+### macOS: protium, and choosing the Wine setup (2026-09-29)
+
+CrossOver stays the default. If [protium](https://github.com/Benehiko/protium)
+is installed (`~/.local/bin/protium` or on `PATH`) and one of its prefixes
+holds Elden Ring, the engine uses it instead. It launches through
+`protium run --prefix <name>`, so the prefix's own settings apply.
+`--backend auto|crossover|whisky|protium`, or `macos_backend = "…"` in
+`engine.cfg`, picks one outright. A named backend never falls back to
+another vendor's Wine. Setup guide:
+[Installing the engine, macOS](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#macos).
+
+## v0.2.0 (2026-09-29)
+
+### Co-op: everyone runs the same game-changing mods (2026-09-29)
+
+Players in a session must run the same mods that change how the game plays:
+a game rule, or a param write. Mods that only draw, monitor or log may
+differ. A joiner whose set differs is held at the door. The menu lists the
+host's mods, downloaded for them and checked byte for byte, each with an
+**Enable** button, and any game-changing mod the host does not run with a
+**Switch off** button. Once they match, the joiner joins by itself. Nothing
+is written to the mods directory until the player presses **Enable**. In the
+session, a joiner cannot load a game-changing mod the host does not run, or
+switch off one the host does; cosmetic mods load and reload freely.
+
+### The menu no longer fights the camera (2026-09-29)
+
+While the ermod menu is open, or `Insert` has given mod windows focus, the
+mouse pointer moves freely and the camera stays still: the game's cursor
+recentring is suspended and it reads the keyboard and mouse as idle. A
+gamepad keeps working. The menu can also be driven from the keyboard: `Tab`
+or the arrow keys to move, `Space` or `Enter` to press.
+
+### Mod packs and game rules (2026-09-28)
+
+A mod can be a **mod pack**: its manifest lists other mods by name
+(`mods = { "level60", "boss-rules" }`). A pack and its members take
+precedence over mods loaded on their own. When a pack and a standalone mod
+set the same thing to different values, the pack's value is the one that
+lands. The standalone mod still loads, and the log says which of its
+settings was not applied.
+
+Every mod's configuration (`sdk.params` writes, and the new `sdk.rules`) is
+now checked before any of it reaches the game. The engine runs each mod's
+entry point with its writes held back, compares them, and applies only what
+passes. Two packs that set the same thing to different values are both
+refused, along with their members. The same goes for two standalone mods.
+The same value from both is fine. A mod already running keeps its place, so
+a pack added later that disagrees with it is the one refused. Configuration
+can only be changed from a mod's entry point; a write from an event handler
+is an error.
+
+`sdk.rules` holds engine-wide game rules. A mod sets a rule only with the
+permission of the same name. The first rule is `boss_spectate` (default on):
+off, a player who dies in a fog-wall boss fight respawns instead of being
+held to watch a teammate.
+
+### The world gate is the game's own (2026-09-07)
+
+Everything that waits for "a world" — `dev world`, `dev wait-world`, `dev
+state`, `dev warp`, `dev summon`, the co-op rig — now waits for the player to
+be standing in one: the game's title, in-game and map-move step machines at
+their resting steps with no title menu held. It used to be a null test on one
+allocation, which passed on the title screen. `dev state` says
+`world-loading` while the map step is still walking and `not-in-world` at the
+title. `dev world --skip-menu` now presses the game's own Continue instead
+of replaying it, because the replay loaded the world under the title window.
+
+The first release. Everything below has been proven on a live, offline
+launch of the real game unless it says otherwise.
+
+**Supported game build: 2.6.2.0.** On any other build the engine logs that it
+does not recognise the game, disables every hook and lets the vanilla game
+run. It never guesses.
+
+### What it is
+
+`ermod-engine` launches Elden Ring with Easy Anti-Cheat left out — under
+Proton on Linux, in a Wine bottle on macOS — and injects a runtime that can
+run Lua mods in the live game and load a modded `regulation.bin` without
+touching the game install.
+
+### Playing with mods
+
+- **Lua mods, live.** Drop `.lua` files in the engine's mods directory and
+  they run in the game. Each mod is sandboxed in its own VM with only the
+  modules it declares; a mod that misbehaves is disabled on the spot and the
+  others carry on.
+- **Mods can read and write the game's live parameter tables** — the same
+  data a `regulation.bin` holds, edited in the running game.
+- **Mods can draw** — an in-game overlay (`Insert` toggles input focus),
+  report frame timing, and persist their own settings between sessions.
+- **A modded `regulation.bin` loads without ModEngine.** Point the engine at
+  an `ermod-engine dev apply` artifact and the game reads it instead of its
+  own file.
+  The game's own `regulation.bin` is never overwritten, so Steam's integrity
+  check has nothing to revert.
+
+### Getting to the game faster
+
+- **`ermod-engine world` is the testing loop in one command.** Stop the
+  game, author the save `Continue` will load (`--save FILE`, and
+  `field=value` arguments applied by the engine itself), relaunch muted and
+  headless,
+  drive to a loaded world, print the character — about thirty seconds, no
+  input, nothing on the desktop. It replaces an older script, so a mod
+  author has it with the binary rather than with a checkout.
+- **`--headless` keeps the game off your desktop.** The launch runs inside a
+  headless gamescope session — its own nested display that is never shown —
+  so the game does not open a window and does not take the keyboard or
+  mouse. Meant for unattended test runs on a machine someone is also using;
+  `ermod-engine shot`, `screen`, `key`, `state` and `drive` all work
+  unchanged, because they act from inside the game rather than through the
+  display. Needs `gamescope` installed; the launcher says so if it is not.
+- **The logo screens are skipped by default.** The publisher and engine cards
+  shown every launch. The game already has its own way of skipping them; the
+  engine just always takes it, so nothing of ours runs on that path. Turn it
+  off with `skip_title_cards = false` in `engine.cfg`, or on the Engine tab.
+- **The opening movie can be skipped**, and the story cutscenes with it,
+  each behind its own switch (`skip_boot_cinematics`,
+  `skip_ingame_cinematics`, both off by default; also on the Engine tab).
+  The engine presses the game's own `[Esc] Skip` the moment a movie it is
+  told to skip opens, so the game ends it exactly as it ends one you skipped
+  yourself — about three seconds in. The opening movie is proven live; the
+  in-game switch is the same code against cutscenes not yet reached in a
+  test. Four attempts to end the movie through Bink's own API came first and
+  each was ruled out by a live run (one dropped every frame of the picture
+  while the audio ran on; three crashed the game inside Bink).
+- **`ermod-engine key` now moves the game.** It sends a real key event
+  (`SendInput` from inside the process) as well as feeding the input hooks,
+  and that turned out to be the only route the game's screens react to; the
+  earlier message-queue delivery reached the pump and moved nothing. A
+  test can now drive the game from `PRESS ANY BUTTON` through the policy
+  dialogs, the main menu and character creation to the opening movie
+  without a person at the keyboard.
+- **The engine can tell which screen the game is on, and drive it by
+  looking.** `ermod-engine screen` names the menu in front of it (a frame
+  capture reduced to a small fingerprint and matched against references
+  learned from the running game; `--learn` teaches it a new one), and
+  `ermod-engine drive new-game` takes a freshly launched game from `PRESS
+  ANY BUTTON` to the world — through whatever dialogs happen to appear —
+  in under a minute, unattended. It replaced a timing script that broke on
+  every unexpected dialog.
+- **The engine can set the character, instead of driving the game to build
+  one.** `ermod-engine state` prints the live character sheet — level, the
+  eight stats, runes — and `ermod-engine state level=60 vigor=40
+  runes=500000` writes it, printing the sheet as it stands afterwards so a
+  clamped value is visible rather than silent. Proven live on a fresh
+  Vagabond: the first read returned the class's own starting numbers, field
+  for field, and after a write the game's own HUD showed the new rune total.
+  It writes save-side fields only — it cannot warp or spawn, because where
+  the player stands is not a field but the output of the game's
+  map-streaming machinery. Writes are refused outside a loaded world, since
+  the title screen's player data is zeroed and a write there would be
+  discarded unread, and every value is clamped to its real range (stats to
+  the game's own 99).
+- **The engine reads a save file itself, with no Rust and no game.**
+  `ermod-engine save show [<save.sl2>] [--slot N] [--all]` prints the
+  characters in a save — name, level, runes, the eight stats, the save
+  version, the map each stands in, and where each one actually is: position,
+  the grace they last rested at, their spawn point, and the save's Steam
+  account. It reads the file and never writes it. With no file it reads the
+  active profile's save; your vanilla save is only read when you name it. It
+  agrees field for field with the Rust tool it replaced, on every character
+  of every save tested, across nine save versions.
+- **The engine writes a save too, and there is no Rust left in the project.**
+  `ermod-engine save set [<save.sl2>] --slot N field=value ...` writes level,
+  the eight stats, runes, name, Steam id, event flags, the volume sliders and
+  the position block, recomputing every section checksum and the player-data
+  hash. `save set --slot N grace="The First Step"` puts a character at any
+  overworld or legacy-dungeon grace, in the Lands Between or the Land of
+  Shadow, so a test starts on `Continue` already
+  standing there. Unlike the tool it replaced, it writes bytes in place: a set
+  touches the slot you named and nothing else.
+- **`ermod-engine save graces` lists every grace** it can place a character
+  at — with its map, position, unlock flag and whether it can be stood at —
+  and needs no save file. **`save regen-graces`** rebuilds that table from a
+  save's own regulation copy, for the day a game patch moves a grace.
+- The message-queue hooks no longer hang the game on a dialog: a message
+  answered to a look-ahead peek is now kept for the removing call that
+  follows, instead of vanishing and leaving `GetMessageW` to block.
+- Every one of these is version-gated like the rest of the engine: on an
+  unrecognised build, or if anything about the game does not look the way the
+  signature says it should, the engine logs it and leaves the game alone —
+  the intro plays exactly as it would without the engine.
+
+### Writing mods
+
+- **Edit and save; the game picks it up within a second.** No relaunch.
+- **`--mods <dir>` points the game at your working tree**, so the files you
+  edit are the files it loads.
+- **The engine can capture what it draws** — `ermod-engine shot` writes the
+  exact frame the game presented, overlay included.
+- **The authoring tools are part of the engine**, under `ermod-engine dev`:
+  `check` (would this mod load in-game?), `perf` (what does it cost per
+  event?), `stubs` (LuaLS type stubs for the SDK), `img` (turn a frame
+  capture into numbers), and `apply`, `ls`, `show` and `selftest` for
+  working with a `regulation.bin` offline. `check` and `img diff` report
+  through the exit code, so both drop straight into a pre-commit hook or CI.
+- The SDK stubs, the worked examples and the scripting reference live in the
+  open repo, which builds nothing: `stubs/ermod.lua` is generated from the
+  engine's own binding tables, so it lists every `sdk.*` function a mod can
+  call, exhaustively.
+
+### Your characters
+
+- **A modded game never plays on your own save.** Each session plays on a
+  *profile* — a named save of its own — so a mod that grants a hundred levels
+  or writes a bad value lands there and not in the save Steam Cloud carries
+  to every machine you own. Your own save is only ever read.
+- **The engine offers to copy your characters in.** On a first launch it
+  shows what your own save holds and asks once whether to copy them into the
+  profile — in a window if your desktop has one, in the terminal if not.
+  Answer with `--port-vanilla` or `--no-port-vanilla` to skip the question,
+  or `--no-gui` to be asked in the terminal; say no and it is remembered
+  rather than asked again.
+
+  ```text
+  Profile 'default' has no characters yet.
+  Your own save has 3:
+      a                  lv 164    118h
+      BBB                lv  32     13h
+      test60             lv  60      0h
+
+  Copy them into this profile? Your own save is only read. [Y/n]
+  ```
+
+- **`ermod-engine profile list` says what each profile holds** — every
+  character, its level and its playtime — and which profiles were copied from
+  your own save, including when that save has changed since.
+- `ermod-engine profile new|use|delete|port` manage profiles; `profile
+  export` is the one command that writes your own save back, it asks for
+  `--yes`, and it never overwrites its own backup.
+- `ermod-engine profile backup` copies your own save aside, under today's
+  date. It reads that file and never writes it, and a second backup on one
+  day never replaces the first.
+- `ermod-engine paths` shows where everything lives, and the characters in
+  your own save, so you can confirm the engine found the right file.
+
+### A window, if you would rather not use a terminal
+
+- **`ermod-engine settings` opens a settings window.** One page: your engine
+  switches on one tab, your saves on the other.
+- **The Profiles tab shows your own save first**, with the characters in it,
+  and then every profile with its characters, when it was last written, and
+  whether it was copied from your own save. Buttons do what the `profile`
+  commands do: choose which profile the game plays on, copy your characters
+  into one, copy one back over your own save, back your own save up, make a
+  profile, delete one.
+- **Anything that would overwrite characters asks twice**, and says what it
+  is about to do while it waits for the second press.
+- **A Mods tab switches mods on and off**, per profile — the same switches
+  the engine's own in-game menu flips, so a mod turned off in one is off in
+  the other. The window cannot say whether a mod is *running* or what it
+  costs per frame; that is live, and the in-game menu is where it is shown.
+- **The Engine tab is the engine's settings file.** The two key bindings are
+  read from `engine.cfg` and written back. Each says what pressing that key
+  in game actually does, shows the key it is on now, and rebinds by asking
+  you to press the key you want — any key the engine can bind, not a short
+  list — with a button back to the default beside it.
+- Everything the window does has a command, and every command still works.
+  On a machine with no display the window says so and names the commands
+  instead.
+
+### On a Mac
+
+- **The engine runs on macOS.** The launcher builds as a native Apple Silicon
+  binary and starts the game in a Wine bottle — CrossOver, Whisky, or anything
+  else Wine-based — instead of under Proton, which is a Linux program and has
+  no macOS build. It finds the bottle itself if you use CrossOver or Whisky;
+  for anything else, name it with `--prefix <bottle> --wine <path to wine>`.
+- **The Steam that has to be running is the Windows one inside the bottle.**
+  That is the client the game's own Steamworks talks to. Offline Mode is not
+  required on either platform.
+- **An install with the executables renamed still works, and still refuses Easy
+  Anti-Cheat.** Mac players commonly copy `eldenring.exe` over
+  `start_protected_game.exe` so Steam's Play button starts the game. The
+  engine reads each executable's own version resource rather than trusting its
+  filename, so it launches whichever file really is the game and refuses
+  whichever one really is Easy Anti-Cheat — in either direction. You do not
+  need that rename for the engine, which never uses Steam's Play button, but
+  having done it costs you nothing.
+- **The overlay and frame capture work here too.** `sdk.ui` (the in-game
+  overlay) and `sdk.screen` / `ermod-engine shot` (frame capture) had been off
+  on macOS: they draw and read back through a D3D12 command queue, and the way
+  the runtime learned the game's queue is a vtable write that D3DMetal does not
+  allow. The overlay now falls back to a command queue of its own when it
+  cannot learn the game's, so both work without that write. Linux is unchanged
+  — there it still uses the game's queue. (Built and covered by the tests; that
+  the overlay renders under D3DMetal is not yet confirmed on real hardware.)
+- **`--muted` works here too.** It used to route audio into a PulseAudio null
+  sink, which macOS has none of. The runtime now mutes the game's own audio
+  session from inside the process (through `IAudioSessionManager` /
+  `ISimpleAudioVolume`), so it needs nothing from the host, touches no prefix
+  or game setting, and leaves nothing behind — on either platform.
+- **What is not there yet.** `--headless` is Linux-only by nature: it is
+  gamescope's nested offscreen compositor, and macOS has no gamescope and no
+  equivalent, so the flag is refused there rather than half-faked. `dev coop
+  host/join/udp` and `dev egress` have not been ported, and the settings
+  window falls back to naming the equivalent commands. Each says so plainly
+  instead of quietly doing nothing. `dev coop selftest` runs (it opens no
+  socket), and `dev world` runs — muted but visible, and it says so, rather
+  than asking for an offscreen launch the platform cannot give and never
+  launching.
+- **Each platform's code is in its own file, and the binary carries only its
+  own.** The launcher's Linux code (`/proc`, Proton, gamescope, the raw-syscall
+  co-op transports) and its macOS code (Wine bottles, `libproc`) live in
+  `_linux.zig` and `_darwin.zig` files, the way Go does it, and the build
+  compiles one set. A macOS launcher has no Linux syscall in it to reach by
+  mistake, and vice versa. Building for any other OS is refused in one
+  sentence; `make check-os` type-checks the platform you are not sitting at.
+- **Not yet proven on real hardware.** Everything above is covered by the test
+  suite and was driven end to end against a synthetic bottle; a launch of the
+  real game on a real Mac has not happened yet.
+  [Installing the engine, macOS](https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#macos)
+  says what to expect.
+
+### Safety
+
+- **Never with anti-cheat.** The engine refuses to launch while Easy
+  Anti-Cheat is running, and the runtime checks again inside the game before
+  enabling anything. There is no bypass flag. Steam's Offline Mode is not
+  required — the engine never starts the protected launcher.
+- **The game install is never written to.** Everything the engine stages goes
+  in the Wine prefix, and `ermod-engine uninstall` removes it again.
+- **Your own save is only read**, including when the engine looks inside it
+  to name your characters. The one command that writes it is `profile
+  export`, which you have to ask for by name.
+- **An unknown game build disables everything** rather than guessing at
+  addresses that have moved.
+- **Which file is the game is decided by reading it, not by its name.** The
+  rule is "launch the game, never Easy Anti-Cheat", and it is kept by asking
+  each executable what it is — every Windows binary records its own name
+  inside itself, and copying or renaming a file does not change that. So an
+  executable that has been renamed cannot smuggle Easy Anti-Cheat past the
+  rule, and cannot hide the game from it either.
+- **You can check what the game talks to.** `ermod-engine dev egress` reports
+  every host the running game is connected to and says whether any of them is
+  FromSoftware's. Worth knowing what it found: a modded session reaches no
+  FromSoftware server, but it is not silent either — Elden Ring ships Epic
+  Online Services and that dials `epicgames.dev` on its own, in a vanilla
+  session as much as a modded one. The engine does not cause it and will not
+  claim it does not happen. The command opens no connection itself.
+
+### Knowing what you are running
+
+- `ermod-engine --version` reports the engine, the mod front end it was built
+  against, and the game builds it supports.
+- If the installed game is not supported, the launcher says so before
+  launching, in the terminal, and names what it does support.
+- The launcher warns if the runtime beside it is from a different build,
+  which is what a half-finished unpack over an older release looks like.
+- `--help` and `--help-test` are styled when printed to a terminal: bold
+  headings, subcommands in colour, arguments and flags picked out, and a blank
+  line between entries so each command reads as its own block. Piped into a
+  file or pager, with `NO_COLOR` set, or on `TERM=dumb`, the output is plain
+  text, unchanged.

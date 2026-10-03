@@ -22,3 +22,7 @@ Everything here is also on the website, rendered from these same files.
 | [Architecture](architecture.md)                 | How it fits together                                     |
 
 The worked examples are in [`examples/`](../examples/README.md).
+
+## Releases
+
+[Changelog](changelog.md): what changed in each engine release, newest first.

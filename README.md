@@ -14,6 +14,8 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 - 🐧 **Linux** (Steam + Proton) and **macOS on Apple Silicon** (CrossOver,
   Whisky or protium, detected for you).
 
+🌐 **Website: <https://benehiko.github.io/elden-ring-mods/>**
+
 ---
 
 ## Quick start

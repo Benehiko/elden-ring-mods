@@ -6,8 +6,8 @@
 -- is the one that lands, and the standalone mod still loads without that
 -- write. Two packs that disagree on a setting are both refused.
 --
--- `sdk.rules` holds engine-wide game rules. Setting one needs the permission
--- of the same name, and works only here in the entry point: a rule set from
+-- `sdk.rules` holds engine-wide game rules. Setting one needs the "rules"
+-- permission, and works only here in the entry point: a rule set from
 -- an event handler is an error.
 --
 -- Try: load it beside `level60.lua` and read the log. Then add a standalone
@@ -17,7 +17,7 @@ local pack = {
   name = "boss-rules-pack",
   version = "1.0.0",
   run_at = "launch",
-  permissions = { "boss_spectate", "log" },
+  permissions = { "rules", "log" },
   mods = { "level60" },
 }
 

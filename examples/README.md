@@ -30,7 +30,9 @@ editor checks the names, and a typo is an error where it is written.
 | --- | --- |
 | [`level60.lua`](level60.lua) | **the reference mod.** Every starting class begins at level 60: `sdk.params.row`, typed field read and write, and the offline `ermod-engine mod bake` path |
 | [`double_runes.lua`](double_runes.lua) | `sdk.params.rows` over a whole PARAM table |
-| [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, a rule permission, `sdk.rules`, and precedence over standalone mods |
+| [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, the `rules` permission, `sdk.rules`, and precedence over standalone mods |
+| [`class_flasks.lua`](class_flasks.lua) | `sdk.items`: change class defaults (starting flasks, items) by name, with `sdk.items.file` naming the param |
+| [`summon_anywhere.lua`](summon_anywhere.lua) | the `rules` permission: spirit ashes work outside summoning pools (`spirit_summon_anywhere`) |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
 passes `mod verify`, but its entry point fails with "unknown param file" in the

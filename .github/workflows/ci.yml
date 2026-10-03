@@ -39,6 +39,20 @@ jobs:
           done
           exit $status
 
+  # Every Markdown file is formatted with Prettier (.prettierrc.json).
+  # `make fmt` fixes it locally.
+  markdown-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Markdown is formatted
+        run: make check-fmt
+
   # This repository publishes no tooling (AGENTS.md): anything that only the
   # engine's maintainers run belongs in the engine. A Python file has been
   # added here before, after the rule existed, so the rule is enforced.

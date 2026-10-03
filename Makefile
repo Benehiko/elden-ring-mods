@@ -12,7 +12,18 @@
 
 ENGINE ?= ../elden-ring-mods-engine
 
-.PHONY: hooks check-stubs check-cli-docs
+PRETTIER ?= npx --yes prettier@3.9.9
+
+.PHONY: hooks check-stubs check-cli-docs fmt check-fmt
+
+# Formats every Markdown file with Prettier (.prettierrc.json). Needs Node;
+# the generated docs/cli.md is left alone (.prettierignore).
+fmt:
+	@$(PRETTIER) --write "**/*.md"
+
+# Fails if any Markdown file is not formatted. CI runs the same check.
+check-fmt:
+	@$(PRETTIER) --check "**/*.md"
 
 hooks:
 	git config core.hooksPath .githooks

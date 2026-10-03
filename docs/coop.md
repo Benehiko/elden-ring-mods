@@ -323,13 +323,13 @@ says where it is).
 
 ### Other messages
 
-| Message | What to do |
-| --- | --- |
-| `the game is already running` | `coop` starts the game itself. Quit the game and run the command again. |
-| `cannot tell this machine's Steam ID` | No save of yours exists yet. Play once through Steam, or give an ID with `--as`. |
-| `a player is <SteamID64>@<a.b.c.d>…` | The ID or address is mistyped. Copy the line `coop id` printed. |
-| `no world within 15 minutes` | The game sat at the title screen. Run the command again and press Continue. |
-| `the game is still running, without co-op` | A step failed; the lines above say which. Quit the game and try again. |
+| Message                                    | What to do                                                                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------- |
+| `the game is already running`              | `coop` starts the game itself. Quit the game and run the command again.          |
+| `cannot tell this machine's Steam ID`      | No save of yours exists yet. Play once through Steam, or give an ID with `--as`. |
+| `a player is <SteamID64>@<a.b.c.d>…`       | The ID or address is mistyped. Copy the line `coop id` printed.                  |
+| `no world within 15 minutes`               | The game sat at the title screen. Run the command again and press Continue.      |
+| `the game is still running, without co-op` | A step failed; the lines above say which. Quit the game and try again.           |
 
 ### The logs
 

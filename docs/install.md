@@ -75,6 +75,7 @@ Proton it names.
   ```
 
   `WINEPREFIX` and `WINE` in the environment do the same.
+
 - **Turn off the Steam overlay.** In the bottle's Steam: Elden Ring →
   Properties → uncheck "Enable the Steam Overlay while in-game". With it on,
   the game black-screens and closes itself under Wine on macOS, with or
@@ -152,9 +153,9 @@ Keep the three binaries together. `ermod-engine` is the one you run; it finds
 The macOS `ermod-engine` is signed ad hoc, not with an Apple Developer ID, and
 is not notarized. A web browser marks what it downloads as quarantined, and
 Gatekeeper refuses to run a quarantined binary it cannot trace to a registered
-developer. The message reads *"ermod-engine" cannot be opened because the
-developer cannot be verified*, or, on macOS 15 and later, *Apple could not
-verify "ermod-engine" is free of malware*.
+developer. The message reads _"ermod-engine" cannot be opened because the
+developer cannot be verified_, or, on macOS 15 and later, _Apple could not
+verify "ermod-engine" is free of malware_.
 
 Once you have checked the download (above), clear the quarantine from the
 unpacked directory:
@@ -203,7 +204,7 @@ it. Common cases:
   launched through Proton on this machine, or Proton is not installed.
   Launch the game normally once, then try again.
 - **`no Wine bottle found`** or **`found a Wine bottle but no Elden Ring
-  inside it`** (macOS) means none of the bottles the engine searched holds
+inside it`** (macOS) means none of the bottles the engine searched holds
   the game. Name the right one with `--prefix`.
 - **`no Wine found to run the bottle with`** (macOS): name one with
   `--wine`.
@@ -314,7 +315,7 @@ Script mods and a modded regulation can both be active at once.
 This is not a setting. A mod that grants a hundred levels, a bad regulation
 file, a script with a bug in it: none of that can reach the save Steam Cloud
 carries to every machine you own, because the modded game never reads that
-file. It plays on a *profile*, a save of the engine's own, kept in
+file. It plays on a _profile_, a save of the engine's own, kept in
 `~/.local/share/ermod/profiles/`.
 
 The first launch creates a profile called `default`, which is empty. Without
@@ -380,10 +381,10 @@ backup, because it may be your only copy.
 
 The game starts as normal, with mods loaded.
 
-| Key | What it does |
-| --- | --- |
+| Key                | What it does                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
 | `` ` `` (backtick) | Opens and closes the engine's menu: every mod with its state and cost, a switch per mod, profiles, and co-op. |
-| `Insert` | Gives mouse and keyboard to mod windows (an overlay, a settings panel), and hands them back to the game. |
+| `Insert`           | Gives mouse and keyboard to mod windows (an overlay, a settings panel), and hands them back to the game.      |
 
 While the menu is open, or `Insert` has given mod windows focus, the mouse
 belongs to them: the pointer moves freely and the camera stays still. The
@@ -409,14 +410,14 @@ skip_boot_cinematics = false
 skip_ingame_cinematics = false
 ```
 
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `menu_key` | `"grave"` | The key that opens and closes the engine's menu. |
-| `focus_key` | `"insert"` | The key that gives mod windows the mouse and keyboard. |
-| `skip_title_cards` | `true` | Skips the publisher and engine logo screens at startup. |
-| `skip_boot_cinematics` | `false` | Skips the cinematics the game plays as it boots. |
-| `skip_ingame_cinematics` | `false` | Skips cinematics that play during the game. |
-| `coop_join_approval` | `"auto"` | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
+| Setting                  | Default    | What it does                                                                                                                                                                            |
+| ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `menu_key`               | `"grave"`  | The key that opens and closes the engine's menu.                                                                                                                                        |
+| `focus_key`              | `"insert"` | The key that gives mod windows the mouse and keyboard.                                                                                                                                  |
+| `skip_title_cards`       | `true`     | Skips the publisher and engine logo screens at startup.                                                                                                                                 |
+| `skip_boot_cinematics`   | `false`    | Skips the cinematics the game plays as it boots.                                                                                                                                        |
+| `skip_ingame_cinematics` | `false`    | Skips cinematics that play during the game.                                                                                                                                             |
+| `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
 
 One setting per line, as `name = value`. Setting names are lowercase,
 exactly as above. A key is a quoted name; a switch is `true` or `false`.

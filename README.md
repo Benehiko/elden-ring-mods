@@ -87,10 +87,10 @@ Then read **[the scripting guide](docs/scripting.md)** and the eleven
 
 ## In the game
 
-| Key | What it does |
-| --- | --- |
-| `` ` `` (backtick) | Opens the ermod menu: every mod with a switch, profiles, and co-op. |
-| `Insert` | Gives mouse and keyboard to mod windows, and hands them back to the game. |
+| Key                | What it does                                                              |
+| ------------------ | ------------------------------------------------------------------------- |
+| `` ` `` (backtick) | Opens the ermod menu: every mod with a switch, profiles, and co-op.       |
+| `Insert`           | Gives mouse and keyboard to mod windows, and hands them back to the game. |
 
 The menu works from the keyboard too (`Tab`/arrows, `Space`/`Enter`). Rebind
 either key with `./ermod-engine settings`
@@ -98,25 +98,25 @@ either key with `./ermod-engine settings`
 
 ## Supported game versions
 
-| Game build | Engine | |
-| --- | --- | --- |
-| **2.7.1.0** (latest) | v0.3.0 and later | mods and co-op |
-| 2.7.0.0 | v0.2.0 and later | mods and co-op |
-| 2.6.2.0 | v0.1.0 and later | mods; co-op without the rule fixes |
+| Game build           | Engine           |                                    |
+| -------------------- | ---------------- | ---------------------------------- |
+| **2.7.1.0** (latest) | v0.3.0 and later | mods and co-op                     |
+| 2.7.0.0              | v0.2.0 and later | mods and co-op                     |
+| 2.6.2.0              | v0.1.0 and later | mods; co-op without the rule fixes |
 
 `./ermod-engine check-build` tells you which one you have. An unknown build
 runs unmodded, with a warning.
 
 ## Everything else
 
-| | |
-| --- | --- |
-| [Install guide](docs/install.md) | Verifying downloads, macOS setup, where mods go, settings, troubleshooting |
-| [Profiles and your save](docs/install.md#5-profiles-and-your-own-save) | Modded saves kept apart from your own; `profile` and `character` commands |
-| [Co-op guide](docs/coop.md) · [LAN / VPN](docs/network.md) | Sessions, mods in co-op, fixes |
-| [Scripting guide](docs/scripting.md) | Every SDK module, the sandbox, `mod perf`, `mod bake` |
-| [Command reference](docs/cli.md) | Every command and flag |
-| [Architecture](docs/architecture.md) | How it fits together |
+|                                                                        |                                                                            |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Install guide](docs/install.md)                                       | Verifying downloads, macOS setup, where mods go, settings, troubleshooting |
+| [Profiles and your save](docs/install.md#5-profiles-and-your-own-save) | Modded saves kept apart from your own; `profile` and `character` commands  |
+| [Co-op guide](docs/coop.md) · [LAN / VPN](docs/network.md)             | Sessions, mods in co-op, fixes                                             |
+| [Scripting guide](docs/scripting.md)                                   | Every SDK module, the sandbox, `mod perf`, `mod bake`                      |
+| [Command reference](docs/cli.md)                                       | Every command and flag                                                     |
+| [Architecture](docs/architecture.md)                                   | How it fits together                                                       |
 
 This repository is the open half (SDK stubs, examples and docs) under
 [Apache-2.0](LICENSE). The engine is closed source; its binaries ship on the

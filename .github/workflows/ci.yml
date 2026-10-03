@@ -39,8 +39,8 @@ jobs:
           done
           exit $status
 
-  # Every Markdown file is formatted with Prettier (.prettierrc.json).
-  # `make fmt` fixes it locally. Prettier comes from the flake, so CI and
+  # Every Markdown file is formatted and lint-clean under rumdl (.rumdl.toml).
+  # `make fmt` fixes it locally. rumdl comes from the flake, so CI and
   # `nix develop` run the same version (flake.lock).
   markdown-format:
     runs-on: ubuntu-latest

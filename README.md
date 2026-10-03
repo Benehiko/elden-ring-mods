@@ -23,7 +23,7 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 ### 1. Play with mods
 
 Download `ermod-engine` for your machine from the
-**[latest release](../../releases/latest)** (`…-linux-x86_64.tar.gz` or
+**[latest release](https://github.com/Benehiko/elden-ring-mods/releases/latest)** (`…-linux-x86_64.tar.gz` or
 `…-macos-aarch64.tar.gz`), then:
 
 ```sh
@@ -120,6 +120,6 @@ runs unmodded, with a warning.
 
 This repository is the open half (SDK stubs, examples and docs) under
 [Apache-2.0](LICENSE). The engine is closed source; its binaries ship on the
-[Releases](../../releases) page under their own licence ([NOTICE](NOTICE)).
+[Releases](https://github.com/Benehiko/elden-ring-mods/releases) page under their own licence ([NOTICE](NOTICE)).
 ELDEN RING is the property of FromSoftware and Bandai Namco. This project is
 unaffiliated, distributes no game data, and never writes to an installation.

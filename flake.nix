@@ -21,7 +21,7 @@
         default = pkgs.mkShell {
           packages = [
             pkgs.gnumake
-            pkgs.prettier # make fmt / make check-fmt
+            pkgs.rumdl # make fmt / make check-fmt (Markdown)
             pkgs.lua5_4 # luac, for the example syntax check
           ];
         };

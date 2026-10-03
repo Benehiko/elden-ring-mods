@@ -12,19 +12,20 @@
 
 ENGINE ?= ../elden-ring-mods-engine
 
-PRETTIER ?= prettier
+RUMDL ?= rumdl
 
 .PHONY: hooks check-stubs check-cli-docs fmt check-fmt
 
-# Formats every Markdown file with Prettier (.prettierrc.json). `nix develop`
-# provides it, at the version pinned in flake.lock; the generated docs/cli.md
-# is left alone (.prettierignore).
+# Formats and lint-fixes every Markdown file with rumdl (.rumdl.toml). `nix
+# develop` provides it, at the version pinned in flake.lock; the generated
+# docs/cli.md is left alone.
 fmt:
-	@$(PRETTIER) --write "**/*.md"
+	@$(RUMDL) fmt .
 
-# Fails if any Markdown file is not formatted. CI runs the same check.
+# Fails if any Markdown file is not formatted or breaks a lint rule (a
+# broken relative link, say). CI runs the same check.
 check-fmt:
-	@$(PRETTIER) --check "**/*.md"
+	@$(RUMDL) check .
 
 hooks:
 	git config core.hooksPath .githooks

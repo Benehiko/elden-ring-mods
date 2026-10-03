@@ -12,12 +12,13 @@
 
 ENGINE ?= ../elden-ring-mods-engine
 
-PRETTIER ?= npx --yes prettier@3.9.9
+PRETTIER ?= prettier
 
 .PHONY: hooks check-stubs check-cli-docs fmt check-fmt
 
-# Formats every Markdown file with Prettier (.prettierrc.json). Needs Node;
-# the generated docs/cli.md is left alone (.prettierignore).
+# Formats every Markdown file with Prettier (.prettierrc.json). `nix develop`
+# provides it, at the version pinned in flake.lock; the generated docs/cli.md
+# is left alone (.prettierignore).
 fmt:
 	@$(PRETTIER) --write "**/*.md"
 

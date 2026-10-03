@@ -35,9 +35,11 @@ closed repository `elden-ring-mods-engine`.
 - `make check-stubs`: the committed stubs are what the engine generates.
 - `make check-cli-docs`: the committed command reference is what the engine
   generates from its `--help`.
+- `nix develop` (or `direnv allow`, via `.envrc`) gives you `make`,
+  Prettier and `luac` at the versions pinned in `flake.lock`. The flake is a
+  dev shell only; it builds nothing.
 - `make fmt` / `make check-fmt`: format or check every Markdown file with
-  Prettier (needs Node; config in `.prettierrc.json`, generated
-  `docs/cli.md` excluded).
+  Prettier (config in `.prettierrc.json`, generated `docs/cli.md` excluded).
 - CI: every example parses, Markdown is formatted, and no Python or `tools/`
   exists.
 - `make hooks` once per clone, to install the pre-commit hook.

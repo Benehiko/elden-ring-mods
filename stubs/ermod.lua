@@ -330,7 +330,7 @@ function watch.get(stat) end
 ---value wins over a standalone mod's.
 ---@class ermod.sdk.rules
 ---@field boss_spectate boolean # fog-wall bosses: a dead peer watches a survivor instead of respawning (default true)
----@field spirit_summon_anywhere boolean # spirit ashes work anywhere, not only at a Rebirth Monument; the bell is still needed (default false)
+---@field spirit_summon_anywhere boolean # spirit ashes work anywhere, not only at a Rebirth Monument; one at a time, and it stays with the player (default false)
 
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file

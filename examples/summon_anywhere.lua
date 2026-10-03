@@ -1,8 +1,8 @@
 -- Example: spirit ashes work anywhere, not only beside a Rebirth Monument.
 --
 -- A game rule, so the manifest names the rule as its permission and sets it
--- from the entry point. The Spirit Calling Bell is still needed and one
--- spirit is out at a time; inside a summoning pool nothing changes. See
+-- from the entry point. One spirit is out at a time and it stays with the
+-- player; inside a summoning pool nothing changes. See
 -- docs/e16/summon-anywhere.md for how it works.
 
 local mod = {

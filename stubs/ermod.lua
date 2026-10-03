@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"boss_spectate"|"spirit_summon_anywhere"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -17,7 +17,7 @@
 ---@field ui ermod.sdk.ui?
 ---@field screen ermod.sdk.screen?
 ---@field watch ermod.sdk.watch?
----@field rules ermod.sdk.rules? # present when a rule permission is held
+---@field rules ermod.sdk.rules? # present with the "rules" permission
 ---@field items ermod.sdk.items # every item, spell, skill and class by row id; always present
 
 ---The table a mod script returns.
@@ -324,10 +324,9 @@ function watch.on(stat, handler) end
 ---@return integer?
 function watch.get(stat) end
 
----Engine-wide game rules. Present when the manifest holds a rule
----permission. Every rule is readable; setting one needs the permission
----of the same name and works only from the entry point. A mod pack's
----value wins over a standalone mod's.
+---Engine-wide game rules. Present when the manifest holds the "rules"
+---permission. Every rule is readable and settable, from the entry
+---point only. A mod pack's value wins over a standalone mod's.
 ---@class ermod.sdk.rules
 ---@field boss_spectate boolean # fog-wall bosses: a dead peer watches a survivor instead of respawning (default true)
 ---@field spirit_summon_anywhere boolean # spirit ashes work anywhere, not only at a Rebirth Monument; one at a time, and it stays with the player (default false)

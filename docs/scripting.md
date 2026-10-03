@@ -114,12 +114,12 @@ table a mod receives is *built* from it: an undeclared module is not present
 at all, so `sdk.ui` is nil in a mod that did not ask for `ui`. A data-only
 mod cannot draw, and cannot be made to draw by a bug.
 
-The eight modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
-`screen` and `watch`. What each offers is in [Modules](#modules) below.
-
-Each game rule is a permission too, named after the rule. Holding any rule
-permission puts `sdk.rules` on the table; setting a rule needs that rule's
-own permission. The only rule so far is `boss_spectate`.
+The nine modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
+`screen`, `watch` and `rules`. What each offers is in [Modules](#modules)
+below. `rules` puts `sdk.rules` on the table and covers every game rule;
+which rules a mod changes is what it sets, and that is what the engine checks
+against other mods. `sdk.items` is on every table: it is read-only data and
+needs no permission.
 
 Around that, the VM itself is narrow. Only `base`, `table`, `string` and
 `math` are opened. `io`, `os`, `package` and `debug` never are, and the
@@ -340,18 +340,39 @@ the game presented; see [frame captures](#frame-captures).
 ### `rules`
 
 Engine-wide game rules, read and set as fields: `sdk.rules.boss_spectate =
-false`. Any rule can be read. Setting one needs the permission of the same
-name, takes a boolean, and works only from the entry point. An unknown name
-is an error.
+false`. Any rule can be read. Setting one needs the `rules` permission,
+takes a boolean, and works only from the entry point. An unknown name is an
+error.
 
 | Rule | Default | Meaning |
 | --- | --- | --- |
 | `boss_spectate` | `true` | In a fog-wall boss fight, a player who dies while a teammate lives is held and watches a survivor. Off, they respawn at the grace. |
+| `spirit_summon_anywhere` | `false` | Spirit ashes work outside summoning pools: one spirit at a time, and it stays with the player. Inside a pool the game's own rules apply. |
 
 A rule set by a mod returns to its default when the mod is unloaded or
 switched off. Rules exist only in the running game; `mod bake` has nowhere to
 write one, so offline a rule reads as its default and setting it does
 nothing.
+
+### `items`
+
+Every item, spell, skill and class the game names, as tables from a name to
+its row id, with `sdk.items.file` naming the param file the ids are rows of.
+On every `sdk`; no permission.
+
+```lua
+local row = sdk.params.row(sdk.items.file.classes, sdk.items.classes.wretch)
+row.HpEstMax = 6                                     -- starting Crimson flasks
+row.item_01 = sdk.items.upgrade_materials.golden_seed
+```
+
+The tables: `consumables`, `key_items`, `crafting_materials`,
+`remembrances`, `sorceries`, `incantations`, `spirit_ashes`,
+`crystal_tears`, `notes`, `upgrade_materials` (all `EquipParamGoods`),
+`weapons`, `armor`, `talismans`, `ashes_of_war`, `skills` and `classes`. A
+name is the English display name in lower case with words joined by `_`
+(`flask_of_crimson_tears_plus_4`); the stub lists every one. Indexing a name
+that does not exist is an error.
 
 ## The author loop
 
@@ -526,7 +547,7 @@ A mod whose manifest lists `mods` is a mod pack:
 ```lua
 local pack = {
   name = "boss-rules-pack", version = "1.0.0", run_at = "launch",
-  permissions = { "boss_spectate", "log" },
+  permissions = { "rules", "log" },
   mods = { "level60" },
 }
 

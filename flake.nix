@@ -23,6 +23,8 @@
             pkgs.gnumake
             pkgs.rumdl # make fmt / make check-fmt (Markdown)
             pkgs.lua5_4 # luac, for the example syntax check
+            pkgs.pandoc # make site: docs/*.md to HTML
+            pkgs.pagefind # make site: the static search index
           ];
         };
       });

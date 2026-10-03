@@ -8,8 +8,9 @@ on:
 # This repository builds nothing (E15): the executable half, the Lua VM, the
 # SDK bindings and the param pipeline, lives in the engine repository, and
 # what is published here is the surface a mod author writes against. So CI
-# checks the two things that can still go wrong: an example that would no
-# longer load, and tooling creeping back in.
+# checks what can still go wrong: an example that would no longer load,
+# Markdown that is not formatted, a website that no longer builds, and
+# tooling creeping back in.
 
 jobs:
   # Every example must be a well-formed Lua chunk. This is weaker than
@@ -51,6 +52,18 @@ jobs:
 
       - name: Markdown is formatted
         run: nix develop --command make check-fmt
+
+  # The website builds: every guide renders and the search index is made.
+  # pages.yml deploys the same build from main; this catches a break in a PR.
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: The website builds
+        run: nix develop --command make site
 
   # This repository publishes no tooling (AGENTS.md): anything that only the
   # engine's maintainers run belongs in the engine. A Python file has been

@@ -5,3 +5,6 @@ zig-out/
 build_out/
 mod/
 .direnv/
+
+# The website, built by `make site`.
+_site/

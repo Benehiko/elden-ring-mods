@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -18,6 +18,7 @@
 ---@field screen ermod.sdk.screen?
 ---@field watch ermod.sdk.watch?
 ---@field rules ermod.sdk.rules? # present with the "rules" permission
+---@field bosses ermod.sdk.bosses? # present with the "bosses" permission
 ---@field items ermod.sdk.items # every item, spell, skill and class by row id; always present
 
 ---The table a mod script returns.
@@ -98,6 +99,10 @@ params.file = {
   EquipParamProtector = "EquipParamProtector",
   ---`EQUIP_PARAM_GOODS_ST` rows, 176 bytes each.
   EquipParamGoods = "EquipParamGoods",
+  ---`NPC_PARAM_ST` rows, 736 bytes each.
+  NpcParam = "NpcParam",
+  ---`SP_EFFECT_PARAM_ST` rows, 912 bytes each.
+  SpEffectParam = "SpEffectParam",
 }
 
 ---One row of a param file by id, or nil if there is no such row.
@@ -330,6 +335,354 @@ function watch.get(stat) end
 ---@class ermod.sdk.rules
 ---@field boss_spectate boolean # fog-wall bosses: a dead peer watches a survivor instead of respawning (default true)
 ---@field spirit_summon_anywhere boolean # spirit ashes work anywhere, not only at a Rebirth Monument; one at a time, and it stays with the player (default false)
+
+---Every boss the game pays a clear for, base game and DLC, from the
+---regulation's GameAreaParam. Present with the "bosses" permission.
+---A revive clears the boss's defeat flag; the boss is back the next
+---time its map loads (rest at a grace, warp, or die).
+---@class ermod.sdk.bosses
+---@field all ermod.boss[] # every boss, in GameAreaParam row order
+---@field id ermod.bosses.id # every boss by name: sdk.bosses.id.margit_the_fell_omen == 10000850
+local bosses = {}
+
+---@class ermod.boss
+---@field id integer # GameAreaParam row id (what sdk.bosses.id.<key> is)
+---@field key string # its sdk.bosses.id key, e.g. "margit_the_fell_omen" ("boss_<row>" where unresolved)
+---@field display_name string # its one name, e.g. "Margit, the Fell Omen"; "" where unresolved
+---@field name string # "c<model>: <every name the game files under its model>"; "" where not measured
+---@field npc_param integer? # its NpcParam row (stats); nil where not measured
+---@field flag integer # the defeat flag a revive clears
+---@field map string # the boss's map, e.g. "m10_00_00_00"
+---@field dlc boolean # Shadow of the Erdtree
+---@field runes integer # runes paid on the kill (solo)
+---@field marker ermod.vec3 # GameAreaParam's marker near the arena (not the player's coordinate frame)
+---@field idle_pos ermod.vec3? # where the boss waits before its fight (maybe outside the arena), in the player's frame near it; nil if not measured
+---@field arena ermod.vec3? # where the player stood when a recorded fight began (inside the fog); nil if none recorded
+---@field fight_pos ermod.vec3? # where the boss fought in that fight (its mean position near the player); nil if none recorded
+---@field fight_radius number? # how far it ranged in that fight, metres; nil if none recorded
+---@field drops string[] # what the game awarded when it died, "count x name" (empty if not measured)
+---@field drop_lots integer[] # the item lots behind `drops` (negative: ItemLotParam_enemy)
+---@field bodies { entity: integer, hp_max: integer }[] # the encounter's bodies seen live (partners, phases, waves)
+---@field hp_max integer? # measured max HP; nil if not measured
+
+---@class ermod.vec3
+---@field x number
+---@field y number
+---@field z number
+
+---@class ermod.boss_state
+---@field alive boolean # any body of the encounter alive (a wave fight like Fia's Champions has several)
+---@field hp integer # the row's own character (or the first body when it is not loaded)
+---@field hp_max integer
+---@field pos ermod.vec3 # live position, in the player's frame near it
+---@field bodies_alive integer # loaded bodies of the encounter that are alive
+---@field bodies ermod.boss_body[] # every loaded body: entity ids row .. row+9
+
+---@class ermod.boss_body
+---@field entity integer
+---@field hp integer
+---@field hp_max integer
+---@field pos ermod.vec3
+
+---A loaded boss's live state (refreshed every 30 frames), or nil when it is not loaded.
+---@param id integer # row id or defeat flag
+---@return ermod.boss_state?
+function bosses.state(id) end
+
+---The player's live position, or nil outside a world.
+---@return ermod.vec3?
+function bosses.player_pos() end
+
+---True while a boss fight is under way: the player passed a boss's fog and it has not died.
+---@return boolean
+function bosses.in_fight() end
+
+---Where the player stood when the current fight began (inside the fog), or nil outside a fight.
+---@return ermod.vec3?
+function bosses.fight_entry() end
+
+---@class ermod.boss_stats
+---@field npc_param integer # the boss's NpcParam row; any field: bosses.stat / sdk.params
+---@field hp integer # NpcParam hp (the base before area scaling)
+---@field damage_taken { neutral: number, slash: number, blow: number, thrust: number, magic: number, fire: number, thunder: number, dark: number } # HP damage multiplier per damage type: < 1 resists that type, > 1 weak to it
+---@field status_resist { poison: integer, disease: integer, blood: integer, curse: integer, sleep: integer, madness: integer } # status build-up needed before the status triggers (not a damage multiplier)
+---@field buffs integer[] # its resident SpEffects (SpEffectParam rows): mostly buffs, some passive behaviours (regen, immunities)
+
+---The boss's stats from its NpcParam row, live; `{ default = true }` gives them as they were before the first set_stat.
+---@param id integer
+---@param opts { default: boolean? }?
+---@return ermod.boss_stats
+function bosses.stats(id, opts) end
+
+---Any NpcParam field of the boss's row, live.
+---@param id integer
+---@param field string
+---@return number
+function bosses.stat(id, field) end
+
+---Write an NpcParam field of the boss's row in the running game, at any time (a phase).
+---@param id integer
+---@param field string
+---@param value number
+function bosses.set_stat(id, field, value) end
+
+---Restore the boss's NpcParam row as it was before the first set_stat.
+---@param id integer
+---@return boolean restored
+function bosses.reset_stats(id) end
+
+---Set a live body's HP (default: the boss's own; or an entity id row..row+9). Applied within half a second.
+---@param id integer
+---@param hp integer
+---@param entity integer?
+---@return boolean queued
+function bosses.set_hp(id, hp, entity) end
+
+---Set a live body's max HP.
+---@param id integer
+---@param hp_max integer
+---@param entity integer?
+---@return boolean queued
+function bosses.set_hp_max(id, hp_max, entity) end
+
+---While on, a lethal hit leaves the body at 1 HP: hold a boss for its next phase.
+---@param id integer
+---@param on boolean
+---@param entity integer?
+---@return boolean queued
+function bosses.set_immortal(id, on, entity) end
+
+---The boss with this row id or defeat flag, or nil.
+---@param id integer
+---@return ermod.boss?
+function bosses.find(id) end
+
+---Clear one boss's defeat flag. Errors on an id that is no boss.
+---@param id integer # row id or defeat flag
+---@return boolean queued # false when no game is attached
+function bosses.revive(id) end
+
+---Clear the defeat flag of every boss, or of one half of the game.
+---@param opts { base: boolean?, dlc: boolean? }? # both default true
+---@return integer queued # flags queued (bosses sharing a flag count once)
+function bosses.revive_all(opts) end
+
+---Every boss by name: `sdk.bosses.id.<key>` is the boss's row id. Generated by `zig build bosses`.
+---@enum ermod.bosses.id
+bosses.id = {
+  godrick_the_grafted = 10000800, -- Godrick the Grafted
+  margit_the_fell_omen = 10000850, -- Margit, the Fell Omen
+  boss_10010800 = 10010800, -- name not resolved yet
+  morgott_the_omen_king = 11000800, -- Morgott, the Omen King
+  boss_11000850 = 11000850, -- name not resolved yet
+  boss_11050800 = 11050800, -- name not resolved yet
+  boss_11050850 = 11050850, -- name not resolved yet
+  dragonkin_soldier_of_nokstella = 12010800, -- Dragonkin Soldier of Nokstella
+  dragonkin_soldier = 12010850, -- Dragonkin Soldier
+  boss_12020800 = 12020800, -- name not resolved yet
+  boss_12020830 = 12020830, -- name not resolved yet
+  boss_12020850 = 12020850, -- name not resolved yet
+  boss_12030390 = 12030390, -- name not resolved yet
+  boss_12030800 = 12030800, -- name not resolved yet
+  boss_12030850 = 12030850, -- name not resolved yet
+  astel_naturalborn_of_the_void = 12040800, -- Astel, Naturalborn of the Void
+  boss_12050800 = 12050800, -- name not resolved yet
+  boss_12080800 = 12080800, -- name not resolved yet
+  boss_12090800 = 12090800, -- name not resolved yet
+  maliketh_the_black_blade = 13000800, -- Maliketh, the Black Blade
+  dragonlord_placidusax = 13000830, -- Dragonlord Placidusax
+  godskin_apostle = 13000850, -- Godskin Apostle
+  boss_14000800 = 14000800, -- name not resolved yet
+  boss_14000850 = 14000850, -- name not resolved yet
+  malenia_goddess_of_rot = 15000800, -- Malenia, Goddess of Rot
+  loretta_knight_of_the_haligtree = 15000850, -- Loretta, Knight of the Haligtree
+  rykard_lord_of_blasphemy = 16000800, -- Rykard, Lord of Blasphemy
+  godskin_noble = 16000850, -- Godskin Noble
+  boss_16000860 = 16000860, -- name not resolved yet
+  boss_18000800 = 18000800, -- name not resolved yet
+  boss_18000850 = 18000850, -- name not resolved yet
+  elden_beast = 19000800, -- Elden Beast
+  boss_20000800 = 20000800, -- name not resolved yet
+  boss_20010800 = 20010800, -- name not resolved yet
+  boss_20010850 = 20010850, -- name not resolved yet
+  boss_21000850 = 21000850, -- name not resolved yet
+  boss_21010800 = 21010800, -- name not resolved yet
+  boss_22000800 = 22000800, -- name not resolved yet
+  boss_25000800 = 25000800, -- name not resolved yet
+  boss_28000800 = 28000800, -- name not resolved yet
+  boss_30000800 = 30000800, -- name not resolved yet
+  boss_30010800 = 30010800, -- name not resolved yet
+  boss_30020800 = 30020800, -- name not resolved yet
+  boss_30030800 = 30030800, -- name not resolved yet
+  boss_30040800 = 30040800, -- name not resolved yet
+  boss_30050800 = 30050800, -- name not resolved yet
+  boss_30050850 = 30050850, -- name not resolved yet
+  boss_30060800 = 30060800, -- name not resolved yet
+  boss_30070800 = 30070800, -- name not resolved yet
+  boss_30080800 = 30080800, -- name not resolved yet
+  boss_30090800 = 30090800, -- name not resolved yet
+  boss_30100800 = 30100800, -- name not resolved yet
+  boss_30100801 = 30100801, -- name not resolved yet
+  boss_30110800 = 30110800, -- name not resolved yet
+  boss_30120800 = 30120800, -- name not resolved yet
+  boss_30120801 = 30120801, -- name not resolved yet
+  boss_30130800 = 30130800, -- name not resolved yet
+  boss_30140800 = 30140800, -- name not resolved yet
+  boss_30150800 = 30150800, -- name not resolved yet
+  boss_30160800 = 30160800, -- name not resolved yet
+  boss_30170800 = 30170800, -- name not resolved yet
+  boss_30180800 = 30180800, -- name not resolved yet
+  boss_30190800 = 30190800, -- name not resolved yet
+  boss_30200800 = 30200800, -- name not resolved yet
+  boss_31000800 = 31000800, -- name not resolved yet
+  boss_31010800 = 31010800, -- name not resolved yet
+  boss_31020800 = 31020800, -- name not resolved yet
+  boss_31030800 = 31030800, -- name not resolved yet
+  boss_31040800 = 31040800, -- name not resolved yet
+  boss_31050800 = 31050800, -- name not resolved yet
+  boss_31060800 = 31060800, -- name not resolved yet
+  boss_31070800 = 31070800, -- name not resolved yet
+  boss_31090800 = 31090800, -- name not resolved yet
+  boss_31100800 = 31100800, -- name not resolved yet
+  boss_31110800 = 31110800, -- name not resolved yet
+  boss_31120800 = 31120800, -- name not resolved yet
+  boss_31150800 = 31150800, -- name not resolved yet
+  boss_31170800 = 31170800, -- name not resolved yet
+  boss_31180800 = 31180800, -- name not resolved yet
+  boss_31190800 = 31190800, -- name not resolved yet
+  boss_31190850 = 31190850, -- name not resolved yet
+  boss_31200800 = 31200800, -- name not resolved yet
+  boss_31210800 = 31210800, -- name not resolved yet
+  boss_31220800 = 31220800, -- name not resolved yet
+  boss_32000800 = 32000800, -- name not resolved yet
+  boss_32010800 = 32010800, -- name not resolved yet
+  boss_32020800 = 32020800, -- name not resolved yet
+  boss_32040800 = 32040800, -- name not resolved yet
+  boss_32050800 = 32050800, -- name not resolved yet
+  boss_32050801 = 32050801, -- name not resolved yet
+  boss_32070800 = 32070800, -- name not resolved yet
+  boss_32080800 = 32080800, -- name not resolved yet
+  boss_32110800 = 32110800, -- name not resolved yet
+  boss_34120800 = 34120800, -- name not resolved yet
+  boss_34130800 = 34130800, -- name not resolved yet
+  boss_34140850 = 34140850, -- name not resolved yet
+  boss_35000800 = 35000800, -- name not resolved yet
+  boss_35000850 = 35000850, -- name not resolved yet
+  boss_39200800 = 39200800, -- name not resolved yet
+  boss_40000800 = 40000800, -- name not resolved yet
+  boss_40010800 = 40010800, -- name not resolved yet
+  boss_41000800 = 41000800, -- name not resolved yet
+  boss_41010800 = 41010800, -- name not resolved yet
+  boss_41020800 = 41020800, -- name not resolved yet
+  boss_43000800 = 43000800, -- name not resolved yet
+  boss_43010800 = 43010800, -- name not resolved yet
+  boss_1033420800 = 1033420800, -- name not resolved yet
+  boss_1033430800 = 1033430800, -- name not resolved yet
+  boss_1033450800 = 1033450800, -- name not resolved yet
+  boss_1034420800 = 1034420800, -- name not resolved yet
+  boss_1034450800 = 1034450800, -- name not resolved yet
+  boss_1034480800 = 1034480800, -- name not resolved yet
+  boss_1034500800 = 1034500800, -- name not resolved yet
+  boss_1035420800 = 1035420800, -- name not resolved yet
+  boss_1035500800 = 1035500800, -- name not resolved yet
+  boss_1035530800 = 1035530800, -- name not resolved yet
+  boss_1036450340 = 1036450340, -- name not resolved yet
+  boss_1036480340 = 1036480340, -- name not resolved yet
+  boss_1036500800 = 1036500800, -- name not resolved yet
+  boss_1036540800 = 1036540800, -- name not resolved yet
+  boss_1037420340 = 1037420340, -- name not resolved yet
+  boss_1037460800 = 1037460800, -- name not resolved yet
+  boss_1037510800 = 1037510800, -- name not resolved yet
+  boss_1037530800 = 1037530800, -- name not resolved yet
+  boss_1037540810 = 1037540810, -- name not resolved yet
+  boss_1038410800 = 1038410800, -- name not resolved yet
+  boss_1038480800 = 1038480800, -- name not resolved yet
+  boss_1038510800 = 1038510800, -- name not resolved yet
+  boss_1038520340 = 1038520340, -- name not resolved yet
+  boss_1039430340 = 1039430340, -- name not resolved yet
+  boss_1039440800 = 1039440800, -- name not resolved yet
+  boss_1039500800 = 1039500800, -- name not resolved yet
+  boss_1039510800 = 1039510800, -- name not resolved yet
+  boss_1039540800 = 1039540800, -- name not resolved yet
+  boss_1040520800 = 1040520800, -- name not resolved yet
+  boss_1040530800 = 1040530800, -- name not resolved yet
+  boss_1041500800 = 1041500800, -- name not resolved yet
+  boss_1041510800 = 1041510800, -- name not resolved yet
+  boss_1041520800 = 1041520800, -- name not resolved yet
+  boss_1041530800 = 1041530800, -- name not resolved yet
+  boss_1042330800 = 1042330800, -- name not resolved yet
+  boss_1042360800 = 1042360800, -- name not resolved yet
+  boss_1042370800 = 1042370800, -- name not resolved yet
+  boss_1042380800 = 1042380800, -- name not resolved yet
+  boss_1042380850 = 1042380850, -- name not resolved yet
+  boss_1042550800 = 1042550800, -- name not resolved yet
+  boss_1043300800 = 1043300800, -- name not resolved yet
+  boss_1043330800 = 1043330800, -- name not resolved yet
+  boss_1043360800 = 1043360800, -- name not resolved yet
+  boss_1043370340 = 1043370340, -- name not resolved yet
+  boss_1043530800 = 1043530800, -- name not resolved yet
+  boss_1044320340 = 1044320340, -- name not resolved yet
+  boss_1044320342 = 1044320342, -- name not resolved yet
+  boss_1044350800 = 1044350800, -- name not resolved yet
+  boss_1044360800 = 1044360800, -- name not resolved yet
+  boss_1044530800 = 1044530800, -- name not resolved yet
+  boss_1045390800 = 1045390800, -- name not resolved yet
+  boss_1045520800 = 1045520800, -- name not resolved yet
+  boss_1047400800 = 1047400800, -- name not resolved yet
+  boss_1048370800 = 1048370800, -- name not resolved yet
+  boss_1048400800 = 1048400800, -- name not resolved yet
+  boss_1048410800 = 1048410800, -- name not resolved yet
+  boss_1048510800 = 1048510800, -- name not resolved yet
+  boss_1048570800 = 1048570800, -- name not resolved yet
+  boss_1049370800 = 1049370800, -- name not resolved yet
+  boss_1049370850 = 1049370850, -- name not resolved yet
+  boss_1049380800 = 1049380800, -- name not resolved yet
+  boss_1049390800 = 1049390800, -- name not resolved yet
+  boss_1049390850 = 1049390850, -- name not resolved yet
+  boss_1049520800 = 1049520800, -- name not resolved yet
+  boss_1050560800 = 1050560800, -- name not resolved yet
+  boss_1050570800 = 1050570800, -- name not resolved yet
+  boss_1050570850 = 1050570850, -- name not resolved yet
+  boss_1051360800 = 1051360800, -- name not resolved yet
+  boss_1051400800 = 1051400800, -- name not resolved yet
+  boss_1051430800 = 1051430800, -- name not resolved yet
+  boss_1051570800 = 1051570800, -- name not resolved yet
+  boss_1052380800 = 1052380800, -- name not resolved yet
+  boss_1052410800 = 1052410800, -- name not resolved yet
+  boss_1052410850 = 1052410850, -- name not resolved yet
+  boss_1052520800 = 1052520800, -- name not resolved yet
+  boss_1052560800 = 1052560800, -- name not resolved yet
+  boss_1053560800 = 1053560800, -- name not resolved yet
+  boss_1054560800 = 1054560800, -- name not resolved yet
+  boss_1248550800 = 1248550800, -- name not resolved yet
+  boss_2044450800 = 2044450800, -- name not resolved yet
+  boss_2044470800 = 2044470800, -- name not resolved yet
+  boss_2045440800 = 2045440800, -- name not resolved yet
+  boss_2046380800 = 2046380800, -- name not resolved yet
+  boss_2046400800 = 2046400800, -- name not resolved yet
+  boss_2046410800 = 2046410800, -- name not resolved yet
+  boss_2046450800 = 2046450800, -- name not resolved yet
+  boss_2046460800 = 2046460800, -- name not resolved yet
+  boss_2047390800 = 2047390800, -- name not resolved yet
+  boss_2047450800 = 2047450800, -- name not resolved yet
+  boss_2048380850 = 2048380850, -- name not resolved yet
+  boss_2048440800 = 2048440800, -- name not resolved yet
+  boss_2049410800 = 2049410800, -- name not resolved yet
+  boss_2049430800 = 2049430800, -- name not resolved yet
+  boss_2049430850 = 2049430850, -- name not resolved yet
+  boss_2049450800 = 2049450800, -- name not resolved yet
+  boss_2049480800 = 2049480800, -- name not resolved yet
+  boss_2050470800 = 2050470800, -- name not resolved yet
+  boss_2050480800 = 2050480800, -- name not resolved yet
+  boss_2050480860 = 2050480860, -- name not resolved yet
+  boss_2051440800 = 2051440800, -- name not resolved yet
+  boss_2051450720 = 2051450720, -- name not resolved yet
+  boss_2052400800 = 2052400800, -- name not resolved yet
+  boss_2052430800 = 2052430800, -- name not resolved yet
+  boss_2052480800 = 2052480800, -- name not resolved yet
+  boss_2054390800 = 2054390800, -- name not resolved yet
+  boss_2054390850 = 2054390850, -- name not resolved yet
+}
 
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file

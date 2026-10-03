@@ -1,6 +1,6 @@
 # Example mods
 
-Thirteen mods, one file each, every one readable in a minute. Copy one into your
+Sixteen mods, one file each, every one readable in a minute. Copy one into your
 mods directory and it loads on the next frame; edit it and it hot-reloads
 without restarting the game.
 
@@ -33,6 +33,9 @@ editor checks the names, and a typo is an error where it is written.
 | [`boss_rules_pack.lua`](boss_rules_pack.lua) | a mod pack: `mods`, the `rules` permission, `sdk.rules`, and precedence over standalone mods |
 | [`class_flasks.lua`](class_flasks.lua) | `sdk.items`: change class defaults (starting flasks, items) by name, with `sdk.items.file` naming the param |
 | [`summon_anywhere.lua`](summon_anywhere.lua) | the `rules` permission: spirit ashes work outside summoning pools (`spirit_summon_anywhere`) |
+| [`boss_rematch.lua`](boss_rematch.lua) | the `bosses` permission: revive any boss, base game or DLC, by name (`sdk.bosses.id`) |
+| [`boss_watch.lua`](boss_watch.lua) | live boss state: `sdk.bosses.state`, `player_pos`, `in_fight` — which bosses are alive near the player, and whether a fight is on |
+| [`boss_phases.lua`](boss_phases.lua) | boss stats and stages: `sdk.bosses.stats`, `set_stat` (live), `set_hp`, `set_immortal`, `reset_stats` — the same fight reset and harder |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
 passes `mod verify`, but its entry point fails with "unknown param file" in the

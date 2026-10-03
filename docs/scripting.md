@@ -114,9 +114,9 @@ table a mod receives is *built* from it: an undeclared module is not present
 at all, so `sdk.ui` is nil in a mod that did not ask for `ui`. A data-only
 mod cannot draw, and cannot be made to draw by a bug.
 
-The nine modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
-`screen`, `watch` and `rules`. What each offers is in [Modules](#modules)
-below. `rules` puts `sdk.rules` on the table and covers every game rule;
+The ten modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
+`screen`, `watch`, `rules` and `bosses`. What each offers is in
+[Modules](#modules) below. `rules` puts `sdk.rules` on the table and covers every game rule;
 which rules a mod changes is what it sets, and that is what the engine checks
 against other mods. `sdk.items` is on every table: it is read-only data and
 needs no permission.
@@ -374,6 +374,67 @@ name is the English display name in lower case with words joined by `_`
 (`flask_of_crimson_tears_plus_4`); the stub lists every one. Indexing a name
 that does not exist is an error.
 
+### `bosses`
+
+Every boss the game awards a clear for — the base game and Shadow of the
+Erdtree, field bosses included — with what a mod needs to reuse its fight.
+Needs the `bosses` permission.
+
+**Naming a boss.** `sdk.bosses.id.<name>` is the boss's id, an enum like
+`sdk.items` (`sdk.bosses.id.margit_the_fell_omen`; a wrong name is an error,
+and the stub lists every one). Every function also takes the plain id (the
+boss's row, or its defeat flag). Bosses whose name is not resolved yet are
+`boss_<id>`. `sdk.bosses.all` lists every boss and `sdk.bosses.find(id)`
+returns one: `key`, `display_name`, `map`, `dlc`, `runes`, and where it has
+been measured, `idle_pos` (where it waits before its fight — some wait
+outside the arena), `arena` and `fight_pos` (where a recorded fight began and
+where the boss fought), `bodies` (an encounter can be several: a duo, a
+second phase, waves) and `npc_param`.
+
+**Bringing one back.** `revive(id)` and `revive_all({ base = true, dlc =
+true })` clear the boss's defeat record; the boss is back the next time its
+map loads (rest at a grace, warp or die). Its one-off drop does not come
+back; its runes do.
+
+```lua
+sdk.bosses.revive(sdk.bosses.id.margit_the_fell_omen)
+```
+
+**Watching a fight.** `state(id)` is a loaded boss's live state — `alive`,
+`hp`, `hp_max`, `pos`, and `bodies` / `bodies_alive` for every loaded body of
+the encounter (it is alive while any body lives) — or nil when it is not
+loaded; refreshed twice a second. `player_pos()` is the player's position,
+`in_fight()` is true from the moment the player passes a boss's fog until it
+dies, and `fight_entry()` is where the player stood when the fight began.
+Positions are comparable within an arena, not across the world.
+
+**Stats, and changing them while the fight runs.** `stats(id)` is the boss's
+stats: `hp`; `damage_taken`, a multiplier on HP damage per damage type
+(`neutral`, `slash`, `blow`, `thrust`, `magic`, `fire`, `thunder`, `dark`;
+below 1 it resists that type, above 1 it is weak to it); `status_resist`,
+how much build-up of each status (`poison`, `disease`, `blood`, `curse`,
+`sleep`, `madness`) it takes before the status triggers; and `buffs`, its
+resident effects. `stats(id, { default = true })` gives them as they were
+before any change. `stat(id, field)` and `set_stat(id, field, value)` read and
+write any field of the boss's NpcParam row, **at any time**, and
+`reset_stats(id)` restores it. `set_hp`, `set_hp_max` and `set_immortal` act
+on a live body (a lethal hit leaves an immortal body at 1 HP), which is how a
+fight gets stages:
+
+```lua
+-- in an on_present handler: hold the boss at 1 HP, then refill it, harder
+local s = sdk.bosses.state(boss)
+if s and s.hp <= 1 and stage < 3 then
+  stage = stage + 1
+  sdk.bosses.set_stat(boss, "neutralDamageCutRate", 0.8 ^ stage)
+  sdk.bosses.set_hp(boss, s.hp_max)
+  sdk.bosses.set_immortal(boss, stage < 3)
+end
+```
+
+`examples/boss_phases.lua` is the whole mod. A stat change applies to every
+character using that NpcParam row.
+
 ## The author loop
 
 ### Offline
@@ -535,7 +596,9 @@ mod[engine] warn: b.lua not loaded: it sets rule boss_spectate to true, but a.lu
 The check can only see writes made before it runs, so configuration is
 locked once the entry point returns. A `params` or `rules` write from an
 event handler is an error. A mod whose entry point errors lands none of its
-writes.
+writes. The one deliberate exception is `sdk.bosses.set_stat`, which changes
+a boss's own stats while its fight runs; each such write is still recorded
+against the mod that made it.
 
 A mod edited in place is compared as itself, so hot reload never conflicts
 with the version it replaces.
@@ -588,6 +651,7 @@ reference gameplay mod and the offline golden test's subject),
 `rune_counter.lua` (hooks and per-mod state), `enums.lua` (naming events,
 stats and param files by enum), `settings.lua` (ui plus store),
 `perf_monitor.lua` (ui plus perf), `overlay.lua` (ui plus hooks),
-`boss_rules_pack.lua` (a mod pack setting a game rule), and
+`boss_rules_pack.lua` (a mod pack setting a game rule), `boss_rematch.lua`,
+`boss_watch.lua` and `boss_phases.lua` (bosses: revive, watch, stats and stages), and
 `bad_sandbox.lua`, which exists to be refused. The reading order is in
 [`examples/README.md`](../examples/README.md).

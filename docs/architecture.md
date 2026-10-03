@@ -12,7 +12,7 @@ Two halves, one mod format:
 - **In-game.** The engine injects a runtime into the running game, which
   loads `.lua` mods, hooks events, and reads and writes the game's live PARAM
   tables. Edit a mod and it reloads within a second.
-- **Offline.** `ermod-engine mod bake` runs the *same* Lua mod against an
+- **Offline.** `ermod-engine mod bake` runs the _same_ Lua mod against an
   unpacked `regulation.bin` on the host and writes a modded copy. The engine
   can load that copy directly, so no ModEngine is required.
 
@@ -34,15 +34,15 @@ repository's Releases page because that is where the people who need them are.
 
 The split is deliberate and is drawn at the mod's blast radius:
 
-| | |
-| --- | --- |
-| **Open (here)** | the surface a mod is written against: the generated SDK stubs, the worked examples, and this documentation |
+|                     |                                                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Open (here)**     | the surface a mod is written against: the generated SDK stubs, the worked examples, and this documentation                                                                           |
 | **Closed (engine)** | everything executable: the Lua sandbox and every `sdk.*` binding, plus signature scanning, inline detours, live param-table walking, the D3D12 overlay, process launch and injection |
 
 A community mod's whole capability surface is the `Host` vtable behind the
 `sdk.*` bindings: if a capability is not a function on it, no mod can reach
 it. That interface lives in the engine with the rest of the front end, so
-what is published here is an exhaustive *enumeration* of the surface,
+what is published here is an exhaustive _enumeration_ of the surface,
 `stubs/ermod.lua`, generated from the binding tables themselves, rather than
 an implementation you can read. The sandbox's behaviour remains testable from
 outside: `base`, `table`, `string` and `math` only, code-loading globals
@@ -60,7 +60,7 @@ stripped, an instruction budget per call.
 3. **Zig only** for the engine (currently Zig 0.16), with a vendored
    `libzstd` for DCX compression. No .NET tooling (Smithbox etc.) in the
    build path. We may use those interactively for research, but the pipeline
-   must not depend on them. *Mods themselves are Lua, not Zig*; this
+   must not depend on them. _Mods themselves are Lua, not Zig_; this
    constraint is about the tooling.
 4. **Safety by layout.** Documentation and output layout must make it hard to
    launch a modded `regulation.bin` through the protected launcher.
@@ -70,7 +70,7 @@ stripped, an instruction budget per call.
 Nearly all "gameplay numbers" in Elden Ring live in `regulation.bin`, a ~2 MB file in
 the game root. It is a nested container:
 
-```
+```text
 regulation.bin                      (2 MB, encrypted)
 └── AES-256-CBC                     key: community-known 32-byte key (SoulsFormats),
     │                               IV: first 16 bytes of the file (the game
@@ -90,7 +90,7 @@ separate modules in the engine, each with its own tests.
 
 ## Pipeline
 
-```
+```text
                  read-only                          our output
  ┌────────────────────────────┐        ┌─────────────────────────────────┐
  │ $GAME/regulation.bin       │        │ mod/regulation.bin              │
@@ -121,7 +121,7 @@ fields and file entries we don't edit are copied through unchanged.
 
 ## The author commands
 
-```
+```text
 ermod-engine mod verify <mod.lua>...                                # would each mod load in-game?
 ermod-engine mod perf  <mod.lua> [--frames N] [--runes N] [--deaths N] [--regulation <file>]
 ermod-engine mod bake <regulation.bin> <out.bin> <mod>...         # full pipeline; a mod is a
@@ -139,7 +139,7 @@ writes a modded copy that the engine loads with `ermod-engine --regulation`.
 A mod argument is either a built-in spec name (`level60`) or a path to a `.lua`
 launch mod; the two can be mixed on one command line:
 
-```
+```text
 ermod-engine mod bake "$GAME/regulation.bin" mod/regulation.bin level60.lua class-gear
 ```
 
@@ -194,7 +194,7 @@ Two traps worth knowing, both confirmed against the shipped file:
 
 - **`dataStart` is not where data starts.** In the regulation BND4 the header's
   `dataStart` is 291841 while the first entry's data begins at 37728. The field
-  marks the end of the header and hash region, which sits *after* some file data.
+  marks the end of the header and hash region, which sits _after_ some file data.
   Laying files out from `dataStart` inflates the archive by ~254 KB. The writer
   therefore derives the real start from the smallest entry data offset.
 - **The entry size is not a constant.** It is implied by the format byte's bit
@@ -223,7 +223,7 @@ Each `.param` file is a fixed-schema table. Elden Ring uses the 64-bit variant:
 rows' data offsets (320 bytes for `CharaInitParam`), falling back to the strings
 offset when there is only one row.
 
-The row *layout* is likewise absent from the file. Field names, types and offsets
+The row _layout_ is likewise absent from the file. Field names, types and offsets
 come from community **paramdefs** (Paramdex XML). The engine keeps the XML for the
 params it touches and generates its Zig field tables from it.
 
@@ -232,7 +232,7 @@ Two details the generator has to get right:
 - Fields are packed with **no alignment padding**, since padding is explicit via
   `dummy8` fields, so offsets are a simple running sum.
 - Consecutive bitfields share a storage unit, and `dummy8` bitfields pack into the
-  *same* unit as an adjacent `u8`. Treating `dummy8` as a separate type yields 321
+  _same_ unit as an adjacent `u8`. Treating `dummy8` as a separate type yields 321
   bytes for `CharaInitParam` instead of the correct 320, which would shift every
   field after the bitfield and corrupt rows.
 
@@ -243,7 +243,7 @@ silently writing to wrong offsets.
 **Row IDs are not unique.** They are unique in every param a mod has touched so far,
 but not in general: `RandomAppearParam` ships 26 IDs that appear on more than one
 descriptor, each with its own row data. Both of the engine's PARAM readers resolve a
-lookup by ID to the *first* matching descriptor; the later copies are reachable only
+lookup by ID to the _first_ matching descriptor; the later copies are reachable only
 by position. A mod that edits a duplicated ID therefore edits the first row of that
 ID and no other, consistently offline and live, since both paths use the same rule,
 but worth knowing before writing a mod against a param where IDs repeat. No
@@ -256,12 +256,12 @@ coverage of all 194 params is not required.
 
 ### Params of interest
 
-| Param | Purpose for us |
-| --- | --- |
-| `CharaInitParam` | Starting class definitions: level, stats, equipped gear, items. Rows 3000 to 3009 are the ten playable classes (Vagabond … Wretch; see [classes.md](classes.md)). Our level-60 and starting-gear mods are edits here. |
-| `EquipParamWeapon` / `EquipParamProtector` | Weapon/armor IDs referenced from CharaInitParam; read-only lookups to pick gear. |
-| `ItemLotParam_map` | Treasure item lots (chests, corpses). Needed if we go the "physical chest in the world" route. |
-| `SpEffectParam` | Buffs/heals; relevant to the later NPC-healer idea. |
+| Param                                      | Purpose for us                                                                                                                                                                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CharaInitParam`                           | Starting class definitions: level, stats, equipped gear, items. Rows 3000 to 3009 are the ten playable classes (Vagabond … Wretch; see [classes.md](classes.md)). Our level-60 and starting-gear mods are edits here. |
+| `EquipParamWeapon` / `EquipParamProtector` | Weapon/armor IDs referenced from CharaInitParam; read-only lookups to pick gear.                                                                                                                                      |
+| `ItemLotParam_map`                         | Treasure item lots (chests, corpses). Needed if we go the "physical chest in the world" route.                                                                                                                        |
+| `SpEffectParam`                            | Buffs/heals; relevant to the later NPC-healer idea.                                                                                                                                                                   |
 
 ### "Chest with items": two implementation routes
 
@@ -284,7 +284,7 @@ The runtime reads everything from `C:\ermod` inside the game's Wine prefix
 engine's data directory on the host, re-made on every launch, so a rebuilt
 prefix loses nothing:
 
-```
+```text
 <prefix>/drive_c/ermod/
   mods/            → ~/.local/share/ermod/mods (or the --mods directory, for that launch)
   profiles/        → ~/.local/share/ermod/profiles

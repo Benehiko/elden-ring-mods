@@ -4,3 +4,4 @@ zig-out/
 # Output derived from the game's own files. Never commit game data.
 build_out/
 mod/
+.direnv/

@@ -12,7 +12,20 @@
 
 ENGINE ?= ../elden-ring-mods-engine
 
-.PHONY: hooks check-stubs check-cli-docs
+RUMDL ?= rumdl
+
+.PHONY: hooks check-stubs check-cli-docs fmt check-fmt
+
+# Formats and lint-fixes every Markdown file with rumdl (.rumdl.toml). `nix
+# develop` provides it, at the version pinned in flake.lock; the generated
+# docs/cli.md is left alone.
+fmt:
+	@$(RUMDL) fmt .
+
+# Fails if any Markdown file is not formatted or breaks a lint rule (a
+# broken relative link, say). CI runs the same check.
+check-fmt:
+	@$(RUMDL) check .
 
 hooks:
 	git config core.hooksPath .githooks

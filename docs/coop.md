@@ -100,7 +100,7 @@ Both of you run:
 It prints your Steam ID, your addresses, and the line a friend types to join
 you. For example (your numbers will differ):
 
-```
+```text
 Steam ID   76561198000000001   (from the folder the game keeps your own save in)
 Address    192.168.1.10   (enp5s0)
            100.101.102.103   (tailscale0)
@@ -128,7 +128,7 @@ The game starts. At the title screen, press **Continue** (or load the
 character you want). Once your world loads, the command sets up the session.
 Wait for `you are hosting`. The terminal shows, abridged:
 
-```
+```text
 info: coop: your Steam ID is 76561198000000001 (from the folder the game keeps your own save in)
 info: coop: [1/4] launch the game
 info: coop: [2/4] wait for a loaded world: at the title screen, press Continue
@@ -155,7 +155,7 @@ host sent, with `./` in front:
 Press **Continue** at the title screen as the host did. The terminal ends
 with, abridged:
 
-```
+```text
 info: coop: [4/4] announce this machine to its peers and join the host's session
 info: coop: joined — the host answered and admitted you. Its world loads for you when the game's own join completes.
 info: coop: this command ends when the game does.
@@ -276,7 +276,7 @@ same game build, the same engine release, and the flag. See
 
 The joiner's terminal says:
 
-```
+```text
 info: coop: the host knows you are here. The join waits until your game-changing mods match the host's: open the ermod menu (`), enable the host's mods it lists, and the join starts by itself
 ```
 
@@ -301,7 +301,7 @@ Then quit the game on the joiner and run `coop join` again.
 
 ### Same Steam ID on two machines
 
-```
+```text
 error: coop: two players have the same Steam ID. Two machines on one Steam account must be told apart: run one of them with --as <another SteamID64> (any one nobody here uses).
 ```
 
@@ -323,13 +323,13 @@ says where it is).
 
 ### Other messages
 
-| Message | What to do |
-| --- | --- |
-| `the game is already running` | `coop` starts the game itself. Quit the game and run the command again. |
-| `cannot tell this machine's Steam ID` | No save of yours exists yet. Play once through Steam, or give an ID with `--as`. |
-| `a player is <SteamID64>@<a.b.c.d>…` | The ID or address is mistyped. Copy the line `coop id` printed. |
-| `no world within 15 minutes` | The game sat at the title screen. Run the command again and press Continue. |
-| `the game is still running, without co-op` | A step failed; the lines above say which. Quit the game and try again. |
+| Message                                    | What to do                                                                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------- |
+| `the game is already running`              | `coop` starts the game itself. Quit the game and run the command again.          |
+| `cannot tell this machine's Steam ID`      | No save of yours exists yet. Play once through Steam, or give an ID with `--as`. |
+| `a player is <SteamID64>@<a.b.c.d>…`       | The ID or address is mistyped. Copy the line `coop id` printed.                  |
+| `no world within 15 minutes`               | The game sat at the title screen. Run the command again and press Continue.      |
+| `the game is still running, without co-op` | A step failed; the lines above say which. Quit the game and try again.           |
 
 ### The logs
 

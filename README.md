@@ -14,6 +14,8 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 - 🐧 **Linux** (Steam + Proton) and **macOS on Apple Silicon** (CrossOver,
   Whisky or protium, detected for you).
 
+🌐 **Website: <https://benehiko.github.io/elden-ring-mods/>**
+
 ---
 
 ## Quick start
@@ -21,7 +23,7 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 ### 1. Play with mods
 
 Download `ermod-engine` for your machine from the
-**[latest release](../../releases/latest)** (`…-linux-x86_64.tar.gz` or
+**[latest release](https://github.com/Benehiko/elden-ring-mods/releases/latest)** (`…-linux-x86_64.tar.gz` or
 `…-macos-aarch64.tar.gz`), then:
 
 ```sh
@@ -85,10 +87,10 @@ Then read **[the scripting guide](docs/scripting.md)** and the eleven
 
 ## In the game
 
-| Key | What it does |
-| --- | --- |
-| `` ` `` (backtick) | Opens the ermod menu: every mod with a switch, profiles, and co-op. |
-| `Insert` | Gives mouse and keyboard to mod windows, and hands them back to the game. |
+| Key                | What it does                                                              |
+| ------------------ | ------------------------------------------------------------------------- |
+| `` ` `` (backtick) | Opens the ermod menu: every mod with a switch, profiles, and co-op.       |
+| `Insert`           | Gives mouse and keyboard to mod windows, and hands them back to the game. |
 
 The menu works from the keyboard too (`Tab`/arrows, `Space`/`Enter`). Rebind
 either key with `./ermod-engine settings`
@@ -96,28 +98,28 @@ either key with `./ermod-engine settings`
 
 ## Supported game versions
 
-| Game build | Engine | |
-| --- | --- | --- |
-| **2.7.1.0** (latest) | v0.3.0 and later | mods and co-op |
-| 2.7.0.0 | v0.2.0 and later | mods and co-op |
-| 2.6.2.0 | v0.1.0 and later | mods; co-op without the rule fixes |
+| Game build           | Engine           |                                    |
+| -------------------- | ---------------- | ---------------------------------- |
+| **2.7.1.0** (latest) | v0.3.0 and later | mods and co-op                     |
+| 2.7.0.0              | v0.2.0 and later | mods and co-op                     |
+| 2.6.2.0              | v0.1.0 and later | mods; co-op without the rule fixes |
 
 `./ermod-engine check-build` tells you which one you have. An unknown build
 runs unmodded, with a warning.
 
 ## Everything else
 
-| | |
-| --- | --- |
-| [Install guide](docs/install.md) | Verifying downloads, macOS setup, where mods go, settings, troubleshooting |
-| [Profiles and your save](docs/install.md#5-profiles-and-your-own-save) | Modded saves kept apart from your own; `profile` and `character` commands |
-| [Co-op guide](docs/coop.md) · [LAN / VPN](docs/network.md) | Sessions, mods in co-op, fixes |
-| [Scripting guide](docs/scripting.md) | Every SDK module, the sandbox, `mod perf`, `mod bake` |
-| [Command reference](docs/cli.md) | Every command and flag |
-| [Architecture](docs/architecture.md) | How it fits together |
+|                                                                        |                                                                            |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Install guide](docs/install.md)                                       | Verifying downloads, macOS setup, where mods go, settings, troubleshooting |
+| [Profiles and your save](docs/install.md#5-profiles-and-your-own-save) | Modded saves kept apart from your own; `profile` and `character` commands  |
+| [Co-op guide](docs/coop.md) · [LAN / VPN](docs/network.md)             | Sessions, mods in co-op, fixes                                             |
+| [Scripting guide](docs/scripting.md)                                   | Every SDK module, the sandbox, `mod perf`, `mod bake`                      |
+| [Command reference](docs/cli.md)                                       | Every command and flag                                                     |
+| [Architecture](docs/architecture.md)                                   | How it fits together                                                       |
 
 This repository is the open half (SDK stubs, examples and docs) under
 [Apache-2.0](LICENSE). The engine is closed source; its binaries ship on the
-[Releases](../../releases) page under their own licence ([NOTICE](NOTICE)).
+[Releases](https://github.com/Benehiko/elden-ring-mods/releases) page under their own licence ([NOTICE](NOTICE)).
 ELDEN RING is the property of FromSoftware and Bandai Namco. This project is
 unaffiliated, distributes no game data, and never writes to an installation.

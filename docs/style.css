@@ -93,7 +93,33 @@ body {
   letter-spacing: 0.01em;
 }
 
-.masthead nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+/* Wordmark and tools (search, theme) share the first row; the nav takes the
+ * whole second row. The theme switch is added by theme.js, into .tools where
+ * a page has one and straight into the masthead where it does not. */
+.wordmark { order: 1; }
+.masthead .tools,
+.masthead > .theme-toggle { order: 2; margin-left: auto; }
+.masthead nav { order: 3; flex-basis: 100%; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+.tools { display: flex; gap: 0.75rem; align-items: center; }
+
+.site-search input,
+.theme-toggle {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--parchment);
+  background: var(--stone-up);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.3rem 0.6rem;
+}
+.site-search input { width: 13rem; max-width: 100%; }
+.site-search input::placeholder { color: var(--ash); }
+.site-search input:focus { border-color: var(--gilt); outline: none; }
+
+.theme-toggle { cursor: pointer; color: var(--ash); }
+.theme-toggle:hover { color: var(--parchment); border-color: var(--gilt); }
+.theme-toggle[aria-pressed="true"] { color: var(--gilt); border-color: var(--gilt); }
 
 .masthead nav a,
 footer nav a {
@@ -316,6 +342,96 @@ pre .n { color: var(--syn-number); }
   border-left: 1px solid var(--moss);
   color: var(--ash);
 }
+
+/* ── guides ───────────────────────────────────────────────────────── */
+
+/* The guides are docs/*.md rendered by pandoc (`make site`). They are longer
+ * and denser than the landing page, so headings step down further and
+ * sections sit closer together. */
+
+.guide article { margin-top: 3rem; }
+.guide h1 { margin-bottom: 1.5rem; }
+.guide h2 { margin-top: 3rem; scroll-margin-top: 1.5rem; }
+.guide h3, .guide h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 2rem 0 0.6rem;
+  scroll-margin-top: 1.5rem;
+}
+.guide h3 { font-size: 1.12rem; }
+.guide h4 { font-size: 1rem; color: var(--ash); }
+
+.guide ul, .guide ol { padding-left: 1.4rem; margin: 0 0 1.15rem; }
+.guide li { margin: 0.3rem 0; }
+.guide li > p { margin-bottom: 0.5rem; }
+
+.guide blockquote {
+  margin: 1.5rem 0;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  border-left: 2px solid var(--gilt);
+  color: var(--ash);
+}
+
+.guide hr { margin: 2.5rem 0; }
+
+/* Tables can be wider than the measure; they scroll rather than squeeze. */
+.guide table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92em;
+}
+.guide th, .guide td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.45rem 0.9rem 0.45rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.guide th { font-weight: 600; }
+.guide td code, .guide th code {
+  background: var(--stone-up);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+.guide-toc {
+  margin: 0 0 2.5rem;
+  border-left: 1px solid var(--moss);
+  padding-left: 1.1rem;
+}
+.guide-toc summary { cursor: pointer; color: var(--ash); }
+.guide-toc summary:hover { color: var(--parchment); }
+.guide-toc ul { list-style: none; padding-left: 0; margin: 0.75rem 0 0; }
+.guide-toc ul ul { padding-left: 1.1rem; }
+.guide-toc a { text-decoration: none; }
+
+/* pandoc's highlighter, mapped onto the landing page's three colours: gilt
+ * keywords, strings, numbers. Comments are muted; everything else plain. */
+pre .kw, pre .cf { color: var(--gilt); }
+pre .st, pre .ch, pre .ss { color: var(--syn-string); }
+pre .dv, pre .fl, pre .bn { color: var(--syn-number); }
+pre .co { color: var(--ash); font-style: italic; }
+pre.sourceCode a { display: none; } /* pandoc's empty per-line anchors */
+div.sourceCode pre { margin: 1.5rem 0; }
+
+/* ── search ───────────────────────────────────────────────────────── */
+
+/* search.html runs pagefind's own UI; these are its documented theme
+ * variables, set from the page's tokens so it follows the theme switch. */
+#search-ui .pagefind-ui {
+  --pagefind-ui-scale: 0.85;
+  --pagefind-ui-primary: var(--gilt);
+  --pagefind-ui-text: var(--parchment);
+  --pagefind-ui-background: var(--stone-up);
+  --pagefind-ui-border: var(--rule);
+  --pagefind-ui-tag: var(--stone-up);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 2px;
+  --pagefind-ui-font: inherit;
+  margin-top: 2rem;
+}
+#search-ui mark { background: none; color: var(--gilt); font-weight: 600; }
 
 /* ── footer ───────────────────────────────────────────────────────── */
 

@@ -13,6 +13,7 @@ closed repository `elden-ring-mods-engine`.
 | `docs/cli.md`, `docs/cli.html` | the command reference, for the repository and the website | generated from the engine's `--help`: `make -C ../elden-ring-mods-engine cli-docs`. Never edit by hand; change the help in the engine. |
 | `examples/*.lua`               | worked mods                                               | must stay byte-identical to the engine's `examples/` (`zig build test-examples` there)                                                 |
 | `docs/`, `README.md`           | the author- and player-facing docs                        | written here                                                                                                                           |
+| `docs/*.html`, `*.css`, `*.js` | the website around those docs                             | written here; `make site` renders each `docs/*.md` into `docs/guide.template.html` and indexes them for search                         |
 | `LICENSE`, `NOTICE`            | Apache-2.0 and what it does not cover                     | written here                                                                                                                           |
 
 ## What does not belong here
@@ -23,7 +24,10 @@ closed repository `elden-ring-mods-engine`.
   the engine as `tools/paramdef_gen.zig` and `data/paramdefs/`.
 - **No Python, ever.** The project is Zig. CI (`no-tooling`) and the
   pre-commit hook both reject any `.py` file.
-- **Nothing that builds.** There is no `build.zig` and there should not be one.
+- **Nothing that builds**, apart from the website. There is no `build.zig`
+  and there should not be one. `make site` is the one exception, and it stays
+  a Makefile target calling pandoc and pagefind from the flake: no script,
+  no generator, no Lua filter. Its output, `_site/`, is never committed.
 - **No game data.** No `regulation.bin`, no param rows, nothing extracted from
   an installation (see `NOTICE`).
 - **No engine internals.** Addresses, signatures, hook details and E-series
@@ -41,8 +45,12 @@ closed repository `elden-ring-mods-engine`.
 - `make fmt` / `make check-fmt`: format or check every Markdown file with
   rumdl (config in `.rumdl.toml`, generated `docs/cli.md` excluded). No
   JavaScript and no Python: tools come from nixpkgs, pinned by `flake.lock`.
-- CI: every example parses, Markdown is formatted, and no Python or `tools/`
-  exists.
+- `make site` builds the website into `_site/`; `make serve` builds it and
+  serves it on <http://localhost:1414> (search does not work from `file://`).
+  A guide must start with a `# Title` line: it becomes the page title.
+  `.github/workflows/pages.yml` deploys `main` to GitHub Pages.
+- CI: every example parses, Markdown is formatted, the website builds, and
+  no Python or `tools/` exists.
 - `make hooks` once per clone, to install the pre-commit hook.
 
 ## Commits

@@ -9,17 +9,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 </head>
 <body>
 
 <a class="skip" href="#download">Skip to download</a>
 
-<header class="masthead">
+<header class="masthead" data-pagefind-ignore>
   <p class="wordmark">ermod-engine</p>
+  <div class="tools">
+    <form class="site-search" action="search.html" role="search">
+      <input type="search" name="q" placeholder="Search the guides" aria-label="Search the guides">
+    </form>
+  </div>
   <nav>
-    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
-    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">Writing mods</a>
-    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md">Co-op</a>
+    <a href="install.html">Install guide</a>
+    <a href="scripting.html">Writing mods</a>
+    <a href="coop.html">Co-op</a>
+    <a href="guides.html">All guides</a>
     <a href="cli.html">Commands</a>
     <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
   </nav>
@@ -63,7 +70,7 @@
         Easy Anti-Cheat never runs, and the one launch that does risk a ban is
         the game's normal Steam launch with a modified
         <code>regulation.bin</code> in place.
-        <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#before-you-start">The install guide</a>
+        <a href="install.html#before-you-start">The install guide</a>
         has the rules.
       </dd>
 
@@ -111,7 +118,7 @@
       <b>Co-op with the same mods.</b> The engine runs its own co-op, peer to
       peer between the players' machines, and holds a joiner until its
       game-changing mods match the host's.
-      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/coop.md">The co-op guide</a>
+      <a href="coop.html">The co-op guide</a>
       covers starting a session.
     </p>
 
@@ -151,7 +158,7 @@
       not listed is absent from the <code>sdk</code> table it receives, so it
       cannot be called rather than merely refused. Eleven worked examples and the
       full reference are in
-      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/scripting.md">the scripting guide</a>.
+      <a href="scripting.html">the scripting guide</a>.
     </p>
   </section>
 
@@ -176,7 +183,7 @@ sha256sum --ignore-missing -c SHA256SUMS        # macOS: shasum -a 256 --ignore-
       Signature first, then checksums: checksums from the same page as the
       archive only prove the two agree, not that either came from us.
       On macOS, Gatekeeper refuses the first run of a browser download; the
-      <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md#on-macos-clear-the-quarantine">install guide</a>
+      <a href="install.html#on-macos-clear-the-quarantine">install guide</a>
       says how to clear it.
     </p>
 
@@ -201,7 +208,7 @@ sha256sum --ignore-missing -c SHA256SUMS        # macOS: shasum -a 256 --ignore-
 
 </main>
 
-<footer>
+<footer data-pagefind-ignore>
   <p>
     The engine is closed source; this repository publishes the SDK stubs, the
     examples and the param definitions a mod is written against.
@@ -209,7 +216,8 @@ sha256sum --ignore-missing -c SHA256SUMS        # macOS: shasum -a 256 --ignore-
   </p>
   <nav>
     <a href="https://github.com/Benehiko/elden-ring-mods/releases">Releases</a>
-    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md">Install guide</a>
+    <a href="install.html">Install guide</a>
+    <a href="guides.html">All guides</a>
     <a href="cli.html">Commands</a>
     <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
   </nav>

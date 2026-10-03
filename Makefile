@@ -8,13 +8,73 @@
 #   docs/cli.md, docs/cli.html    `make cli-docs`   in elden-ring-mods-engine
 #
 # What is left here is checking that what is committed is what the engine
-# would produce.
+# would produce, and `make site`, which renders docs/ into the website with
+# pandoc and pagefind from the flake. Its output (_site/) is never committed.
 
 ENGINE ?= ../elden-ring-mods-engine
 
 RUMDL ?= rumdl
+PANDOC ?= pandoc
+PAGEFIND ?= pagefind
 
-.PHONY: hooks check-stubs check-cli-docs fmt check-fmt
+# The website, built into $(SITE) and deployed by .github/workflows/pages.yml.
+SITE ?= _site
+REPO_BLOB := https://github.com/Benehiko/elden-ring-mods/blob/main
+
+# Every guide in docs/ becomes a page. cli.md is left out: the engine
+# generates cli.html for the website itself. docs/README.md is the guides
+# index, so it becomes guides.html.
+GUIDES := $(filter-out docs/cli.md docs/README.md,$(wildcard docs/*.md))
+
+.PHONY: hooks check-stubs check-cli-docs fmt check-fmt site serve
+
+# Builds the website: plain HTML and CSS, a few lines of JavaScript for the
+# theme switch, and a static search index. Nothing runs on a server.
+#
+#   1. The hand-written pages and assets are copied as they are.
+#   2. pandoc renders each guide into docs/guide.template.html. Line 1 of a
+#      guide is its `# Title`; it becomes the page title and the template's
+#      <h1>, and the rest is rendered with GitHub's heading anchors, so a link
+#      that works on GitHub works on the site.
+#   3. Links are rewritten for the site: guide.md to guide.html, links out of
+#      docs/ to GitHub, and the GitHub guide links in the generated cli.html to
+#      the pages here. cli.html also gets the theme script, which the engine's
+#      generator does not emit yet.
+#   4. pagefind indexes the result into $(SITE)/pagefind for search.html.
+#
+# pandoc and pagefind come from the flake, pinned by flake.lock.
+site:
+	@rm -rf $(SITE) && mkdir -p $(SITE)
+	@cp docs/index.html docs/cli.html docs/search.html docs/style.css docs/theme.js $(SITE)/
+	@for md in $(GUIDES) docs/README.md; do \
+		name=$$(basename "$$md" .md); \
+		[ "$$name" = README ] && name=guides; \
+		title=$$(sed -n '1s/^# //p' "$$md"); \
+		[ -n "$$title" ] || { echo "site: $$md must start with a '# Title' line" >&2; exit 1; }; \
+		sed 1d "$$md" | $(PANDOC) --from gfm --to html5 \
+			--template docs/guide.template.html \
+			--toc --toc-depth=2 --wrap=none \
+			--metadata pagetitle="$$title" --metadata source="$$md" \
+			--output "$(SITE)/$$name.html" || exit 1; \
+	done
+	@for f in $(SITE)/*.html; do \
+		sed -E \
+			-e 's#href="README\.md#href="guides.md#g' \
+			-e 's#href="([A-Za-z0-9_-]+)\.md#href="\1.html#g' \
+			-e 's#href="\.\./#href="$(REPO_BLOB)/#g' \
+			-e 's#href="$(REPO_BLOB)/docs/([A-Za-z0-9_-]+)\.md#href="\1.html#g' \
+			"$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f" || exit 1; \
+	done
+	@grep -q 'src="theme.js"' $(SITE)/cli.html || { \
+		sed 's#</head>#<script src="theme.js"></script></head>#' $(SITE)/cli.html > $(SITE)/cli.html.tmp && \
+		mv $(SITE)/cli.html.tmp $(SITE)/cli.html; }
+	@$(PAGEFIND) --site $(SITE) --output-subdir pagefind --quiet
+	@echo "site: built $(SITE)/ ($$(ls $(SITE)/*.html | wc -l | tr -d ' ') pages)"
+
+# Serves the built site on http://localhost:1414. Search needs a server:
+# browsers refuse to load the index from file:// URLs.
+serve: site
+	@$(PAGEFIND) --site $(SITE) --output-subdir pagefind --quiet --serve
 
 # Formats and lint-fixes every Markdown file with rumdl (.rumdl.toml). `nix
 # develop` provides it, at the version pinned in flake.lock; the generated

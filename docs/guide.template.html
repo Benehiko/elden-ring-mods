@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- The page around every guide. `make site` renders each docs/*.md into it
+     with pandoc; the Markdown stays the source and reads the same on GitHub. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$pagetitle$ · ermod-engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+</head>
+<body>
+
+<a class="skip" href="#guide">Skip to the guide</a>
+
+<header class="masthead" data-pagefind-ignore>
+  <p class="wordmark"><a href="./">ermod-engine</a></p>
+  <div class="tools">
+    <form class="site-search" action="search.html" role="search">
+      <input type="search" name="q" placeholder="Search the guides" aria-label="Search the guides">
+    </form>
+  </div>
+  <nav>
+    <a href="install.html">Install guide</a>
+    <a href="scripting.html">Writing mods</a>
+    <a href="coop.html">Co-op</a>
+    <a href="guides.html">All guides</a>
+    <a href="cli.html">Commands</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</header>
+
+<main id="guide" class="guide">
+  <article>
+    <h1>$pagetitle$</h1>
+$if(toc)$
+    <details class="guide-toc" data-pagefind-ignore>
+      <summary>On this page</summary>
+$table-of-contents$
+    </details>
+$endif$
+$body$
+  </article>
+</main>
+
+<footer data-pagefind-ignore>
+  <p>
+    This page is rendered from
+    <a href="https://github.com/Benehiko/elden-ring-mods/blob/main/$source$">$source$</a>;
+    corrections are welcome there.
+    Not affiliated with FromSoftware or Bandai Namco.
+  </p>
+  <nav>
+    <a href="https://github.com/Benehiko/elden-ring-mods/releases">Releases</a>
+    <a href="guides.html">All guides</a>
+    <a href="cli.html">Commands</a>
+    <a href="https://github.com/Benehiko/elden-ring-mods">Source</a>
+  </nav>
+</footer>
+
+</body>
+</html>

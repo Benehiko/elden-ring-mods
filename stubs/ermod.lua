@@ -754,6 +754,7 @@ local trace = {}
 ---@field load_request integer? # streamer's requested level
 ---@field manipulator string # who drives it: ComManipulator (local AI), NetAIManipulator (remote owner), RideManipulator, ...
 ---@field ride_state integer? # players only: 0 on foot
+---@field yaw number? # facing, radians (the physics orientation's yaw)
 ---@field sync ermod.trace.sync?
 
 ---@class ermod.trace.predicate
@@ -796,7 +797,7 @@ function trace.barriers() end
 ---@field session ermod.trace.session # the peer's own session view (its role, its frame)
 ---@field player ermod.trace.chr? # the peer itself, as it sees itself
 ---@field peers ermod.trace.chr[] # the remote bodies on the peer's machine
----@field chrs ermod.trace.chr[] # the characters nearest the peer, nearest first (at most 52)
+---@field chrs ermod.trace.chr[] # the characters nearest the peer, nearest first (at most 48)
 
 ---Every co-op peer's own snapshot, as it last arrived whole. Each machine
 ---in an engine co-op session sends its snapshot to every other one once a

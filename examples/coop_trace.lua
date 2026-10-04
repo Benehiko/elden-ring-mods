@@ -41,7 +41,7 @@
 
 local mod = {
   name = "coop-trace",
-  version = "1.4.0",
+  version = "1.5.0",
   run_at = "events",
   permissions = { "trace", "ui", "hooks", "log" },
 }
@@ -50,6 +50,9 @@ local config = {
   radius = 60,            -- metres: characters shown and logged
   max_rows = 40,          -- rows drawn per list
   stale_frames = 90,      -- STALE once no owner record was used for this long
+  min_offset_samples = 3, -- shared map-block characters needed to estimate a peer's frame offset
+  pose_tolerance = 1.0,   -- metres: a player placed further off than this on the other machine is red
+  yaw_tolerance = 15,     -- degrees: likewise for facing
   notick_radius = 15,     -- metres: NOTICK only this close to the player
   hp_tolerance = 0.1,     -- the cross-check calls HP apart beyond this share of max
   sort = 1,               -- index into `sorts`
@@ -156,9 +159,9 @@ mod.compare = compare
 local function row(c, tags)
   local sy = c.sync or {}
   return string.format(
-    "%s %s e=%s d=%s pos=%s blk=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s flags=%s alpha=%s ride=%s tags=%s",
+    "%s %s e=%s d=%s pos=%s yaw=%s blk=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s flags=%s alpha=%s ride=%s tags=%s",
     c.key, c.class ~= "" and c.class or "?", s(c.entity), dist(c),
-    vec(c.pos), c.block and string.format("%08x", c.block) or "-", hp(c), s(c.dead), s(sy.owned), s(sy.registered), c.manipulator ~= "" and c.manipulator or "-",
+    vec(c.pos), c.yaw and string.format("%.1f", math.deg(c.yaw)) or "-", c.block and string.format("%08x", c.block) or "-", hp(c), s(c.dead), s(sy.owned), s(sy.registered), c.manipulator ~= "" and c.manipulator or "-",
     s(c.update), s(c.load_level), s(c.load_request), s(sy.pop_age), s(sy.rec70_hp),
     sy.flags and string.format("0x%x", sy.flags) or "-", c.alpha and string.format("%.2f", c.alpha) or "-",
     s(c.ride_state), #tags > 0 and table.concat(tags, ",") or "-")
@@ -211,6 +214,77 @@ local function collecting(role)
   return role == "host"
 end
 
+-- ── the frame check: do both machines put the players in the same place? ─
+
+local function median(list)
+  local t = {}
+  for i, v in ipairs(list) do t[i] = v end
+  table.sort(t)
+  return t[math.floor((#t + 1) / 2)]
+end
+
+-- An angle difference wrapped into (-180, 180] degrees.
+local function wrap_deg(rad)
+  local d = math.deg(rad) % 360
+  if d > 180 then d = d - 360 end
+  return d
+end
+
+-- The peer's frame relative to ours: the per-axis median of (there - here)
+-- over characters of a map block both machines have (a player's handle has
+-- no block, `lo` all ones, and players are the ones being tested), with the
+-- median facing difference as the frame's rotation. Nil with fewer than
+-- `cfg.min_offset_samples`.
+local function frame_offset(by_key, r, cfg)
+  local dx, dy, dz, dyaw = {}, {}, {}, {}
+  for _, c in ipairs(r.chrs) do
+    local m = by_key[c.key]
+    if m and m.pos and c.pos and c.lo ~= 0xffffffff then
+      dx[#dx + 1] = c.pos.x - m.pos.x
+      dy[#dy + 1] = c.pos.y - m.pos.y
+      dz[#dz + 1] = c.pos.z - m.pos.z
+      if c.yaw and m.yaw then dyaw[#dyaw + 1] = wrap_deg(c.yaw - m.yaw) end
+    end
+  end
+  if #dx < cfg.min_offset_samples then return nil end
+  local off = { x = median(dx), y = median(dy), z = median(dz), n = #dx }
+  off.rot = #dyaw > 0 and median(dyaw) or nil
+  local res = {}
+  for i = 1, #dx do
+    res[i] = math.sqrt((dx[i] - off.x) ^ 2 + (dy[i] - off.y) ^ 2 + (dz[i] - off.z) ^ 2)
+  end
+  off.spread = median(res)
+  return off
+end
+mod.frame_offset = frame_offset
+
+-- Where `there` (a body in the peer's frame) lands in ours, against where we
+-- have `here`: metres off, per axis, and the facing error in degrees.
+local function pose_error(here, there, off)
+  if not (here and there and here.pos and there.pos and off) then return nil end
+  local e = { x = there.pos.x - off.x - here.pos.x, y = there.pos.y - off.y - here.pos.y, z = there.pos.z - off.z - here.pos.z }
+  e.d = math.sqrt(e.x ^ 2 + e.y ^ 2 + e.z ^ 2)
+  if here.yaw and there.yaw then e.yaw = wrap_deg(there.yaw - here.yaw - math.rad(off.rot or 0)) end
+  return e
+end
+mod.pose_error = pose_error
+
+local function find_key(list, key)
+  for _, c in ipairs(list) do
+    if c.key == key then return c end
+  end
+  return nil
+end
+
+local function err_text(e)
+  if not e then return "-" end
+  return string.format("%.2f m (%.2f,%.2f,%.2f) yaw %s", e.d, e.x, e.y, e.z, e.yaw and string.format("%+.1f deg", e.yaw) or "-")
+end
+
+local function err_bad(e, cfg)
+  return e ~= nil and (e.d > cfg.pose_tolerance or (e.yaw ~= nil and math.abs(e.yaw) > cfg.yaw_tolerance))
+end
+
 -- The peers' views, each with its own tags and its cross-check against ours.
 local function refresh_remotes(sdk, session, by_key, p, log_rows)
   view.remotes = {}
@@ -239,6 +313,26 @@ local function refresh_remotes(sdk, session, by_key, p, log_rows)
         end
       else
         entry.only_there = entry.only_there + 1
+      end
+    end
+    -- The frame check: this machine's player as the peer has it, and the
+    -- peer's player as this machine has it, both through the frame offset.
+    local off = frame_offset(by_key, r, config)
+    entry.frame = off
+    if view.player then entry.me_there = pose_error(view.player, find_key(r.peers, view.player.key), off) end
+    if r.player and off then
+      -- Reversed: the peer's own position is the truth for its body, so our
+      -- copy goes into its frame (the offset negated) and is compared there.
+      local back = { x = -off.x, y = -off.y, z = -off.z, rot = off.rot and -off.rot or nil }
+      entry.them_here = pose_error(r.player, find_key(view.peers, r.player.key), back)
+    end
+    if collect and log_rows then
+      if off then
+        sdk.log.info(string.format("%s frame peer %d (%s, age %s): offset (%.2f,%.2f,%.2f) rot %s from %d chrs, spread %.2f m | me on it: %s | it on me: %s",
+          p, r.id, r.session.role, s(r.age), off.x, off.y, off.z, off.rot and string.format("%+.1f deg", off.rot) or "-", off.n, off.spread,
+          err_text(entry.me_there), err_text(entry.them_here)))
+      else
+        sdk.log.info(string.format("%s frame peer %d: fewer than %d characters both machines have; no offset", p, r.id, config.min_offset_samples))
       end
     end
     -- An open disagreement whose character is no longer on both lists is
@@ -442,6 +536,15 @@ local function draw(sdk)
             r.session.send_gate and "OPEN" or "closed", r.session.frame))
           if r.player then player_line(ui, "self", r.player) end
           for _, c in ipairs(r.peers) do player_line(ui, "sees", c) end
+          local f = e.frame
+          if f then
+            ui.text(string.format("frame: its = ours + (%.2f, %.2f, %.2f), rot %s, from %d chrs (spread %.2f m)",
+              f.x, f.y, f.z, f.rot and string.format("%+.1f deg", f.rot) or "-", f.n, f.spread), f.spread > config.pose_tolerance and AMBER or GREY)
+            ui.text("me on it:  " .. err_text(e.me_there), err_bad(e.me_there, config) and RED or GREEN)
+            ui.text("it on me:  " .. err_text(e.them_here), err_bad(e.them_here, config) and RED or GREEN)
+          else
+            ui.text(string.format("frame: fewer than %d characters both machines have", config.min_offset_samples), GREY)
+          end
           ui.tree(string.format("Disagreements (%d)###d%d", #e.diffs, r.id), function()
             if #e.diffs == 0 then ui.text("none among the characters both machines have", GREY) end
             for i, d in ipairs(e.diffs) do

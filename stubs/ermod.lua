@@ -258,6 +258,19 @@ function ui.separator() end
 function ui.same_line() end
 function ui.spacing() end
 
+---A collapsible section header; the section's widgets follow it while it is open.
+---@param label string
+---@param default_open boolean? # open the first time it is drawn (default closed)
+---@return boolean open
+function ui.collapsing(label, default_open) end
+
+---A tree node; `body` runs while it is open, indented under it.
+---@param label string
+---@param body fun()
+---@param default_open boolean?
+---@return boolean open
+function ui.tree(label, body, default_open) end
+
 ---Whether the overlay currently has input focus (Insert toggles it).
 ---@return boolean
 function ui.focused() end
@@ -776,6 +789,21 @@ function trace.chrs(radius) end
 
 ---@return ermod.trace.barriers
 function trace.barriers() end
+
+---@class ermod.trace.remote
+---@field id integer # the peer's Steam id
+---@field age integer? # this machine's frames since the snapshot arrived whole
+---@field session ermod.trace.session # the peer's own session view (its role, its frame)
+---@field player ermod.trace.chr? # the peer itself, as it sees itself
+---@field peers ermod.trace.chr[] # the remote bodies on the peer's machine
+---@field chrs ermod.trace.chr[] # the characters nearest the peer, nearest first (at most 52)
+
+---Every co-op peer's own snapshot, as it last arrived whole. Each machine
+---in an engine co-op session sends its snapshot to every other one once a
+---second, so any machine (the host, usually) can show and log the whole
+---session. Empty outside a session.
+---@return ermod.trace.remote[]
+function trace.remotes() end
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file
 ---`items.file[<table>]` names, so a mod can write

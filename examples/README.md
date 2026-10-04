@@ -36,7 +36,7 @@ editor checks the names, and a typo is an error where it is written.
 | [`boss_rematch.lua`](boss_rematch.lua)       | the `bosses` permission: revive any boss, base game or DLC, by name (`sdk.bosses.id`)                                                                      |
 | [`boss_watch.lua`](boss_watch.lua)           | live boss state: `sdk.bosses.state`, `player_pos`, `in_fight` — which bosses are alive near the player, and whether a fight is on                          |
 | [`boss_phases.lua`](boss_phases.lua)         | boss stats and stages: `sdk.bosses.stats`, `set_stat` (live), `set_hp`, `set_immortal`, `reset_stats` — the same fight reset and harder                    |
-| [`coop_trace.lua`](coop_trace.lua)           | a co-op debug session: `sdk.trace` — session role, players, nearby enemies with ownership and sync state, barrier counters; flags frozen and ghost enemies and logs rows that join across machines | 
+| [`coop_trace.lua`](coop_trace.lua)           | a co-op debug session: `sdk.trace` — session role, players, nearby enemies with ownership and sync state, barrier counters; flags frozen and ghost enemies; the host collects every peer's view (`trace.remotes`) and logs where machines disagree; collapsible sections with `ui.collapsing` / `ui.tree` |
 
 `double_runes` uses `GameAreaParam`, which has no vendored paramdef yet. It
 passes `mod verify`, but its entry point fails with "unknown param file" in the

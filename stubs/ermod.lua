@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"|"trace"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -19,6 +19,7 @@
 ---@field watch ermod.sdk.watch?
 ---@field rules ermod.sdk.rules? # present with the "rules" permission
 ---@field bosses ermod.sdk.bosses? # present with the "bosses" permission
+---@field trace ermod.sdk.trace? # present with the "trace" permission
 ---@field items ermod.sdk.items # every item, spell, skill and class by row id; always present
 
 ---The table a mod script returns.
@@ -172,11 +173,14 @@ function store.keys() end
 ---@alias ermod.ui.color number[] # {r, g, b [, a]} in 0..1
 ---@alias ermod.ui.flag "no_title"|"no_resize"|"no_move"|"no_background"|"auto_size"|"no_inputs"
 
+---@alias ermod.ui.anchor "top_left"|"top_right"|"bottom_left"|"bottom_right"
+
 ---@class ermod.ui.window_opts
----@field x number?
----@field y number?
----@field w number?
----@field h number?
+---@field x number? # offset from the anchor corner, inward; 1080p pixels, scaled to the display
+---@field y number? # offset from the anchor corner, inward; 1080p pixels, scaled to the display
+---@field w number? # 1080p pixels, scaled to the display
+---@field h number? # 1080p pixels, scaled to the display
+---@field anchor ermod.ui.anchor? # screen corner x/y count from (default "top_right", clear of the game's HUD)
 ---@field once boolean? # apply position/size only the first time (default true)
 ---@field flags ermod.ui.flag[]?
 
@@ -349,6 +353,7 @@ local bosses = {}
 ---@field id integer # GameAreaParam row id (what sdk.bosses.id.<key> is)
 ---@field key string # its sdk.bosses.id key, e.g. "margit_the_fell_omen" ("boss_<row>" where unresolved)
 ---@field display_name string # its one name, e.g. "Margit, the Fell Omen"; "" where unresolved
+---@field name_measured boolean # display_name was read off the boss itself in the game (its model's names); false where it is assigned by row and not yet checked live
 ---@field name string # "c<model>: <every name the game files under its model>"; "" where not measured
 ---@field npc_param integer? # its NpcParam row (stats); nil where not measured
 ---@field flag integer # the defeat flag a revive clears
@@ -472,218 +477,305 @@ function bosses.revive_all(opts) end
 bosses.id = {
   godrick_the_grafted = 10000800, -- Godrick the Grafted
   margit_the_fell_omen = 10000850, -- Margit, the Fell Omen
-  boss_10010800 = 10010800, -- name not resolved yet
+  grafted_scion = 10010800, -- Grafted Scion
   morgott_the_omen_king = 11000800, -- Morgott, the Omen King
-  boss_11000850 = 11000850, -- name not resolved yet
-  boss_11050800 = 11050800, -- name not resolved yet
-  boss_11050850 = 11050850, -- name not resolved yet
+  godfrey_first_elden_lord = 11000850, -- Godfrey, First Elden Lord
+  hoarah_loux_warrior = 11050800, -- Hoarah Loux, Warrior
+  sir_gideon_ofnir_the_all_knowing = 11050850, -- Sir Gideon Ofnir, the All-Knowing
   dragonkin_soldier_of_nokstella = 12010800, -- Dragonkin Soldier of Nokstella
   dragonkin_soldier = 12010850, -- Dragonkin Soldier
-  boss_12020800 = 12020800, -- name not resolved yet
-  boss_12020830 = 12020830, -- name not resolved yet
-  boss_12020850 = 12020850, -- name not resolved yet
-  boss_12030390 = 12030390, -- name not resolved yet
-  boss_12030800 = 12030800, -- name not resolved yet
-  boss_12030850 = 12030850, -- name not resolved yet
+  valiant_gargoyle = 12020800, -- Valiant Gargoyle
+  dragonkin_soldier_12020830 = 12020830, -- Dragonkin Soldier
+  mimic_tear = 12020850, -- Mimic Tear
+  crucible_knight = 12030390, -- Crucible Knight
+  fias_champion = 12030800, -- Fia's Champion
+  lichdragon_fortissax = 12030850, -- Lichdragon Fortissax
   astel_naturalborn_of_the_void = 12040800, -- Astel, Naturalborn of the Void
-  boss_12050800 = 12050800, -- name not resolved yet
-  boss_12080800 = 12080800, -- name not resolved yet
-  boss_12090800 = 12090800, -- name not resolved yet
+  mohg_lord_of_blood = 12050800, -- Mohg, Lord of Blood
+  ancestor_spirit = 12080800, -- Ancestor Spirit
+  regal_ancestor_spirit = 12090800, -- Regal Ancestor Spirit
   maliketh_the_black_blade = 13000800, -- Maliketh, the Black Blade
   dragonlord_placidusax = 13000830, -- Dragonlord Placidusax
   godskin_apostle = 13000850, -- Godskin Apostle
-  boss_14000800 = 14000800, -- name not resolved yet
-  boss_14000850 = 14000850, -- name not resolved yet
+  rennala_queen_of_the_full_moon = 14000800, -- Rennala, Queen of the Full Moon
+  red_wolf_of_radagon = 14000850, -- Red Wolf of Radagon
   malenia_goddess_of_rot = 15000800, -- Malenia, Goddess of Rot
   loretta_knight_of_the_haligtree = 15000850, -- Loretta, Knight of the Haligtree
   rykard_lord_of_blasphemy = 16000800, -- Rykard, Lord of Blasphemy
   godskin_noble = 16000850, -- Godskin Noble
-  boss_16000860 = 16000860, -- name not resolved yet
-  boss_18000800 = 18000800, -- name not resolved yet
-  boss_18000850 = 18000850, -- name not resolved yet
+  abductor_virgin_swinging_sickle_and_abductor_virgin_wheel = 16000860, -- Abductor Virgin (Swinging Sickle) & Abductor Virgin (Wheel)
+  ulcerated_tree_spirit = 18000800, -- Ulcerated Tree Spirit
+  soldier_of_godrick = 18000850, -- Soldier of Godrick
   elden_beast = 19000800, -- Elden Beast
-  boss_20000800 = 20000800, -- name not resolved yet
-  boss_20010800 = 20010800, -- name not resolved yet
+  divine_beast_dancing_lion = 20000800, -- Divine Beast Dancing Lion
+  promised_consort_radahn = 20010800, -- Promised Consort Radahn
   boss_20010850 = 20010850, -- name not resolved yet
-  boss_21000850 = 21000850, -- name not resolved yet
-  boss_21010800 = 21010800, -- name not resolved yet
-  boss_22000800 = 22000800, -- name not resolved yet
-  boss_25000800 = 25000800, -- name not resolved yet
-  boss_28000800 = 28000800, -- name not resolved yet
-  boss_30000800 = 30000800, -- name not resolved yet
-  boss_30010800 = 30010800, -- name not resolved yet
-  boss_30020800 = 30020800, -- name not resolved yet
-  boss_30030800 = 30030800, -- name not resolved yet
-  boss_30040800 = 30040800, -- name not resolved yet
-  boss_30050800 = 30050800, -- name not resolved yet
-  boss_30050850 = 30050850, -- name not resolved yet
-  boss_30060800 = 30060800, -- name not resolved yet
-  boss_30070800 = 30070800, -- name not resolved yet
-  boss_30080800 = 30080800, -- name not resolved yet
-  boss_30090800 = 30090800, -- name not resolved yet
-  boss_30100800 = 30100800, -- name not resolved yet
-  boss_30100801 = 30100801, -- name not resolved yet
-  boss_30110800 = 30110800, -- name not resolved yet
-  boss_30120800 = 30120800, -- name not resolved yet
-  boss_30120801 = 30120801, -- name not resolved yet
-  boss_30130800 = 30130800, -- name not resolved yet
-  boss_30140800 = 30140800, -- name not resolved yet
-  boss_30150800 = 30150800, -- name not resolved yet
-  boss_30160800 = 30160800, -- name not resolved yet
-  boss_30170800 = 30170800, -- name not resolved yet
-  boss_30180800 = 30180800, -- name not resolved yet
-  boss_30190800 = 30190800, -- name not resolved yet
-  boss_30200800 = 30200800, -- name not resolved yet
-  boss_31000800 = 31000800, -- name not resolved yet
-  boss_31010800 = 31010800, -- name not resolved yet
-  boss_31020800 = 31020800, -- name not resolved yet
-  boss_31030800 = 31030800, -- name not resolved yet
-  boss_31040800 = 31040800, -- name not resolved yet
-  boss_31050800 = 31050800, -- name not resolved yet
-  boss_31060800 = 31060800, -- name not resolved yet
-  boss_31070800 = 31070800, -- name not resolved yet
-  boss_31090800 = 31090800, -- name not resolved yet
-  boss_31100800 = 31100800, -- name not resolved yet
-  boss_31110800 = 31110800, -- name not resolved yet
-  boss_31120800 = 31120800, -- name not resolved yet
-  boss_31150800 = 31150800, -- name not resolved yet
-  boss_31170800 = 31170800, -- name not resolved yet
-  boss_31180800 = 31180800, -- name not resolved yet
-  boss_31190800 = 31190800, -- name not resolved yet
-  boss_31190850 = 31190850, -- name not resolved yet
-  boss_31200800 = 31200800, -- name not resolved yet
-  boss_31210800 = 31210800, -- name not resolved yet
-  boss_31220800 = 31220800, -- name not resolved yet
-  boss_32000800 = 32000800, -- name not resolved yet
-  boss_32010800 = 32010800, -- name not resolved yet
-  boss_32020800 = 32020800, -- name not resolved yet
-  boss_32040800 = 32040800, -- name not resolved yet
-  boss_32050800 = 32050800, -- name not resolved yet
-  boss_32050801 = 32050801, -- name not resolved yet
-  boss_32070800 = 32070800, -- name not resolved yet
-  boss_32080800 = 32080800, -- name not resolved yet
-  boss_32110800 = 32110800, -- name not resolved yet
-  boss_34120800 = 34120800, -- name not resolved yet
-  boss_34130800 = 34130800, -- name not resolved yet
-  boss_34140850 = 34140850, -- name not resolved yet
-  boss_35000800 = 35000800, -- name not resolved yet
-  boss_35000850 = 35000850, -- name not resolved yet
-  boss_39200800 = 39200800, -- name not resolved yet
-  boss_40000800 = 40000800, -- name not resolved yet
-  boss_40010800 = 40010800, -- name not resolved yet
-  boss_41000800 = 41000800, -- name not resolved yet
-  boss_41010800 = 41010800, -- name not resolved yet
-  boss_41020800 = 41020800, -- name not resolved yet
-  boss_43000800 = 43000800, -- name not resolved yet
-  boss_43010800 = 43010800, -- name not resolved yet
-  boss_1033420800 = 1033420800, -- name not resolved yet
-  boss_1033430800 = 1033430800, -- name not resolved yet
-  boss_1033450800 = 1033450800, -- name not resolved yet
-  boss_1034420800 = 1034420800, -- name not resolved yet
-  boss_1034450800 = 1034450800, -- name not resolved yet
-  boss_1034480800 = 1034480800, -- name not resolved yet
-  boss_1034500800 = 1034500800, -- name not resolved yet
-  boss_1035420800 = 1035420800, -- name not resolved yet
-  boss_1035500800 = 1035500800, -- name not resolved yet
-  boss_1035530800 = 1035530800, -- name not resolved yet
-  boss_1036450340 = 1036450340, -- name not resolved yet
-  boss_1036480340 = 1036480340, -- name not resolved yet
-  boss_1036500800 = 1036500800, -- name not resolved yet
-  boss_1036540800 = 1036540800, -- name not resolved yet
-  boss_1037420340 = 1037420340, -- name not resolved yet
-  boss_1037460800 = 1037460800, -- name not resolved yet
-  boss_1037510800 = 1037510800, -- name not resolved yet
-  boss_1037530800 = 1037530800, -- name not resolved yet
-  boss_1037540810 = 1037540810, -- name not resolved yet
-  boss_1038410800 = 1038410800, -- name not resolved yet
-  boss_1038480800 = 1038480800, -- name not resolved yet
-  boss_1038510800 = 1038510800, -- name not resolved yet
-  boss_1038520340 = 1038520340, -- name not resolved yet
-  boss_1039430340 = 1039430340, -- name not resolved yet
-  boss_1039440800 = 1039440800, -- name not resolved yet
-  boss_1039500800 = 1039500800, -- name not resolved yet
-  boss_1039510800 = 1039510800, -- name not resolved yet
-  boss_1039540800 = 1039540800, -- name not resolved yet
-  boss_1040520800 = 1040520800, -- name not resolved yet
-  boss_1040530800 = 1040530800, -- name not resolved yet
-  boss_1041500800 = 1041500800, -- name not resolved yet
-  boss_1041510800 = 1041510800, -- name not resolved yet
-  boss_1041520800 = 1041520800, -- name not resolved yet
-  boss_1041530800 = 1041530800, -- name not resolved yet
-  boss_1042330800 = 1042330800, -- name not resolved yet
-  boss_1042360800 = 1042360800, -- name not resolved yet
-  boss_1042370800 = 1042370800, -- name not resolved yet
-  boss_1042380800 = 1042380800, -- name not resolved yet
-  boss_1042380850 = 1042380850, -- name not resolved yet
-  boss_1042550800 = 1042550800, -- name not resolved yet
-  boss_1043300800 = 1043300800, -- name not resolved yet
-  boss_1043330800 = 1043330800, -- name not resolved yet
-  boss_1043360800 = 1043360800, -- name not resolved yet
-  boss_1043370340 = 1043370340, -- name not resolved yet
-  boss_1043530800 = 1043530800, -- name not resolved yet
-  boss_1044320340 = 1044320340, -- name not resolved yet
-  boss_1044320342 = 1044320342, -- name not resolved yet
-  boss_1044350800 = 1044350800, -- name not resolved yet
-  boss_1044360800 = 1044360800, -- name not resolved yet
-  boss_1044530800 = 1044530800, -- name not resolved yet
-  boss_1045390800 = 1045390800, -- name not resolved yet
-  boss_1045520800 = 1045520800, -- name not resolved yet
-  boss_1047400800 = 1047400800, -- name not resolved yet
-  boss_1048370800 = 1048370800, -- name not resolved yet
-  boss_1048400800 = 1048400800, -- name not resolved yet
-  boss_1048410800 = 1048410800, -- name not resolved yet
-  boss_1048510800 = 1048510800, -- name not resolved yet
-  boss_1048570800 = 1048570800, -- name not resolved yet
-  boss_1049370800 = 1049370800, -- name not resolved yet
-  boss_1049370850 = 1049370850, -- name not resolved yet
-  boss_1049380800 = 1049380800, -- name not resolved yet
-  boss_1049390800 = 1049390800, -- name not resolved yet
-  boss_1049390850 = 1049390850, -- name not resolved yet
-  boss_1049520800 = 1049520800, -- name not resolved yet
-  boss_1050560800 = 1050560800, -- name not resolved yet
-  boss_1050570800 = 1050570800, -- name not resolved yet
-  boss_1050570850 = 1050570850, -- name not resolved yet
-  boss_1051360800 = 1051360800, -- name not resolved yet
-  boss_1051400800 = 1051400800, -- name not resolved yet
-  boss_1051430800 = 1051430800, -- name not resolved yet
-  boss_1051570800 = 1051570800, -- name not resolved yet
-  boss_1052380800 = 1052380800, -- name not resolved yet
-  boss_1052410800 = 1052410800, -- name not resolved yet
-  boss_1052410850 = 1052410850, -- name not resolved yet
-  boss_1052520800 = 1052520800, -- name not resolved yet
-  boss_1052560800 = 1052560800, -- name not resolved yet
-  boss_1053560800 = 1053560800, -- name not resolved yet
-  boss_1054560800 = 1054560800, -- name not resolved yet
-  boss_1248550800 = 1248550800, -- name not resolved yet
-  boss_2044450800 = 2044450800, -- name not resolved yet
-  boss_2044470800 = 2044470800, -- name not resolved yet
-  boss_2045440800 = 2045440800, -- name not resolved yet
-  boss_2046380800 = 2046380800, -- name not resolved yet
-  boss_2046400800 = 2046400800, -- name not resolved yet
-  boss_2046410800 = 2046410800, -- name not resolved yet
-  boss_2046450800 = 2046450800, -- name not resolved yet
-  boss_2046460800 = 2046460800, -- name not resolved yet
-  boss_2047390800 = 2047390800, -- name not resolved yet
-  boss_2047450800 = 2047450800, -- name not resolved yet
-  boss_2048380850 = 2048380850, -- name not resolved yet
-  boss_2048440800 = 2048440800, -- name not resolved yet
-  boss_2049410800 = 2049410800, -- name not resolved yet
-  boss_2049430800 = 2049430800, -- name not resolved yet
-  boss_2049430850 = 2049430850, -- name not resolved yet
-  boss_2049450800 = 2049450800, -- name not resolved yet
-  boss_2049480800 = 2049480800, -- name not resolved yet
-  boss_2050470800 = 2050470800, -- name not resolved yet
-  boss_2050480800 = 2050480800, -- name not resolved yet
-  boss_2050480860 = 2050480860, -- name not resolved yet
-  boss_2051440800 = 2051440800, -- name not resolved yet
+  golden_hippopotamus = 21000850, -- Golden Hippopotamus
+  messmer_the_impaler = 21010800, -- Messmer the Impaler
+  putrescent_knight = 22000800, -- Putrescent Knight
+  metyr_mother_of_fingers = 25000800, -- Metyr, Mother of Fingers
+  midra_lord_of_frenzied_flame = 28000800, -- Midra, Lord of Frenzied Flame
+  cemetery_shade = 30000800, -- Cemetery Shade
+  erdtree_burial_watchdog = 30010800, -- Erdtree Burial Watchdog
+  erdtree_burial_watchdog_30020800 = 30020800, -- Erdtree Burial Watchdog
+  spiritcaller_snail = 30030800, -- Spiritcaller Snail
+  grave_warden_duelist = 30040800, -- Grave Warden Duelist
+  cemetery_shade_30050800 = 30050800, -- Cemetery Shade
+  black_knife_assassin = 30050850, -- Black Knife Assassin
+  erdtree_burial_watchdog_30060800 = 30060800, -- Erdtree Burial Watchdog
+  erdtree_burial_watchdog_30070800 = 30070800, -- Erdtree Burial Watchdog
+  ancient_hero_of_zamor = 30080800, -- Ancient Hero of Zamor
+  red_wolf_of_the_champion = 30090800, -- Red Wolf of the Champion
+  crucible_knight_ordovis = 30100800, -- Crucible Knight Ordovis
+  crucible_knight_30100801 = 30100801, -- Crucible Knight
+  black_knife_assassin_30110800 = 30110800, -- Black Knife Assassin
+  perfumer_tricia = 30120800, -- Perfumer Tricia
+  misbegotten_warrior = 30120801, -- Misbegotten Warrior
+  grave_warden_duelist_30130800 = 30130800, -- Grave Warden Duelist
+  erdtree_burial_watchdog_30140800 = 30140800, -- Erdtree Burial Watchdog
+  cemetery_shade_30150800 = 30150800, -- Cemetery Shade
+  putrid_tree_spirit = 30160800, -- Putrid Tree Spirit
+  ancient_hero_of_zamor_30170800 = 30170800, -- Ancient Hero of Zamor
+  ulcerated_tree_spirit_30180800 = 30180800, -- Ulcerated Tree Spirit
+  putrid_grave_warden_duelist = 30190800, -- Putrid Grave Warden Duelist
+  stray_mimic_tear = 30200800, -- Stray Mimic Tear
+  patches = 31000800, -- Patches
+  runebear = 31010800, -- Runebear
+  miranda_the_blighted_bloom = 31020800, -- Miranda the Blighted Bloom
+  beastman_of_farum_azula = 31030800, -- Beastman of Farum Azula
+  cleanrot_knight = 31040800, -- Cleanrot Knight
+  bloodhound_knight = 31050800, -- Bloodhound Knight
+  crystalian = 31060800, -- Crystalian
+  kindred_of_rot = 31070800, -- Kindred of Rot
+  demi_human_queen_margot = 31090800, -- Demi-Human Queen Margot
+  beastman_of_farum_azula_31100800 = 31100800, -- Beastman of Farum Azula
+  crystalian_31110800 = 31110800, -- Crystalian
+  misbegotten_crusader = 31120800, -- Misbegotten Crusader
+  demi_human_chief = 31150800, -- Demi-Human Chief
+  guardian_golem = 31170800, -- Guardian Golem
+  omenkiller = 31180800, -- Omenkiller
+  black_knife_assassin_31190800 = 31190800, -- Black Knife Assassin
+  necromancer_garris = 31190850, -- Necromancer Garris
+  cleanrot_knight_31200800 = 31200800, -- Cleanrot Knight
+  frenzied_duelist = 31210800, -- Frenzied Duelist
+  spiritcaller_snail_31220800 = 31220800, -- Spiritcaller Snail
+  scaly_misbegotten = 32000800, -- Scaly Misbegotten
+  stonedigger_troll = 32010800, -- Stonedigger Troll
+  crystalian_ringblade = 32020800, -- Crystalian (Ringblade)
+  stonedigger_troll_32040800 = 32040800, -- Stonedigger Troll
+  crystalian_ringblade_32050800 = 32050800, -- Crystalian (Ringblade)
+  crystalian_spear = 32050801, -- Crystalian (Spear)
+  magma_wyrm = 32070800, -- Magma Wyrm
+  fallingstar_beast = 32080800, -- Fallingstar Beast
+  astel_stars_of_darkness = 32110800, -- Astel, Stars of Darkness
+  onyx_lord = 34120800, -- Onyx Lord
+  godskin_apostle_34130800 = 34130800, -- Godskin Apostle
+  fell_twin = 34140850, -- Fell Twin
+  mohg_the_omen = 35000800, -- Mohg, the Omen
+  esgar_priest_of_blood = 35000850, -- Esgar, Priest of Blood
+  magma_wyrm_makar = 39200800, -- Magma Wyrm Makar
+  death_knight = 40000800, -- Death Knight
+  death_knight_40010800 = 40010800, -- Death Knight
+  demi_human_swordmaster_onze = 41000800, -- Demi-Human Swordmaster Onze
+  curseblade_labirith = 41010800, -- Curseblade Labirith
+  lamenter = 41020800, -- Lamenter
+  chief_bloodfiend = 43000800, -- Chief Bloodfiend
+  ancient_dragon_man = 43010800, -- Ancient Dragon-Man
+  alecto_black_knife_ringleader = 1033420800, -- Alecto, Black Knife Ringleader
+  erdtree_avatar = 1033430800, -- Erdtree Avatar
+  bols_carian_knight = 1033450800, -- Bols, Carian Knight
+  glintstone_dragon_adula = 1034420800, -- Glintstone Dragon Adula
+  glintstone_dragon_smarag = 1034450800, -- Glintstone Dragon Smarag
+  royal_revenant = 1034480800, -- Royal Revenant
+  glintstone_dragon_adula_1034500800 = 1034500800, -- Glintstone Dragon Adula
+  omenkiller_1035420800 = 1035420800, -- Omenkiller
+  royal_knight_loretta = 1035500800, -- Royal Knight Loretta
+  magma_wyrm_1035530800 = 1035530800, -- Magma Wyrm
+  death_rite_bird = 1036450340, -- Death Rite Bird
+  nights_cavalry = 1036480340, -- Night's Cavalry
+  onyx_lord_1036500800 = 1036500800, -- Onyx Lord
+  fallingstar_beast_1036540800 = 1036540800, -- Fallingstar Beast
+  death_rite_bird_1037420340 = 1037420340, -- Death Rite Bird
+  bell_bearing_hunter = 1037460800, -- Bell Bearing Hunter
+  ancient_dragon_lansseax = 1037510800, -- Ancient Dragon Lansseax
+  demi_human_queen_maggie = 1037530800, -- Demi-Human Queen Maggie
+  ulcerated_tree_spirit_1037540810 = 1037540810, -- Ulcerated Tree Spirit
+  adan_thief_of_fire = 1038410800, -- Adan, Thief of Fire
+  erdtree_avatar_1038480800 = 1038480800, -- Erdtree Avatar
+  demi_human_queen_gilika = 1038510800, -- Demi-Human Queen Gilika
+  tibia_mariner = 1038520340, -- Tibia Mariner
+  nights_cavalry_1039430340 = 1039430340, -- Night's Cavalry
+  tibia_mariner_1039440800 = 1039440800, -- Tibia Mariner
+  godefroy_the_grafted = 1039500800, -- Godefroy the Grafted
+  bell_bearing_hunter_1039510800 = 1039510800, -- Bell Bearing Hunter
+  bell_bearing_hunter_1039540800 = 1039540800, -- Bell Bearing Hunter
+  black_knife_assassin_1040520800 = 1040520800, -- Black Knife Assassin
+  sanguine_noble = 1040530800, -- Sanguine Noble
+  fallingstar_beast_1041500800 = 1041500800, -- Fallingstar Beast
+  tree_sentinel = 1041510800, -- Tree Sentinel
+  ancient_dragon_lansseax_1041520800 = 1041520800, -- Ancient Dragon Lansseax
+  wormface = 1041530800, -- Wormface
+  ancient_hero_of_zamor_1042330800 = 1042330800, -- Ancient Hero of Zamor
+  tree_sentinel_1042360800 = 1042360800, -- Tree Sentinel
+  crucible_knight_1042370800 = 1042370800, -- Crucible Knight
+  death_rite_bird_1042380800 = 1042380800, -- Death Rite Bird
+  bell_bearing_hunter_1042380850 = 1042380850, -- Bell Bearing Hunter
+  godskin_apostle_1042550800 = 1042550800, -- Godskin Apostle
+  leonine_misbegotten = 1043300800, -- Leonine Misbegotten
+  erdtree_avatar_1043330800 = 1043330800, -- Erdtree Avatar
+  flying_dragon_agheel = 1043360800, -- Flying Dragon Agheel
+  nights_cavalry_1043370340 = 1043370340, -- Night's Cavalry
+  bell_bearing_hunter_1043530800 = 1043530800, -- Bell Bearing Hunter
+  death_rite_bird_1044320340 = 1044320340, -- Death Rite Bird
+  nights_cavalry_1044320342 = 1044320342, -- Night's Cavalry
+  bloodhound_knight_darriwil = 1044350800, -- Bloodhound Knight Darriwil
+  mad_pumpkin_head = 1044360800, -- Mad Pumpkin Head
+  bell_bearing_hunter_1044530800 = 1044530800, -- Bell Bearing Hunter
+  tibia_mariner_1045390800 = 1045390800, -- Tibia Mariner
+  draconic_tree_sentinel = 1045520800, -- Draconic Tree Sentinel
+  putrid_avatar = 1047400800, -- Putrid Avatar
+  decaying_ekzykes = 1048370800, -- Decaying Ekzykes
+  mad_pumpkin_head_1048400800 = 1048400800, -- Mad Pumpkin Head
+  bell_bearing_hunter_1048410800 = 1048410800, -- Bell Bearing Hunter
+  nights_cavalry_1048510800 = 1048510800, -- Night's Cavalry
+  death_rite_bird_1048570800 = 1048570800, -- Death Rite Bird
+  nights_cavalry_1049370800 = 1049370800, -- Night's Cavalry
+  death_rite_bird_1049370850 = 1049370850, -- Death Rite Bird
+  commander_oneil = 1049380800, -- Commander O'Neil
+  nox_swordstress_and_nox_monk = 1049390800, -- Nox Swordstress & Nox Monk
+  battlemage_hugues = 1049390850, -- Battlemage Hugues
+  black_blade_kindred = 1049520800, -- Black Blade Kindred
+  great_wyrm_theodorix = 1050560800, -- Great Wyrm Theodorix
+  death_rite_bird_1050570800 = 1050570800, -- Death Rite Bird
+  putrid_avatar_1050570850 = 1050570850, -- Putrid Avatar
+  crucible_knight_1051360800 = 1051360800, -- Crucible Knight
+  putrid_avatar_1051400800 = 1051400800, -- Putrid Avatar
+  black_blade_kindred_1051430800 = 1051430800, -- Black Blade Kindred
+  commander_niall = 1051570800, -- Commander Niall
+  starscourge_radahn = 1052380800, -- Starscourge Radahn
+  flying_dragon_greyll = 1052410800, -- Flying Dragon Greyll
+  nights_cavalry_1052410850 = 1052410850, -- Night's Cavalry
+  fire_giant = 1052520800, -- Fire Giant
+  erdtree_avatar_1052560800 = 1052560800, -- Erdtree Avatar
+  roundtable_knight_vyke = 1053560800, -- Roundtable Knight Vyke
+  borealis_the_freezing_fog = 1054560800, -- Borealis the Freezing Fog
+  nights_cavalry_1248550800 = 1248550800, -- Night's Cavalry
+  romina_saint_of_the_bud = 2044450800, -- Romina, Saint of the Bud
+  rugalea_the_great_red_bear = 2044470800, -- Rugalea the Great Red Bear
+  ghostflame_dragon = 2045440800, -- Ghostflame Dragon
+  dancer_of_ranah = 2046380800, -- Dancer of Ranah
+  demi_human_queen_marigga = 2046400800, -- Demi-Human Queen Marigga
+  knight_of_the_solitary_gaol = 2046410800, -- Knight of the Solitary Gaol
+  red_bear = 2046450800, -- Red Bear
+  divine_beast_dancing_lion_2046460800 = 2046460800, -- Divine Beast Dancing Lion
+  death_rite_bird_2047390800 = 2047390800, -- Death Rite Bird
+  black_knight_garrew = 2047450800, -- Black Knight Garrew
+  ghostflame_dragon_2048380850 = 2048380850, -- Ghostflame Dragon
+  rellana_twin_moon_knight = 2048440800, -- Rellana, Twin Moon Knight
+  jagged_peak_drake = 2049410800, -- Jagged Peak Drake
+  ghostflame_dragon_2049430800 = 2049430800, -- Ghostflame Dragon
+  black_knight_edredd = 2049430850, -- Black Knight Edredd
+  ralva_the_great_red_bear = 2049450800, -- Ralva the Great Red Bear
+  commander_gaius = 2049480800, -- Commander Gaius
+  tree_sentinel_2050470800 = 2050470800, -- Tree Sentinel
+  scadutree_avatar = 2050480800, -- Scadutree Avatar
+  tree_sentinel_2050480860 = 2050480860, -- Tree Sentinel
+  rakshasa = 2051440800, -- Rakshasa
   boss_2051450720 = 2051450720, -- name not resolved yet
-  boss_2052400800 = 2052400800, -- name not resolved yet
-  boss_2052430800 = 2052430800, -- name not resolved yet
-  boss_2052480800 = 2052480800, -- name not resolved yet
-  boss_2054390800 = 2054390800, -- name not resolved yet
-  boss_2054390850 = 2054390850, -- name not resolved yet
+  jagged_peak_drake_2052400800 = 2052400800, -- Jagged Peak Drake
+  jori_elder_inquisitor = 2052430800, -- Jori, Elder Inquisitor
+  fallingstar_beast_2052480800 = 2052480800, -- Fallingstar Beast
+  bayle_the_dread = 2054390800, -- Bayle the Dread
+  ancient_dragon_senessax = 2054390850, -- Ancient Dragon Senessax
 }
 
+---A read-only view of the co-op world for debugging it: the session,
+---the local player, remote players, every character near the player
+---with its chr-sync state, and the multiplayer-area barrier counters.
+---Present with the "trace" permission. The runtime refreshes it every
+---30 frames in a world; outside one, in_world is false and lists are empty.
+---@class ermod.sdk.trace
+local trace = {}
+
+---@alias ermod.trace.role "solo"|"host"|"joiner"|"other"
+
+---@class ermod.trace.session
+---@field in_world boolean
+---@field fabricated boolean # the engine's offline co-op session is installed
+---@field role ermod.trace.role # from the session manager's state: 3 host, 6 joiner
+---@field mgr_state integer? # session manager state (raw)
+---@field mgr_sub integer? # session manager sub-state (raw)
+---@field phase_byte integer? # GameMan guest/host byte: 1 guest, 2 host, 0 none
+---@field send_gate boolean # the game will send chr-sync records (host, or joiner with the phase byte set)
+---@field area integer? # the local area id
+---@field frame integer # the runtime's census frame counter at this snapshot
+---@field chrs_seen integer # characters walked this snapshot (chrs() holds the nearest of them)
+
+---@class ermod.trace.sync
+---@field set integer # chr-sync set index (from the handle)
+---@field slot integer # slot in that set (from the handle)
+---@field owner integer? # the slot's owner word (raw)
+---@field registered boolean? # owner word bit 0
+---@field owned boolean? # owner word bit 1: this machine simulates the character
+---@field flags integer? # slot flag word: 0x1 recv4, 0x2 send4, 0x4 recv46, 0x8 send46, 0x10 recv70, 0x20 send70, 0x40 recv47, 0x80 send47, 0x100 popped4
+---@field rec4 ermod.vec3? # the last position record stored for the slot (owner's, block-relative)
+---@field rec4_tag integer?
+---@field rec70_hp integer? # HP in the last type-0x70 record (the owner's view); nil when none
+---@field pop_age integer? # frames since a received position record was consumed; nil if never
+
+---@class ermod.trace.chr
+---@field key string # FieldInsHandle "lo:hi" (hex): the same character on every machine
+---@field lo integer
+---@field hi integer
+---@field class string # EnemyIns, PlayerIns, ... ("" when unknown)
+---@field entity integer? # entity id
+---@field pos ermod.vec3? # physics position
+---@field dist number? # metres from the local player
+---@field block integer? # map block handle
+---@field hp integer?
+---@field hp_max integer?
+---@field dead boolean? # the ChrCtrl dead bit
+---@field alpha number? # draw fade; 0 or less is invisible
+---@field update integer? # update selector: 0 ticks, 1/2 do not
+---@field load_level integer? # streamer load level (4 = loaded)
+---@field load_request integer? # streamer's requested level
+---@field manipulator string # who drives it: ComManipulator (local AI), NetAIManipulator (remote owner), RideManipulator, ...
+---@field ride_state integer? # players only: 0 on foot
+---@field sync ermod.trace.sync?
+
+---@class ermod.trace.predicate
+---@field name string
+---@field calls integer
+---@field trues integer
+
+---@class ermod.trace.barriers
+---@field area_cleared integer # times the session's multiplayer area was cleared (the white wall's check)
+---@field warp_back_refused integer # times the game asked to warp the player back inside it
+---@field block_solo_forced integer # map blocks told "solo" under the fabricated session
+---@field predicates ermod.trace.predicate[] # multiplayer predicates: how often asked, how often true
+
+---Bumped each time the runtime publishes a new snapshot.
+---@return integer
+function trace.generation() end
+
+---@return ermod.trace.session
+function trace.session() end
+
+---The local player, or nil outside a world.
+---@return ermod.trace.chr?
+function trace.player() end
+
+---The remote players' bodies on this machine.
+---@return ermod.trace.chr[]
+function trace.peers() end
+
+---Characters near the player, nearest first (at most 128).
+---@param radius number? # metres; default every published one
+---@return ermod.trace.chr[]
+function trace.chrs(radius) end
+
+---@return ermod.trace.barriers
+function trace.barriers() end
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file
 ---`items.file[<table>]` names, so a mod can write

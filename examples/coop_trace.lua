@@ -28,6 +28,7 @@
 --           not being ticked (further out, not ticking is the game's own culling)
 --   DRIVER  the driver disagrees with ownership (our AI on a remote-owned body, or the reverse)
 --   HIDDEN  faded out (alpha <= 0): drawn invisible
+--   LIMBO   0 HP with the dead bit clear: a body that stands and can't be hit
 --
 -- The cross-check (see `compare`) names what two machines disagree on for
 -- one enemy: dead on one side only, HP apart, both or neither owning it,
@@ -40,7 +41,7 @@
 
 local mod = {
   name = "coop-trace",
-  version = "1.3.0",
+  version = "1.4.0",
   run_at = "events",
   permissions = { "trace", "ui", "hooks", "log" },
 }
@@ -93,6 +94,13 @@ local function alive(c)
   return c.dead ~= true and (c.hp == nil or c.hp > 0)
 end
 
+-- At zero HP with the dead bit clear: neither alive nor dead. Measured on a
+-- joiner (coop-trace run 3): the host's corpses held here at 0 HP, dead bit
+-- clear, not ticking, drawn -- a body that stands and can't be hit.
+local function limbo(c)
+  return c.hp == 0 and c.dead == false
+end
+
 -- The tags for one character, as a list. `role` is the session's.
 local function classify(c, role, cfg)
   local tags = {}
@@ -112,6 +120,7 @@ local function classify(c, role, cfg)
     tags[#tags + 1] = "NOTICK"
   end
   if c.alpha ~= nil and c.alpha <= 0 then tags[#tags + 1] = "HIDDEN" end
+  if limbo(c) then tags[#tags + 1] = "LIMBO" end
   return tags
 end
 mod.classify = classify
@@ -122,6 +131,8 @@ local function compare(here, there, cfg)
   local diffs = {}
   local dh, dt = not alive(here), not alive(there)
   if dh ~= dt then diffs[#diffs + 1] = dh and "dead here, alive there" or "alive here, dead there" end
+  local lh, lt = limbo(here), limbo(there)
+  if lh ~= lt then diffs[#diffs + 1] = lt and "0 HP but not dead there" or "0 HP but not dead here" end
   if here.hp and there.hp and not dh and not dt then
     local max = math.max(here.hp_max or 1, there.hp_max or 1, 1)
     if math.abs(here.hp - there.hp) > max * cfg.hp_tolerance then

@@ -24,7 +24,8 @@
 --   STALE   not ours, alive, and no owner position used for a while: it stands still
 --   GHOST   the owner reports it dead (rec70 HP 0) but it is alive here
 --   UNREG   its sync slot is not registered: nobody owns it
---   NOTICK  its update selector says it is not being ticked
+--   NOTICK  a non-player within `notick_radius` whose update selector says it is
+--           not being ticked (further out, not ticking is the game's own culling)
 --   DRIVER  the driver disagrees with ownership (our AI on a remote-owned body, or the reverse)
 --   HIDDEN  faded out (alpha <= 0): drawn invisible
 --
@@ -39,7 +40,7 @@
 
 local mod = {
   name = "coop-trace",
-  version = "1.1.0",
+  version = "1.2.0",
   run_at = "events",
   permissions = { "trace", "ui", "hooks", "log" },
 }
@@ -48,6 +49,7 @@ local config = {
   radius = 60,            -- metres: characters shown and logged
   max_rows = 40,          -- rows drawn per list
   stale_frames = 90,      -- STALE once no owner record was used for this long
+  notick_radius = 15,     -- metres: NOTICK only this close to the player
   hp_tolerance = 0.1,     -- the cross-check calls HP apart beyond this share of max
   sort = 1,               -- index into `sorts`
   log_snapshots = true,   -- write every character's row periodically
@@ -105,7 +107,10 @@ local function classify(c, role, cfg)
     local ai = c.manipulator == "ComManipulator"
     if (sy.owned == true and net) or (sy.owned == false and ai) then tags[#tags + 1] = "DRIVER" end
   end
-  if alive(c) and c.update ~= nil and c.update ~= 0 then tags[#tags + 1] = "NOTICK" end
+  if alive(c) and c.update ~= nil and c.update ~= 0 and c.class ~= "PlayerIns"
+      and c.dist ~= nil and c.dist <= cfg.notick_radius then
+    tags[#tags + 1] = "NOTICK"
+  end
   if c.alpha ~= nil and c.alpha <= 0 then tags[#tags + 1] = "HIDDEN" end
   return tags
 end
@@ -177,6 +182,8 @@ local function sort_items(items, how)
 end
 
 local last_gen = -1
+local last_jump = 0     -- the newest jump seq logged
+local recent_jumps = {} -- the last few, for the overlay
 local refreshes = 0
 local prev = {}       -- key -> { sig, dist, kind }: this machine's characters and players
 local prev_diff = {}  -- "<peer>/<key>" -> the diffs last logged
@@ -306,6 +313,16 @@ local function refresh(sdk)
       p, b.area_cleared, b.warp_back_refused, b.block_solo_forced))
   end
   refresh_remotes(sdk, session, by_key, p, snapshot)
+
+  -- Remote bodies that moved 10 m+ in one frame, caught every frame by the
+  -- engine (the snapshot above samples every 30). Away and back are two lines.
+  for _, j in ipairs(sdk.trace.jumps(last_jump)) do
+    last_jump = j.seq
+    sdk.log.info(string.format("%s jump peer %s %.1f m in one frame at f=%d: %s -> %s ride=%s",
+      p, j.key, j.dist, j.frame, vec(j.from), vec(j.to), s(j.ride_state)))
+    table.insert(recent_jumps, 1, j)
+    if #recent_jumps > 8 then table.remove(recent_jumps) end
+  end
 end
 
 -- ── drawing ───────────────────────────────────────────────────────────
@@ -371,6 +388,12 @@ local function draw(sdk)
       if view.player then player_line(ui, "me", view.player) end
       if #view.peers == 0 then ui.text("no remote player bodies", GREY) end
       for _, c in ipairs(view.peers) do player_line(ui, "peer", c) end
+      ui.tree(string.format("Jumps (%d)###jumps", last_jump), function()
+        if #recent_jumps == 0 then ui.text("no remote body has moved 10 m in one frame", GREY) end
+        for _, j in ipairs(recent_jumps) do
+          ui.text(string.format("f=%d %s %.1f m: %s -> %s ride %s", j.frame, j.key, j.dist, vec(j.from), vec(j.to), s(j.ride_state)), RED)
+        end
+      end, false)
     end
 
     if ui.collapsing(string.format("Characters (%d within %dm, %d flagged)###chrs", #view.items, config.radius, view.flagged), true) then

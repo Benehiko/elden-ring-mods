@@ -804,6 +804,23 @@ function trace.barriers() end
 ---session. Empty outside a session.
 ---@return ermod.trace.remote[]
 function trace.remotes() end
+
+---@class ermod.trace.jump
+---@field seq integer # 1, 2, ...: pass the last one seen to jumps() for only newer ones
+---@field frame integer
+---@field key string # the body's handle
+---@field from ermod.vec3
+---@field to ermod.vec3
+---@field dist number # metres moved in one frame
+---@field ride_state integer? # the body's ride state on that frame
+
+---Remote player bodies that moved 10 m or more in one frame on this
+---machine (checked every frame, unlike the 30-frame snapshot), the
+---ones after `after` that are still held (the last 64), oldest first.
+---A body that jumps away and back shows as two jumps.
+---@param after integer?
+---@return ermod.trace.jump[]
+function trace.jumps(after) end
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file
 ---`items.file[<table>]` names, so a mod can write

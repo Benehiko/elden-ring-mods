@@ -40,7 +40,7 @@
 
 local mod = {
   name = "coop-trace",
-  version = "1.2.0",
+  version = "1.3.0",
   run_at = "events",
   permissions = { "trace", "ui", "hooks", "log" },
 }
@@ -145,9 +145,9 @@ mod.compare = compare
 local function row(c, tags)
   local sy = c.sync or {}
   return string.format(
-    "%s %s e=%s d=%s pos=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s flags=%s alpha=%s ride=%s tags=%s",
+    "%s %s e=%s d=%s pos=%s blk=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s flags=%s alpha=%s ride=%s tags=%s",
     c.key, c.class ~= "" and c.class or "?", s(c.entity), dist(c),
-    vec(c.pos), hp(c), s(c.dead), s(sy.owned), s(sy.registered), c.manipulator ~= "" and c.manipulator or "-",
+    vec(c.pos), c.block and string.format("%08x", c.block) or "-", hp(c), s(c.dead), s(sy.owned), s(sy.registered), c.manipulator ~= "" and c.manipulator or "-",
     s(c.update), s(c.load_level), s(c.load_request), s(sy.pop_age), s(sy.rec70_hp),
     sy.flags and string.format("0x%x", sy.flags) or "-", c.alpha and string.format("%.2f", c.alpha) or "-",
     s(c.ride_state), #tags > 0 and table.concat(tags, ",") or "-")
@@ -206,6 +206,7 @@ local function refresh_remotes(sdk, session, by_key, p, log_rows)
   local collect = collecting(session.role)
   for _, r in ipairs(sdk.trace.remotes()) do
     local entry = { r = r, items = {}, flagged = 0, diffs = {}, only_there = 0 }
+    local compared = {}
     for _, c in ipairs(r.chrs) do
       local tags = classify(c, r.session.role, config)
       if #tags > 0 then entry.flagged = entry.flagged + 1 end
@@ -215,6 +216,7 @@ local function refresh_remotes(sdk, session, by_key, p, log_rows)
         local d = compare(mine, c, config)
         if #d > 0 then entry.diffs[#entry.diffs + 1] = { key = c.key, diffs = d, here = mine, there = c } end
         local k = string.format("%d/%s", r.id, c.key)
+        compared[k] = true
         local text = table.concat(d, ", ")
         if collect and (prev_diff[k] or "") ~= text then
           if text ~= "" then
@@ -226,6 +228,18 @@ local function refresh_remotes(sdk, session, by_key, p, log_rows)
         end
       else
         entry.only_there = entry.only_there + 1
+      end
+    end
+    -- An open disagreement whose character is no longer on both lists is
+    -- closed as unseen: a reading stopped, which is not the same as agreeing.
+    local mine_prefix = string.format("%d/", r.id)
+    for k, text in pairs(prev_diff) do
+      if k:sub(1, #mine_prefix) == mine_prefix and not compared[k] then
+        if collect then
+          sdk.log.info(string.format("%s unseen %s peer %d (%s): no longer on both machines' lists; last diff: %s",
+            p, k:sub(#mine_prefix + 1), r.id, r.session.role, text))
+        end
+        prev_diff[k] = nil
       end
     end
     sort_items(entry.items, config.sort)

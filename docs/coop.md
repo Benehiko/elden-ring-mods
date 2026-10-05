@@ -178,11 +178,16 @@ Leave the terminal open while you play.
 
 ### 4. Meet up
 
-The engine does not move anyone to the host. Each player starts where their
-own save left them, and you find each other in the world. Torrent does not
-work in a session, so a long way apart means a long walk. The easy way:
-before a session, have each player rest at the same site of grace and quit
-there. You then start side by side.
+There is nothing to do: you arrive beside the host. Before your game starts,
+`coop join` asks the host where it stands, and loads your character right
+there, the way a summon arrives at the host. Your own respawn grace does not
+change, so if you die you get up at your grace, not at the host.
+
+The host must be in its world when you join. If the host is on Torrent,
+`coop join` says so and waits up to 90 seconds for it to get off. If the host
+does not answer within a few seconds, you load where your own save stands and
+the log says why. Both players need an engine with this change (see the
+[changelog](changelog.md#unreleased)).
 
 ## Three or more players
 
@@ -340,6 +345,13 @@ says where it is).
 prints where the logs are, on the two `log` lines. `ermod-runtime.log`
 records what co-op did in the game; on the host, a line with `learned peer`
 means a friend's join arrived. Include both logs and
-`./ermod-engine --version` in a bug report. The install guide's
+`./ermod-engine --version` in a bug report.
+
+When the two screens disagree (an enemy alive on one and dead on the other,
+a player in the wrong place, an enemy standing frozen), run
+`examples/coop_trace.lua` on every machine. The host's overlay then shows
+each player's view side by side, with the enemies they disagree on, and its
+log records every machine's view. Attach the host's `ermod-runtime.log` from
+such a session. The install guide's
 [When something does not work](install.md#when-something-does-not-work)
 covers problems outside co-op.

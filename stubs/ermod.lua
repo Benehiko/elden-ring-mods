@@ -126,6 +126,11 @@ function params.rows(file) end
 ---@field total_ms number # since load
 ---@field calls integer
 
+---@class ermod.perf.spikes
+---@field count integer      # spikes since the hook went live
+---@field last_ms number     # interval of the most recent spike, 0 if none
+---@field last_frame integer # frame number of the most recent spike, 0 if none
+
 ---@class ermod.sdk.perf
 local perf = {}
 
@@ -148,6 +153,11 @@ function perf.now_ms() end
 ---Per-mod handler cost for every loaded mod (not only the caller).
 ---@return ermod.perf.mod[]
 function perf.mods() end
+
+---Frame-time spikes since the hook went live, by the frame tracer's rule:
+---an interval over max(2 x median, median + 8 ms) of the last 120 frames.
+---@return ermod.perf.spikes
+function perf.spikes() end
 
 ---@alias ermod.store.value string|number|boolean
 

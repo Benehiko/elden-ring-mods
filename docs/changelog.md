@@ -5,6 +5,127 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
+## Unreleased
+
+### Frame trace: find what makes frames slow
+
+The engine can now record every frame's timing while you play, split into
+the game's CPU work, the time spent waiting in Present (GPU, vsync or
+driver), and the engine's own work, and flag the stutters.
+
+- Turn it on at launch in `engine.cfg` with `frame_trace_cpu = "off" |
+  "light" | "normal" | "detailed"` or `frame_trace_gpu = true | false`
+  (both off by default; the Engine tab keeps them when it saves a rebind),
+  or at any time with `ermod-engine trace start [--cpu LEVEL] [--gpu]` and
+  `ermod-engine trace stop`.
+- `ermod-engine trace report [<file>]` prints frame-time percentiles, the
+  stutters, which side each one was on, and the worst ones.
+- `--cpu` samples the game's busiest threads and the report names the game
+  functions and DLLs that run during stutters, with call paths through the
+  game's own code. `--gpu` times each of the game's GPU submissions.
+- When tracing is off, the tracer itself costs the game one memory read
+  per frame. Separately, the always-on stutter counter behind
+  `sdk.perf.spikes()` runs every frame whether or not you trace. It was
+  measured at about 0.5 µs a frame (median), and at most 6 µs, which is
+  under 0.04 % of a 60 fps frame.
+- Mods can count stutters too: `sdk.perf.spikes()` returns how many frames
+  the trace's spike rule has flagged, the last one's length and its frame
+  number, and the bundled performance monitor shows them.
+
+The sample rates behind `light`, `normal` and `detailed` (50, 100 and
+250 Hz) are placeholders. The first attempt to measure their cost to frame
+times was inconclusive. See [Finding stutters](performance.md).
+
+### Co-op: a trace mod for debugging the shared world
+
+A new read-only SDK module, `sdk.trace` (permission `trace`), shows what each
+machine believes about a co-op session. It covers the session role, the
+players and their mounts, and every enemy near the player: who owns it,
+whether its owner's updates arrive, and the HP its owner last reported. It
+also has the multiplayer-area barrier counters. `examples/coop_trace.lua`
+draws all of it and flags frozen enemies, corpses standing on the other
+screen, and players faded out. It logs rows keyed by the enemy's handle,
+which is the same on every machine.
+
+Every machine in a session sends its view to the others once a second, so
+the host collects the whole session. Its overlay shows each joiner's view
+beside its own, with the enemies the two machines disagree on. Its log
+holds every machine's rows and a line whenever a disagreement starts or
+ends. The overlay is in collapsible sections, with characters sorted and
+the flagged ones first. Mods can use the same widgets: `sdk.ui.collapsing`
+and `sdk.ui.tree`. See [`trace`](scripting.md#trace) and [Playing co-op](coop.md#the-logs).
+
+### Co-op: a joiner arrives beside the host, so players see each other right
+
+A joiner used to load where its own save stood, and its game then placed
+things relative to a different spot than the host's. Players appeared a few
+metres off and faced past each other, and a player on Torrent vanished from
+the other screen. Now `coop join` asks the host where it stands before your
+game starts and loads your character right there, the way a summon arrives
+at the host. Your own respawn grace is unchanged: if you die, you respawn at
+your grace, not at the host.
+
+The host must be in its world when you join. If the host is on Torrent,
+`coop join` says so and waits up to 90 seconds for it to get off. If the
+host does not answer within a few seconds, you load where your save stands
+and the log says why. Both players need this version.
+
+A joiner is also never pulled back to a grace in the middle of a session
+any more; calling Torrent used to trigger that.
+
+### Co-op: Torrent stays under its rider after a death
+
+After a player died and respawned somewhere else, the other machine drew
+their Torrent, and the rider on it, far away (exactly one map tile), so a
+mounted player vanished. Each machine now tells the others how its game
+places its own horse, and the others place it the same way.
+
+A player who stays on Torrent while the other player dies (or travels) is
+no longer left floating on that player's screen until they whistle again:
+the returning player's game puts them back on their horse.
+
+### Co-op: a joiner's death keeps the time of day
+
+A joiner who died came back at 07:00 while the host's world stayed at its
+own time. The joiner's respawn now keeps the running clock, as the host's
+already did.
+
+### Every boss by name
+
+Almost every boss now has a name in `sdk.bosses.id` (210 of 212):
+`sdk.bosses.id.starscourge_radahn`, `sdk.bosses.id.messmer_the_impaler`.
+Every name is the game's own, spelled as the game spells it.
+`boss.name_measured` is true where the name was read off the boss itself in
+the game, and false where it is assigned by encounter and not yet checked
+live; a mod that needs certainty can check it.
+
+### Co-op: a joiner sees the host's dead enemies dead
+
+An enemy the host has already killed no longer stands alive in a joiner's
+world. A joiner also takes the host's health for an enemy the host had
+damaged before the joiner arrived, where before it only matched when both
+players' enemies sat in the same order in memory.
+
+### Co-op: enemies near a joiner come alive away from the host
+
+The host's game only runs the enemies around the host. A joiner exploring
+elsewhere met enemies that stood frozen and ignored it. The joiner's game now
+runs the enemies the host is not running.
+
+### The overlay stays off the game's HUD
+
+The ermod menu and mod windows now open in the top-right corner instead of
+over your health, FP and stamina bars. The overlay also scales with your
+resolution: text and spacing grow and shrink with the display height (1080p
+is the reference), and no window takes more than 40% of the screen's width
+or 70% of its height. Anything longer scrolls.
+
+For mod authors: `x`/`y` in `sdk.ui.window` options now count inward from
+the window's `anchor` corner, which defaults to `"top_right"`. To keep a
+window where it was, pass `anchor = "top_left"`. `"bottom_left"` and
+`"bottom_right"` are available too. Positions and sizes are in 1080p pixels
+and are scaled to the display.
+
 ## v0.4.0 (2026-10-03)
 
 Game build **2.7.1.0**, as in v0.3.2. Every player in a co-op session needs the

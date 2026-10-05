@@ -407,6 +407,7 @@ focus_key = "insert"
 skip_title_cards = true
 skip_boot_cinematics = false
 skip_ingame_cinematics = false
+frame_trace_cpu = "off"
 ```
 
 | Setting                  | Default    | What it does                                                                                                                                                                            |
@@ -417,9 +418,12 @@ skip_ingame_cinematics = false
 | `skip_boot_cinematics`   | `false`    | Skips the cinematics the game plays as it boots.                                                                                                                                        |
 | `skip_ingame_cinematics` | `false`    | Skips cinematics that play during the game.                                                                                                                                             |
 | `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
+| `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                             |
+| `frame_trace_gpu`        | `false`    | Starts a frame trace at launch that times the game's GPU work. See [Finding stutters](performance.md).                                                                                  |
 
 One setting per line, as `name = value`. Setting names are lowercase,
-exactly as above. A key is a quoted name; a switch is `true` or `false`.
+exactly as above. A key or a level is a quoted name; a switch is `true` or
+`false`.
 Lines starting with `#` are comments.
 
 A key name is one of:

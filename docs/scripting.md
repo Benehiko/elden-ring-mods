@@ -114,8 +114,8 @@ table a mod receives is _built_ from it: an undeclared module is not present
 at all, so `sdk.ui` is nil in a mod that did not ask for `ui`. A data-only
 mod cannot draw, and cannot be made to draw by a bug.
 
-The ten modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
-`screen`, `watch`, `rules` and `bosses`. What each offers is in
+The eleven modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
+`screen`, `watch`, `rules`, `bosses` and `trace`. What each offers is in
 [Modules](#modules) below. `rules` puts `sdk.rules` on the table and covers every game rule;
 which rules a mod changes is what it sets, and that is what the engine checks
 against other mods. `sdk.items` is on every table: it is read-only data and
@@ -295,7 +295,9 @@ every stat and is the quickest way to see them move.
 ### `ui`
 
 An immediate-mode overlay (Dear ImGui, drawn in the present hook). Windows,
-text, buttons, checkboxes, sliders, text input, combos, plots, progress bars.
+text, buttons, checkboxes, sliders, text input, combos, plots, progress bars,
+collapsible sections (`collapsing(label, default_open)`) and tree nodes
+(`tree(label, body, default_open)`).
 
 ```lua
 sdk.ui.window("Example Settings", function()
@@ -303,6 +305,14 @@ sdk.ui.window("Example Settings", function()
   if v ~= enabled then enabled = v; sdk.store.set("enabled", v) end
 end, { x = 20, y = 300, flags = { "auto_size" } })
 ```
+
+**Where a window goes.** `x` and `y` count inward from the window's `anchor`
+corner: `"top_right"` (the default, clear of the game's health, FP and
+stamina bars), `"top_left"`, `"bottom_left"` or `"bottom_right"`. Positions
+and sizes are in 1080p pixels and scale with the display, and no window takes
+more than 40 % of the screen's width or 70 % of its height; longer content
+scrolls. A window that used to sit at a position counted from the top-left
+corner needs `anchor = "top_left"` to stay there.
 
 Immediate mode means the widgets exist only while you are drawing them, so
 every `ui` call is legal **only inside a frame**: from a handler running
@@ -322,6 +332,13 @@ itself unavailable, because there is no frame to draw on.
 every loaded mod's handler cost (`last_ms`, `avg_ms`, `total_ms`, `calls`),
 not only the caller's. A performance-monitor mod is `perf` plus `ui` and
 nothing else.
+
+`spikes()` counts stutters: `{ count, last_ms, last_frame }`, meaning how many
+frames since the game started took more than twice the typical frame time
+(or 8 ms longer, whichever is larger), how long the latest one took, and
+which frame it was. It uses the same rule as the engine's frame tracer, so a
+mod's count and an `ermod-engine trace report` agree. To find out _why_ the
+frames were slow, use the tracer; see [Finding stutters](performance.md).
 
 ### `store`
 
@@ -383,8 +400,11 @@ Needs the `bosses` permission.
 **Naming a boss.** `sdk.bosses.id.<name>` is the boss's id, an enum like
 `sdk.items` (`sdk.bosses.id.margit_the_fell_omen`; a wrong name is an error,
 and the stub lists every one). Every function also takes the plain id (the
-boss's row, or its defeat flag). Bosses whose name is not resolved yet are
-`boss_<id>`. `sdk.bosses.all` lists every boss and `sdk.bosses.find(id)`
+boss's row, or its defeat flag). Almost every boss has a name, spelled as the
+game spells it (210 of 212: `sdk.bosses.id.starscourge_radahn`); the rest
+are `boss_<id>`. A boss's `name_measured` is true where the name was read off
+the boss itself in the game, and false where it was assigned by encounter
+and not yet checked live. `sdk.bosses.all` lists every boss and `sdk.bosses.find(id)`
 returns one: `key`, `display_name`, `map`, `dlc`, `runes`, and where it has
 been measured, `idle_pos` (where it waits before its fight — some wait
 outside the arena), `arena` and `fight_pos` (where a recorded fight began and
@@ -434,6 +454,33 @@ end
 
 `examples/boss_phases.lua` is the whole mod. A stat change applies to every
 character using that NpcParam row.
+
+### `trace`
+
+A read-only view of a co-op session, for finding out why two players' games
+disagree. Needs the `trace` permission. Nothing in it changes the game.
+
+- `session()` gives the session's role (`"solo"`, `"host"`, `"joiner"`) and
+  whether you are in a world.
+- `player()` is you, `peers()` is the other players' bodies as your game
+  shows them, and `chrs(radius)` is every character near you, nearest first.
+  Each entry has its position, HP, whether it is dead or faded out, and who
+  controls it. Its `sync` part says whether the owner's updates arrive. A
+  character's `key` names the same enemy on every machine, so two players'
+  logs can be matched on it.
+- `barriers()` counts how often the game tried to wall in or warp back a
+  player at the edge of the session's area.
+- `remotes()` is every other machine's own view, which each one sends once a
+  second. The host can therefore show and log the whole session.
+- `jumps(after)` lists remote players' bodies that moved 10 m or more in a
+  single frame.
+
+The view is refreshed every 30 frames in a world, and `generation()` changes
+when a new one lands. When the engine cannot read the co-op state on your
+game build, `in_world` stays false and every list is empty.
+`examples/coop_trace.lua` draws all of it, flags frozen enemies, corpses
+still standing on another screen and faded-out players, and is the place to
+start.
 
 ## The author loop
 

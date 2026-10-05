@@ -10,6 +10,7 @@ Everything here is also on the website, rendered from these same files.
 | [Profiles and your save](install.md#5-profiles-and-your-own-save) | Modded saves kept apart from your own; `profile` and `character` commands  |
 | [Playing co-op](coop.md)                                          | Sessions, mods in co-op, fixes                                             |
 | [Connecting for co-op: LAN or VPN](network.md)                    | ZeroTier, Tailscale and the firewall                                       |
+| [Finding stutters](performance.md)                                | Tracing what makes frames slow, and reading the report                     |
 
 ## Writing mods
 

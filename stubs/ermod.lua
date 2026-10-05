@@ -58,12 +58,13 @@ hooks.event = {
   on_present = "on_present",
   ---The player gained runes. Payload: { amount = integer }
   on_rune_gain = "on_rune_gain",
-  ---The player died. Payload: {}
+  ---The player died. Payload: { deaths = integer }, the character's lifetime death count including this one (the game's own counter; sdk.watch.stat.deaths reads it any time)
   on_death = "on_death",
 }
 
 ---@class ermod.event.payload
 ---@field amount integer? # on_rune_gain only
+---@field deaths integer? # on_death only: the character's lifetime death count, including this death
 
 ---Subscribe to a named engine event. Unknown names are an error at
 ---subscribe time. Handlers run under the instruction budget; a handler

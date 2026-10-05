@@ -244,7 +244,11 @@ sdk.hooks.on(sdk.hooks.event.on_death, function() sdk.log.info("died") end)
 
 Three events exist: `on_present` (a frame is about to be presented, payload
 `{}`), `on_rune_gain` (payload `{ amount = n }`) and `on_death` (payload
-`{}`). Indexing an event that does not exist (`sdk.hooks.event.on_levelup`)
+`{ deaths = n }`: the character's lifetime death count, this death included).
+`deaths` is the game's own counter, saved with the character, the same value
+`sdk.watch.get(sdk.watch.stat.deaths)` reads at any time; a mod that wants a
+count since it loaded keeps its own (`examples/death_ping.lua` shows both).
+Indexing an event that does not exist (`sdk.hooks.event.on_levelup`)
 is an error where it is written, and an unknown name passed as a string is an
 error at subscribe time: never a handler that silently never fires.
 

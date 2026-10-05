@@ -7,6 +7,15 @@ engine does anything at all.
 
 ## Unreleased
 
+### `on_death` tells a mod the character's death count
+
+`sdk.hooks.on(sdk.hooks.event.on_death, function(ev) ... end)` now gets
+`ev.deaths`: how many times the character has died, this death included.
+It is the game's own lifetime counter, saved with the character, and the
+same number `sdk.watch.get(sdk.watch.stat.deaths)` has always read. A mod no
+longer has to count deaths itself to show a total. `examples/death_ping.lua`
+and `examples/overlay.lua` show it beside their own count since loading.
+
 ### Frame trace: find what makes frames slow
 
 The engine can now record every frame's timing while you play, split into

@@ -28,6 +28,8 @@ function mod.setup(sdk)
 
     sdk.ui.window("Performance", function()
       sdk.ui.text(string.format("%.1f fps   %.2f ms   frame %d", sdk.perf.fps(), ms, sdk.perf.frame()))
+      local spikes = sdk.perf.spikes()
+      sdk.ui.text(string.format("spikes: %d (last %.1f ms)", spikes.count, spikes.last_ms))
       sdk.ui.plot("##frame_ms", history, { min = 0, max = 33.3, height = 50 })
       show_mods = sdk.ui.checkbox("Show mod cost", show_mods)
       if show_mods then

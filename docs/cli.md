@@ -6,7 +6,7 @@
 
 Every command here is in the release build, and `ermod-engine --help` prints the same text. A command marked "no launch" never starts the game.
 
-**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
+**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`trace start`](#ermod-engine-trace-start) [`trace stop`](#ermod-engine-trace-stop) [`trace report`](#ermod-engine-trace-report) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
 
 **Writing a mod:** [`mod verify`](#ermod-engine-mod-verify) [`mod perf`](#ermod-engine-mod-perf) [`mod bake`](#ermod-engine-mod-bake)
 
@@ -169,6 +169,30 @@ ermod-engine shot [--name N] [--scale S] [--out PATH] [--timeout MS]
 ```
 
 Ask the running game for a frame capture; no launch.
+
+### `ermod-engine trace start`
+
+```text
+ermod-engine trace start [--cpu LEVEL] [--gpu]
+```
+
+Start the running game's frame tracer: `--cpu` light|normal|detailed samples the game's threads (normal when nothing is given), `--gpu` times its GPU work (alone, GPU only); no launch.
+
+### `ermod-engine trace stop`
+
+```text
+ermod-engine trace stop
+```
+
+Stop the frame tracer and close its file.
+
+### `ermod-engine trace report`
+
+```text
+ermod-engine trace report [<file>]
+```
+
+What made the slow frames slow, from a trace (the newest in C:\ermod\trace by default).
 
 ### `ermod-engine uninstall`
 

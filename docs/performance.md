@@ -34,13 +34,13 @@ frame_trace_gpu = true
 Both are off by default. With either one on, a trace starts as the game
 does and runs until `trace stop` or until the game exits.
 
-| Option                | What it adds                                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| every trace           | each frame's time, split into the game's CPU work, waiting on the GPU or display, and the engine's own work |
-| `--cpu light`         | which game code and which libraries run during stutters, sampled about 50 times a second                    |
-| `--cpu normal`        | the same, about 100 times a second; enough for most stutters                                                |
-| `--cpu detailed`      | the same, about 250 times a second; for catching a single short stutter                                     |
-| `--gpu`               | the GPU time of each batch of work the game submits                                                         |
+| Option           | What it adds                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| every trace      | each frame's time, split into the game's CPU work, waiting on the GPU or display, and the engine's own work |
+| `--cpu light`    | which game code and which libraries run during stutters, sampled about 50 times a second                    |
+| `--cpu normal`   | the same, about 100 times a second; enough for most stutters                                                |
+| `--cpu detailed` | the same, about 250 times a second; for catching a single short stutter                                     |
+| `--gpu`          | the GPU time of each batch of work the game submits                                                         |
 
 ## Read the report
 

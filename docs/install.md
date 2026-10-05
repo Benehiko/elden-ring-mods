@@ -418,7 +418,7 @@ frame_trace_cpu = "off"
 | `skip_boot_cinematics`   | `false`    | Skips the cinematics the game plays as it boots.                                                                                                                                        |
 | `skip_ingame_cinematics` | `false`    | Skips cinematics that play during the game.                                                                                                                                             |
 | `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
-| `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                              |
+| `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                             |
 | `frame_trace_gpu`        | `false`    | Starts a frame trace at launch that times the game's GPU work. See [Finding stutters](performance.md).                                                                                  |
 
 One setting per line, as `name = value`. Setting names are lowercase,

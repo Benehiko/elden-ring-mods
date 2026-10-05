@@ -54,6 +54,7 @@ holds every machine's rows and a line whenever a disagreement starts or
 ends. The overlay is in collapsible sections, with characters sorted and
 the flagged ones first. Mods can use the same widgets: `sdk.ui.collapsing`
 and `sdk.ui.tree`. See [`trace`](scripting.md#trace) and [Playing co-op](coop.md#the-logs).
+
 ### Co-op: a joiner arrives beside the host, so players see each other right
 
 A joiner used to load where its own save stood, and its game then placed
@@ -124,7 +125,6 @@ the window's `anchor` corner, which defaults to `"top_right"`. To keep a
 window where it was, pass `anchor = "top_left"`. `"bottom_left"` and
 `"bottom_right"` are available too. Positions and sizes are in 1080p pixels
 and are scaled to the display.
-
 
 ## v0.4.0 (2026-10-03)
 

@@ -21,7 +21,7 @@ editor checks the names, and a typo is an error where it is written.
 | [`rune_counter.lua`](rune_counter.lua) | `run_at = "events"`, `sdk.hooks.on`, typed event payloads, per-mod state                                                            |
 | [`enums.lua`](enums.lua)               | naming game things by enum: `sdk.hooks.event`, `sdk.watch.stat`, `sdk.params.file`, listing them with `pairs`, and what a typo does |
 | [`present_ping.lua`](present_ping.lua) | running code every frame without flooding the log                                                                                   |
-| [`death_ping.lua`](death_ping.lua)     | `on_death` and `on_rune_gain` side by side, a live sanity check                                                                     |
+| [`death_ping.lua`](death_ping.lua)     | `on_death` and `on_rune_gain` side by side, a live sanity check; the character's death count beside the session's                   |
 | [`watch_all.lua`](watch_all.lua)       | `sdk.watch`: every watchable stat, its changes and `watch.get`, a live check of what the engine can read                            |
 
 ## Changing the game

@@ -54,6 +54,9 @@
         <li><a href="#completion-bash-zsh-fish"><code>completion bash|zsh|fish</code></a></li>
         <li><a href="#settings"><code>settings</code></a></li>
         <li><a href="#shot"><code>shot</code></a></li>
+        <li><a href="#trace-start"><code>trace start</code></a></li>
+        <li><a href="#trace-stop"><code>trace stop</code></a></li>
+        <li><a href="#trace-report"><code>trace report</code></a></li>
         <li><a href="#uninstall"><code>uninstall</code></a></li>
         <li><a href="#check-build"><code>check-build</code></a></li>
         <li><a href="#version"><code>--version</code></a></li>
@@ -205,6 +208,24 @@
       <h3><code>ermod-engine shot</code></h3>
       <pre><code>ermod-engine shot [--name N] [--scale S] [--out PATH] [--timeout MS]</code></pre>
       <p>Ask the running game for a frame capture; no launch.</p>
+    </article>
+
+    <article class="cmd" id="trace-start">
+      <h3><code>ermod-engine trace start</code></h3>
+      <pre><code>ermod-engine trace start [--cpu LEVEL] [--gpu]</code></pre>
+      <p>Start the running game's frame tracer: <code>--cpu</code> light|normal|detailed samples the game's threads (normal when nothing is given), <code>--gpu</code> times its GPU work (alone, GPU only); no launch.</p>
+    </article>
+
+    <article class="cmd" id="trace-stop">
+      <h3><code>ermod-engine trace stop</code></h3>
+      <pre><code>ermod-engine trace stop</code></pre>
+      <p>Stop the frame tracer and close its file.</p>
+    </article>
+
+    <article class="cmd" id="trace-report">
+      <h3><code>ermod-engine trace report</code></h3>
+      <pre><code>ermod-engine trace report [&lt;file&gt;]</code></pre>
+      <p>What made the slow frames slow, from a trace (the newest in C:\ermod\trace by default).</p>
     </article>
 
     <article class="cmd" id="uninstall">

@@ -41,7 +41,7 @@
 
 local mod = {
   name = "coop-trace",
-  version = "1.5.0",
+  version = "1.6.0",
   run_at = "events",
   permissions = { "trace", "ui", "hooks", "log" },
 }
@@ -59,6 +59,7 @@ local config = {
   log_snapshots = true,   -- write every character's row periodically
   snapshot_every = 10,    -- in refreshes (the engine refreshes every 30 frames)
   max_events = 40,        -- transition lines per refresh, at most
+  log_mounts = true,      -- while any player rides, log riders and mounts every refresh
   collect = 1,            -- index into `collect_modes`: who logs the peers' views
 }
 
@@ -159,10 +160,11 @@ mod.compare = compare
 local function row(c, tags)
   local sy = c.sync or {}
   return string.format(
-    "%s %s e=%s d=%s pos=%s yaw=%s blk=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s flags=%s alpha=%s ride=%s tags=%s",
+    "%s %s e=%s d=%s pos=%s yaw=%s blk=%s hp=%s dead=%s own=%s reg=%s drv=%s upd=%s ll=%s/%s age=%s rec70=%s rec4=%s flags=%s alpha=%s ride=%s tags=%s",
     c.key, c.class ~= "" and c.class or "?", s(c.entity), dist(c),
     vec(c.pos), c.yaw and string.format("%.1f", math.deg(c.yaw)) or "-", c.block and string.format("%08x", c.block) or "-", hp(c), s(c.dead), s(sy.owned), s(sy.registered), c.manipulator ~= "" and c.manipulator or "-",
     s(c.update), s(c.load_level), s(c.load_request), s(sy.pop_age), s(sy.rec70_hp),
+    sy.rec4 and string.format("%s/%s@%s:%s", vec(sy.rec4), s(sy.rec4_tag), s(sy.set), s(sy.slot)) or "-",
     sy.flags and string.format("0x%x", sy.flags) or "-", c.alpha and string.format("%.2f", c.alpha) or "-",
     s(c.ride_state), #tags > 0 and table.concat(tags, ",") or "-")
 end
@@ -419,6 +421,22 @@ local function refresh(sdk)
     end
   end
   prev = now
+
+  -- While anyone is mounting, riding or getting off, every refresh: the
+  -- players and every character with no map block in its handle (a
+  -- player's horse is one). A ride lasts seconds; the 5 s snapshot misses it.
+  local riding = false
+  if view.player and view.player.ride_state and view.player.ride_state ~= 0 then riding = true end
+  for _, c in ipairs(view.peers) do
+    if c.ride_state and c.ride_state ~= 0 then riding = true end
+  end
+  if config.log_mounts and riding then
+    if view.player then sdk.log.info(p .. " mount self " .. row(view.player, {})) end
+    for _, c in ipairs(view.peers) do sdk.log.info(p .. " mount peer " .. row(c, {})) end
+    for _, it in ipairs(view.items) do
+      if it.c.lo == 0xffffffff then sdk.log.info(p .. " mount chr " .. row(it.c, it.tags)) end
+    end
+  end
 
   local snapshot = config.log_snapshots and refreshes % config.snapshot_every == 0
   if snapshot then

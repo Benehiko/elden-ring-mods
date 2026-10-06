@@ -7,6 +7,25 @@ engine does anything at all.
 
 ## Unreleased
 
+### Co-op: every player gets the runes
+
+A joiner used to get nothing for most enemies and only a quarter of a boss's
+runes. Now every player in a session gets the full runes of every enemy any
+player kills, and of every boss, however far apart they stand. Each
+character's own rune bonuses, such as a rune talisman, still apply on top.
+Solo play is unchanged. Every player in the session needs this version.
+
+### `sdk.coop`: decide who gets what
+
+A new SDK module, `sdk.coop` (permission `coop`), for mods that decide
+things per player: `coop.active()`, `coop.is_host()`, `coop.get_distance()`
+(metres to the nearest other player) and `coop.distances()`. Its
+`coop.set_rune_rates({ enemy = 0.25, boss = 0.5 })` sets the share of runes
+the player on that machine takes; the full amount is the default.
+`sdk.watch.stat.coop_distance` reports the distance as a watchable value.
+See [`coop` in the scripting guide](scripting.md#coop) and
+`examples/coop_runes.lua`.
+
 ### `on_death` tells a mod the character's death count
 
 `sdk.hooks.on(sdk.hooks.event.on_death, function(ev) ... end)` now gets

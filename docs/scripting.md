@@ -114,8 +114,8 @@ table a mod receives is _built_ from it: an undeclared module is not present
 at all, so `sdk.ui` is nil in a mod that did not ask for `ui`. A data-only
 mod cannot draw, and cannot be made to draw by a bug.
 
-The eleven modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
-`screen`, `watch`, `rules`, `bosses` and `trace`. What each offers is in
+The twelve modules are `log`, `hooks`, `params`, `perf`, `store`, `ui`,
+`screen`, `watch`, `rules`, `bosses`, `trace` and `coop`. What each offers is in
 [Modules](#modules) below. `rules` puts `sdk.rules` on the table and covers every game rule;
 which rules a mod changes is what it sets, and that is what the engine checks
 against other mods. `sdk.items` is on every table: it is read-only data and
@@ -275,14 +275,15 @@ by `sdk.watch.stat` ([enums](#naming-game-things-enums)): indexing one that
 does not exist (`sdk.watch.stat.mana`) is an error where it is written, and an
 unknown name passed as a string is an error at subscribe time.
 
-| Stat                                                                                     | Meaning                                                       |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `deaths`                                                                                 | Times the current character has died                          |
-| `runes`                                                                                  | Runes held (not the ones lying where the character last died) |
-| `level`                                                                                  | Rune level                                                    |
-| `vigor`, `mind`, `endurance`, `strength`, `dexterity`, `intelligence`, `faith`, `arcane` | The eight attributes, one stat each                           |
-| `hp`                                                                                     | Current HP of the local player                                |
-| `hp_max`                                                                                 | Maximum HP; moves with vigor, buffs and talismans             |
+| Stat                                                                                     | Meaning                                                                               |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `deaths`                                                                                 | Times the current character has died                                                  |
+| `runes`                                                                                  | Runes held (not the ones lying where the character last died)                         |
+| `level`                                                                                  | Rune level                                                                            |
+| `vigor`, `mind`, `endurance`, `strength`, `dexterity`, `intelligence`, `faith`, `arcane` | The eight attributes, one stat each                                                   |
+| `hp`                                                                                     | Current HP of the local player                                                        |
+| `hp_max`                                                                                 | Maximum HP; moves with vigor, buffs and talismans                                     |
+| `coop_distance`                                                                          | Whole metres to the nearest other player in a co-op session; `nil` when there is none |
 
 FP, stamina and flasks are not watchable yet, on purpose: none has an offset
 derived from the game, and a guessed one would report a confident wrong
@@ -544,6 +545,43 @@ game build, `in_world` stays false and every list is empty.
 still standing on another screen and faded-out players, and is the place to
 start.
 
+### `coop`
+
+The co-op session, for mods that decide things per player, and the share of
+runes your character takes. Needs the `coop` permission.
+
+In a co-op session every player gets the full runes of every enemy any
+player kills, and of every boss, however far apart they stand. That is the
+default and needs no mod. Each character's own rune bonuses, such as a rune
+talisman, still apply on top. A mod can change the share for the player
+whose machine runs it:
+
+```lua
+sdk.hooks.on(sdk.hooks.event.on_present, function()
+  if not sdk.coop.active() then return end
+  local d = sdk.coop.get_distance()  -- metres, or nil when nobody is nearby
+  if d and d <= 100 then sdk.coop.set_rune_rates({ enemy = 1, boss = 1 })
+  else sdk.coop.set_rune_rates({ enemy = 0.25, boss = 0.5 }) end
+end)
+```
+
+- `active()` is whether you are hosting or have joined a session, in a world.
+  `is_host()` is whether you host it.
+- `get_distance()` is the metres to the nearest other player loaded in your
+  world, or nil. `distances()` lists every other player's distance, nearest
+  first. `sdk.watch.stat.coop_distance` is the same distance in whole metres,
+  as a watchable value.
+- `set_rune_rates({ enemy = ..., boss = ... })` sets your character's share
+  of every enemy kill and of every boss: 1 is the full amount (the default),
+  0.25 a quarter, 0 none, at most 10. A field left out keeps its value.
+  `rune_rates()` reads them back.
+
+The rates are your machine's own. They change what your character gets,
+nobody else's, and only in a session. A group that wants one rule for
+everyone runs the same mod on every machine. Setting rates does not count
+as changing the game, so it does not have to match the host's mods to join.
+`examples/coop_runes.lua` is the whole mod.
+
 ## The author loop
 
 ### Offline
@@ -761,6 +799,7 @@ reference gameplay mod and the offline golden test's subject),
 stats and param files by enum), `settings.lua` (ui plus store),
 `perf_monitor.lua` (ui plus perf), `overlay.lua` (ui plus hooks),
 `boss_rules_pack.lua` (a mod pack setting a game rule), `boss_rematch.lua`,
-`boss_watch.lua` and `boss_phases.lua` (bosses: revive, watch, stats and stages), and
+`boss_watch.lua` and `boss_phases.lua` (bosses: revive, watch, stats and stages),
+`coop_runes.lua` (coop: a player's rune share by distance to the others), and
 `bad_sandbox.lua`, which exists to be refused. The reading order is in
 [`examples/README.md`](../examples/README.md).

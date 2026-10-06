@@ -568,9 +568,28 @@ end)
 - `active()` is whether you are hosting or have joined a session, in a world.
   `is_host()` is whether you host it.
 - `get_distance()` is the metres to the nearest other player loaded in your
-  world, or nil. `distances()` lists every other player's distance, nearest
-  first. `sdk.watch.stat.coop_distance` is the same distance in whole metres,
-  as a watchable value.
+  world, or nil, and that player's Steam ID as a second value:
+  `local d, id = sdk.coop.get_distance()`. `get_distance(id)` is the metres
+  to the player with that Steam ID, or nil when they are not loaded in your
+  world. `distances()` lists every other player's distance, nearest first.
+  `sdk.watch.stat.coop_distance` is the nearest distance in whole metres, as
+  a watchable value.
+- `players()` lists every other player loaded in your world, nearest first,
+  and says who each one is: `id` (their SteamID64), `key` (the same handle
+  `sdk.trace` shows), `distance` and `pos` (`{ x, y, z }`). A player who has
+  only just appeared can have no `id` for a moment.
+- Positions are in your machine's own coordinates, the ones the distances
+  are measured in. Another player's machine can place everything offset from
+  yours, and your own coordinates can shift during a session, so compare
+  positions read on one machine at the same moment.
+
+```lua
+for _, p in ipairs(sdk.coop.players()) do
+  sdk.log.info(string.format("%s is %.0f m away at (%.0f, %.0f, %.0f)",
+    tostring(p.id), p.distance, p.pos.x, p.pos.y, p.pos.z))
+end
+```
+
 - `set_rune_rates({ enemy = ..., boss = ... })` sets your character's share
   of every enemy kill and of every boss: 1 is the full amount (the default),
   0.25 a quarter, 0 none, at most 10. A field left out keeps its value.

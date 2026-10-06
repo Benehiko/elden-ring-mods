@@ -1,7 +1,8 @@
 -- Example: watch the bosses around the player.
 --
--- `sdk.bosses.state(id)` is a loaded boss's live HP and position (nil when
--- it is not loaded), `sdk.bosses.player_pos()` is where the player is, and
+-- `sdk.bosses.state(id)` is the boss's state: `loaded`, `alive`, `defeated`
+-- (the game's record), and while loaded its live HP and position.
+-- `sdk.bosses.player_pos()` is where the player is, and
 -- `sdk.bosses.in_fight()` is true from the moment the player passes a boss's
 -- fog until the boss dies. The engine refreshes them every 30 frames.
 --
@@ -44,7 +45,7 @@ function mod.setup(sdk)
       -- Champions' waves): `s.bodies` lists every loaded one, and `s.alive`
       -- is true while any of them lives.
       local s = sdk.bosses.state(boss.id)
-      if s and s.alive then
+      if s.alive then
         for _, body in ipairs(s.bodies) do
           local d = distance(me, body.pos)
           if body.hp > 0 and d < 80 then

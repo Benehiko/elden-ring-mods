@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"|"trace"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"|"trace"|"coop"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -20,6 +20,7 @@
 ---@field rules ermod.sdk.rules? # present with the "rules" permission
 ---@field bosses ermod.sdk.bosses? # present with the "bosses" permission
 ---@field trace ermod.sdk.trace? # present with the "trace" permission
+---@field coop ermod.sdk.coop? # present with the "coop" permission
 ---@field items ermod.sdk.items # every item, spell, skill and class by row id; always present
 
 ---The table a mod script returns.
@@ -342,6 +343,8 @@ watch.stat = {
   hp = "hp",
   ---Maximum HP of the local player (moves with vigor, buffs and talismans).
   hp_max = "hp_max",
+  ---Whole metres to the nearest other player in a co-op session; unreadable (nil) when there is none.
+  coop_distance = "coop_distance",
 }
 
 ---@class ermod.watch.change
@@ -880,6 +883,50 @@ function trace.remotes() end
 ---@param after integer?
 ---@return ermod.trace.jump[]
 function trace.jumps(after) end
+---The co-op session, for mods that decide things per player: whether
+---this is a session, whether this machine hosts it, how far the other
+---players are, and the share of runes this machine's character takes.
+---Present with the "coop" permission.
+---@class ermod.sdk.coop
+local coop = {}
+
+---Whether this machine is in an engine co-op session (hosting or joined),
+---in a loaded world.
+---@return boolean
+function coop.active() end
+
+---Whether this machine hosts the co-op session. False outside one.
+---@return boolean
+function coop.is_host() end
+
+---Metres from this player to the nearest other player in the session,
+---or nil when there is none in this world (solo, a load, or nobody
+---else loaded nearby). Updated every frame.
+---@return number?
+function coop.get_distance() end
+
+---Metres from this player to each other player loaded in this world,
+---nearest first. Empty outside a session.
+---@return number[]
+function coop.distances() end
+
+---@class ermod.coop.rune_rates
+---@field enemy number # share of every enemy kill's runes this character takes (default 1)
+---@field boss number # share of every boss's runes this character takes (default 1)
+
+---Set the share of runes this machine's character takes in a co-op
+---session: `enemy` for every enemy any player kills, `boss` for every
+---boss. 1 is the full amount (the default), 0.25 a quarter, 0 none; at
+---most 10. A field left out keeps its value. Only this machine's
+---character is affected, only in a session; the latest call from any
+---mod wins.
+---@param rates { enemy: number?, boss: number? }
+function coop.set_rune_rates(rates) end
+
+---The rates set by `set_rune_rates` (both 1 unless a mod changed them).
+---@return ermod.coop.rune_rates
+function coop.rune_rates() end
+
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file
 ---`items.file[<table>]` names, so a mod can write

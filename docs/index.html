@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ermod-engine: Elden Ring mods on Linux and macOS</title>
-<meta name="description" content="A mod loader for Elden Ring on Linux and macOS. Lua mods that run in the live game, a modded regulation.bin without ModEngine, and the game install is only ever read.">
+<meta name="description" content="A mod loader for Elden Ring on Linux and macOS. Live Lua mods you toggle in-game, private co-op over LAN or VPN with mods synced from the host, and your game install and saves are never touched.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -42,9 +42,9 @@
     </div>
 
     <p class="lede">
-      Lua mods that run in the live game, and modded params without ModEngine.
-      No toolchain, no Windows, no installer, and your game install is only
-      ever read.
+      Lua mods you switch on and off in the live game, and private co-op with
+      your friends over LAN or VPN. Your game install and your saves are never
+      touched. No toolchain, no Windows, no installer.
     </p>
 
     <div class="downloads" id="download">
@@ -58,33 +58,64 @@
   <hr>
 
   <section class="rules">
-    <h2>Before you play</h2>
-    <p class="section-lede">
-      Modded play means playing with anti-cheat disabled. These three are not
-      fine print.
-    </p>
+    <h2>Why ermod-engine</h2>
 
     <dl>
-      <dt>Modded sessions never reach FromSoftware's servers.</dt>
+      <dt>Your game install is never touched.</dt>
       <dd>
-        Easy Anti-Cheat never runs, and the one launch that does risk a ban is
-        the game's normal Steam launch with a modified
-        <code>regulation.bin</code> in place.
-        <a href="install.html#before-you-start">The install guide</a>
-        has the rules.
-      </dd>
-
-      <dt>The engine never touches your install.</dt>
-      <dd>
-        It reads the game directory and writes nothing into it, so Steam's
-        integrity check has nothing to revert. Your own
+        The engine reads the game directory and writes nothing into it, so
+        Steam's integrity check has nothing to revert. Your own
         <code>regulation.bin</code> is never overwritten.
       </dd>
 
-      <dt>Your vanilla save is never played on.</dt>
+      <dt>Your saves are never touched.</dt>
       <dd>
-        Mods run against a profile, a separate save the engine creates. It can
-        copy your characters in, reading your save and never writing it.
+        Modded play happens on a profile, a copy of your save kept in the
+        engine's own directory. It copies your characters in by reading your
+        save, never by writing it. The one command that writes your save runs
+        only when you ask, and backs it up first.
+        <a href="install.html#5-profiles-and-your-own-save">More on profiles</a>.
+      </dd>
+
+      <dt>Co-op over LAN or VPN, private by default.</dt>
+      <dd>
+        Up to five players, peer to peer, on your home network or over
+        ZeroTier or Tailscale. There is no matchmaking and no FromSoftware
+        server: only machines you can reach can join you, and you can only
+        join machines you can reach. No strangers dropping in, and no lobby
+        password to share. Want a say anyway? One setting makes the host
+        approve each join.
+        <a href="network.html">Setting up LAN or VPN</a>.
+      </dd>
+
+      <dt>Mods are live Lua scripts.</dt>
+      <dd>
+        Switch any mod on or off from the in-game menu, no restart. Edit a
+        file while you play and it reloads within a second. Each mod runs in
+        its own sandbox with only the modules it declares; one that
+        misbehaves is switched off and the others carry on.
+      </dd>
+
+      <dt>Mods follow the host, with your consent.</dt>
+      <dd>
+        When the host plays with mods that change the game, every player needs
+        them. Join without them and the menu lists the host's mods, already
+        downloaded, each with an <b>Enable</b> button. Nothing is written to
+        your mods directory until you press it. Mods that only draw or log can
+        differ. <a href="coop.html#mods-in-co-op">Mods in co-op</a>.
+      </dd>
+
+      <dt>Native on Linux and macOS.</dt>
+      <dd>
+        A native launcher for Linux x86-64 and Apple Silicon. It finds your
+        game and drives Proton, CrossOver, Whisky or protium for you. No
+        Windows machine, no setup.
+      </dd>
+
+      <dt>Small and quick.</dt>
+      <dd>
+        One download of a few megabytes, and nothing to install: unpack it
+        and play.
       </dd>
     </dl>
   </section>
@@ -92,15 +123,7 @@
   <hr>
 
   <section>
-    <h2>What it does</h2>
-
-    <p>
-      <b>Lua mods, live.</b> Drop <code>.lua</code> files in the mods directory
-      and they run in the game. Each mod is sandboxed in its own VM with only
-      the modules it declares; one that misbehaves is disabled on the spot and
-      the others carry on. Edit a file while the game runs and it reloads
-      within a second.
-    </p>
+    <h2>What else it does</h2>
 
     <p>
       <b>The game's live parameter tables, readable and writable:</b> the same
@@ -115,11 +138,12 @@
     </p>
 
     <p>
-      <b>Co-op with the same mods.</b> The engine runs its own co-op, peer to
-      peer between the players' machines, and holds a joiner until its
-      game-changing mods match the host's.
-      <a href="coop.html">The co-op guide</a>
-      covers starting a session.
+      <b>Safe by design.</b> Modded play means anti-cheat is off, so Easy
+      Anti-Cheat never runs and modded sessions never reach FromSoftware's
+      servers. The one launch that does risk a ban is the game's normal Steam
+      launch with a modified <code>regulation.bin</code> in place.
+      <a href="install.html#before-you-start">The install guide</a>
+      has the rules; they are not fine print.
     </p>
 
     <p class="aside">

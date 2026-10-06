@@ -3,16 +3,30 @@
 **Mod Elden Ring in Lua, live in the running game, and play it in co-op with
 your friends, over LAN or a VPN.** On Linux and macOS.
 
-- ⚡ **Mods are a few lines of Lua.** Save the file and it reloads in the game
-  within a second. No toolchain, no ModEngine.
-- 🤝 **Co-op for up to five players**, peer to peer, at home or over
-  [ZeroTier or Tailscale](docs/network.md). Friends missing the host's mods
-  get them in one click.
-- 🛡️ **Safe by design.** Easy Anti-Cheat never runs, no modded session reaches
-  FromSoftware's servers, and your game install is only ever read
-  ([the rules](docs/install.md#before-you-start)).
-- 🐧 **Linux** (Steam + Proton) and **macOS on Apple Silicon** (CrossOver,
-  Whisky or protium, detected for you).
+- 📁 **Your game install is never touched.** The engine reads the game
+  directory and writes nothing into it, so Steam's integrity check has
+  nothing to revert.
+- 💾 **Your saves are never touched.** Modded play happens on a
+  [profile](docs/install.md#5-profiles-and-your-own-save), a copy kept in the
+  engine's own directory. It copies your characters in by reading your save,
+  never by writing it.
+- 🔒 **Co-op over LAN or VPN, private by default.** Up to five players, peer to
+  peer, at home or over [ZeroTier or Tailscale](docs/network.md). No
+  matchmaking and no FromSoftware servers: only machines you can reach can
+  join you, and you can only join machines you can reach. No strangers, no
+  lobby password.
+- ⚡ **Mods are live Lua scripts.** Switch any mod on or off from the in-game
+  menu; edit a file and it reloads within a second. No toolchain, no
+  ModEngine, no restart.
+- 🤝 **Mods follow the host, with your consent.** Join a host with mods you
+  lack and the menu offers them, already downloaded. Nothing lands in your
+  mods directory until you press **Enable**.
+- 🐧 **Native on Linux and macOS.** A native launcher for Linux x86-64 and
+  Apple Silicon that finds your game and drives Proton, CrossOver, Whisky or
+  protium for you. No Windows, no setup.
+- 🪶 **Small and quick.** One download of a few megabytes, nothing to install:
+  unpack it and play. Easy Anti-Cheat never runs, and modded sessions never
+  reach FromSoftware's servers ([the rules](docs/install.md#before-you-start)).
 
 🌐 **Website: <https://benehiko.github.io/elden-ring-mods/>**
 

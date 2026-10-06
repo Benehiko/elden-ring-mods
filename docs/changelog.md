@@ -7,7 +7,41 @@ engine does anything at all.
 
 ## Unreleased
 
-Co-op fixes. Every player in a co-op session needs this version.
+### New example: your stats on screen
+
+`examples/stats_overlay.lua` shows every value `sdk.watch` can read in a
+small HUD: level, runes, deaths, HP, the eight attributes and, in co-op, the
+distance to the nearest teammate. A value that just changed shows by how
+much, in green or red, for a few seconds. It only reads and draws, so it is
+safe to run in any co-op session.
+
+## v0.7.0 (2026-10-06)
+
+Game build **2.7.1.0**, as in v0.6.0. Every player in a co-op session needs the
+same game build and this engine version.
+
+### Co-op: both players wake in the Stranded Graveyard with their flasks
+
+After the Grafted Scion, the joiner now sees the Stranded Graveyard's
+arrival cinematic too, and starts with the Flasks of Crimson and Cerulean
+Tears like the host. Before, only the host got either. A character that
+already missed its flasks this way gets them the next time the game starts.
+
+### Co-op: no more standing at 1 HP against the Grafted Scion
+
+When one player falls to the Scion, the other no longer sits at 1 HP,
+unable to die, for half a minute after their own lethal hit. The fallen
+player spectates, and the last one down dies as from any boss.
+
+### Mods: a boss's state is always known, and a revive is only a revive
+
+`sdk.bosses.state(id)` no longer answers nil for a boss that is not nearby.
+It always says whether the boss is `loaded`, whether it is `alive`, and
+whether the game counts it as `defeated` (read from the game itself), with
+its health and position while it is loaded. `sdk.bosses.revive(id)` makes a
+boss unbeaten, evergaol bosses included, and the boss is back the next time
+its area loads; when that happens is the mod's choice. See
+[`bosses` in the scripting guide](scripting.md#bosses).
 
 ### Co-op: a joiner no longer hangs loading in at the host's spot
 

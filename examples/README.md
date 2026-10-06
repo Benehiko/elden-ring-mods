@@ -47,11 +47,12 @@ tables.
 
 ## Drawing on screen
 
-| Example                                | What it teaches                                                                              |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| [`overlay.lua`](overlay.lua)           | a HUD driven by game events: `sdk.ui` plus `sdk.hooks`, borderless input-transparent windows |
-| [`perf_monitor.lua`](perf_monitor.lua) | a tool window: `sdk.perf` counters, plots, per-mod script cost                               |
-| [`settings.lua`](settings.lua)         | an in-game settings screen whose values survive a relaunch: `sdk.ui` plus `sdk.store`        |
+| Example                                  | What it teaches                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`overlay.lua`](overlay.lua)             | a HUD driven by game events: `sdk.ui` plus `sdk.hooks`, borderless input-transparent windows                        |
+| [`stats_overlay.lua`](stats_overlay.lua) | `watch_all` on screen: every `sdk.watch` stat in a HUD, `watch.get` each frame and `watch.on` to light up a change  |
+| [`perf_monitor.lua`](perf_monitor.lua)   | a tool window: `sdk.perf` counters, plots, per-mod script cost                                                      |
+| [`settings.lua`](settings.lua)           | an in-game settings screen whose values survive a relaunch: `sdk.ui` plus `sdk.store`                               |
 
 Press **Insert** to give the overlay mouse and keyboard focus, Insert again to
 hand it back to the game. While it has focus the pointer moves freely and the

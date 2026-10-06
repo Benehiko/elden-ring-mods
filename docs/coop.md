@@ -186,8 +186,8 @@ change, so if you die you get up at your grace, not at the host.
 The host must be in its world when you join. If the host is on Torrent,
 `coop join` says so and waits up to 90 seconds for it to get off. If the host
 does not answer within a few seconds, you load where your own save stands and
-the log says why. Both players need an engine with this change (see the
-[changelog](changelog.md#unreleased)).
+the log says why. Both players need engine v0.5.0 or later (see the
+[changelog](changelog.md#v050-2026-10-05)).
 
 ## Three or more players
 

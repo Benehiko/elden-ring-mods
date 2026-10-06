@@ -5,6 +5,42 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
+## Unreleased
+
+Co-op fixes. Every player in a co-op session needs this version.
+
+### Co-op: a joiner no longer hangs loading in at the host's spot
+
+A joiner loads in where the host stands. In some open-world spots the
+host's game gave that place in a form a save cannot hold, and the joiner
+then sat on the loading screen for good. The host no longer gives a place
+from such a spot, and the joiner loads where its own save stands instead.
+
+### Co-op: enemies near a joiner fight, even far from the host
+
+When a joiner went somewhere the host was not, such as Gatefront while the
+host stayed in Stormveil, some enemies around the joiner were run by
+neither game. They stood still, and when the joiner hit them they froze at
+no health without dying, so they paid no runes. Now the joiner's own game
+runs every enemy around it that the host's game is not running, and hands
+them back when the host comes near or the joiner leaves. A kill there
+counts and pays runes to every player, as anywhere else.
+
+### Co-op: everyone keeps the host's time of day
+
+A joiner who joined, or fast-travelled somewhere far, used to see the
+morning for up to a minute before the game caught up with the host's time.
+The host now shares its time every couple of seconds, so a joiner arrives in
+the same hour as the host.
+
+### Co-op: no white walls at the edge of a multiplayer area
+
+In a co-op session the game used to raise white walls where its multiplayer
+area ends, such as at a catacomb's entrance or at the exit of Margit's arena
+into Stormveil, for the host and the joiner alike. Those walls are gone:
+players in a session can go wherever they could go solo. Solo play is
+unchanged.
+
 ## v0.6.0 (2026-10-06)
 
 Game build **2.7.1.0**, as in v0.5.0. Every player in a co-op session needs the

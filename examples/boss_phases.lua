@@ -51,7 +51,7 @@ function mod.setup(sdk)
     frames = frames + 1
     if frames % 15 ~= 0 then return end
     local s = sdk.bosses.state(boss)
-    if not s then return end
+    if not s.loaded then return end
     if stage == 0 and sdk.bosses.in_fight() and s.alive then
       next_stage(sdk, s)
     elseif stage > 0 and stage < stages and s.hp <= 1 then

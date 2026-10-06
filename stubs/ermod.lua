@@ -899,16 +899,32 @@ function coop.active() end
 ---@return boolean
 function coop.is_host() end
 
----Metres from this player to the nearest other player in the session,
----or nil when there is none in this world (solo, a load, or nobody
----else loaded nearby). Updated every frame.
----@return number?
-function coop.get_distance() end
+---With no argument: metres from this player to the nearest other player
+---in the session, and that player's Steam id (nil when it could not be
+---read). With a Steam id: metres to that player. Nil when there is no
+---such player in this world (solo, a load, another map, or nobody else
+---loaded nearby). Updated every frame.
+---@param id integer? # a player's SteamID64, as `coop.players()` gives it
+---@return number? distance
+---@return integer? id # the nearest player's Steam id (no-argument form only)
+function coop.get_distance(id) end
 
 ---Metres from this player to each other player loaded in this world,
----nearest first. Empty outside a session.
+---nearest first. Empty outside a session. `coop.players()` says who
+---each one is.
 ---@return number[]
 function coop.distances() end
+
+---@class ermod.coop.player
+---@field id integer? # the player's SteamID64; nil when it could not be read
+---@field key string # FieldInsHandle "lo:hi" (hex): the same character on every machine, as `sdk.trace` keys it
+---@field distance number # metres from this player
+---@field pos ermod.vec3 # physics position in this machine's frame (the one `distance` is measured in); another machine's frame can be offset by a translation, and the frame can shift during a session, so compare positions read on one machine in the same frame
+
+---Every other player loaded in this world, nearest first, with who they
+---are. Empty outside a session.
+---@return ermod.coop.player[]
+function coop.players() end
 
 ---@class ermod.coop.rune_rates
 ---@field enemy number # share of every enemy kill's runes this character takes (default 1)

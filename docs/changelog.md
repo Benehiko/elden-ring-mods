@@ -19,7 +19,10 @@ Solo play is unchanged. Every player in the session needs this version.
 
 A new SDK module, `sdk.coop` (permission `coop`), for mods that decide
 things per player: `coop.active()`, `coop.is_host()`, `coop.get_distance()`
-(metres to the nearest other player) and `coop.distances()`. Its
+(metres to the nearest other player, and their Steam ID),
+`coop.get_distance(id)` (metres to one player, by Steam ID),
+`coop.distances()` and `coop.players()` (each other player's Steam ID,
+distance and position, nearest first). Its
 `coop.set_rune_rates({ enemy = 0.25, boss = 0.5 })` sets the share of runes
 the player on that machine takes; the full amount is the default.
 `sdk.watch.stat.coop_distance` reports the distance as a watchable value.

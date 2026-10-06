@@ -7,6 +7,9 @@ engine does anything at all.
 
 ## Unreleased
 
+Game build **2.7.1.0**. Every player in a co-op session needs this engine
+version.
+
 ### Co-op: every player gets the runes
 
 A joiner used to get nothing for most enemies and only a quarter of a boss's
@@ -37,6 +40,53 @@ It is the game's own lifetime counter, saved with the character, and the
 same number `sdk.watch.get(sdk.watch.stat.deaths)` has always read. A mod no
 longer has to count deaths itself to show a total. `examples/death_ping.lua`
 and `examples/overlay.lua` show it beside their own count since loading.
+
+### Mods can run boss fights
+
+`sdk.bosses` can now set up and run a fight, not only revive a boss:
+
+- `bosses.warp(id)` travels to the boss's grace (`boss.grace`) and puts the
+  player beside the boss once it has loaded.
+- `bosses.wake(id)` makes the boss fight, and `bosses.kill(id)` kills it
+  through the game's own death routine, so the game records the defeat.
+- `bosses.reset(id)` clears the defeat flag, and for an evergaol its own
+  state too. It takes effect at the next map load.
+- `hooks.event.on_boss_defeated` gives `{ id, flag, kind }` when the game
+  records a defeat. It does not fire for the defeat flags a map load sets
+  again.
+- New fields: `boss.kind` (`evergaol`, `minor_erdtree`, `field` or
+  `arena`), `boss.phases` (how many kills the game needs before it records
+  the defeat), `boss.evergaol` (the evergaol's name) and `boss.spawns`
+  (where the boss stood before, at the start of, and through its fight).
+
+Evergaols can be opened from a mod. For the ten base-game evergaols,
+`boss.can_open` is true, and `bosses.warp(id, { open = true })` stands the
+player on the pad, answers "Enter evergaol?" and steps towards the boss.
+`bosses.open(id)` does the same when the player is already near it.
+`hooks.event.on_evergaol_entered` fires when the gaol takes the player in,
+whether the player or the SDK opened it. Shadow of the Erdtree's 40 bosses
+now have phases and coordinates recorded too. The boss at row 1039510800
+is now correctly named a Night's Cavalry (`nights_cavalry_1039510800`), and
+161 of the 210 boss names are measured in the game.
+
+A woken boss fights for real: `bosses.wake` does not protect the player. See
+[`bosses` in the scripting guide](scripting.md#bosses).
+
+### Fixed: a stutter in mods that watch every boss
+
+Each `sdk.bosses` lookup re-read the whole boss table. A mod that checked
+every boss once a second (`examples/boss_watch.lua`) spent about 16 ms in a
+single frame and made the game stutter. Lookups now take about 0.03 ms.
+
+### Fixed: `check-build` passes on game build 2.7.1.0
+
+`ermod-engine check-build` reported a failure on 2.7.1.0, and every log
+carried a matching warning, although the build is supported. Both are gone.
+
+## v0.5.0 (2026-10-05)
+
+Game build **2.7.1.0**, as in v0.4.0. Every player in a co-op session needs the
+same game build and this engine version.
 
 ### Frame trace: find what makes frames slow
 

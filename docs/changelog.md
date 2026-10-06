@@ -5,10 +5,10 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
-## Unreleased
+## v0.6.0 (2026-10-06)
 
-Game build **2.7.1.0**. Every player in a co-op session needs this engine
-version.
+Game build **2.7.1.0**, as in v0.5.0. Every player in a co-op session needs the
+same game build and this engine version.
 
 ### Co-op: every player gets the runes
 

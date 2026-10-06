@@ -62,6 +62,8 @@ hooks.event = {
   on_death = "on_death",
   ---A boss died and the game recorded its defeat. Payload: { id = integer (sdk.bosses.id), flag = integer, kind = string }
   on_boss_defeated = "on_boss_defeated",
+  ---The player entered an evergaol, opened by hand or by bosses.open. Payload: { id = integer (sdk.bosses.id) }
+  on_evergaol_entered = "on_evergaol_entered",
 }
 
 ---@class ermod.event.payload
@@ -402,6 +404,7 @@ local bosses = {}
 ---@field phases integer? # kills the game needed before it recorded the defeat (each body or phase that comes back); nil if not measured
 ---@field evergaol string? # the evergaol's name, for an evergaol boss
 ---@field grace integer? # the grace `bosses.warp` travels to (entity id); nil if it has none
+---@field can_open boolean? # evergaol bosses: true when the SDK can open its evergaol (`bosses.open`, `warp(id, { open = true })`): its pad has been recorded
 
 ---@class ermod.vec3
 ---@field x number
@@ -425,10 +428,18 @@ local bosses = {}
 ---@enum ermod.bosses.kind
 bosses.kind = { arena = "arena", field = "field", minor_erdtree = "minor_erdtree", evergaol = "evergaol" }
 
----Travel to the boss's grace, then stand beside the boss once it has loaded.
+---Travel to the boss's grace, then, once the boss has loaded: beside the boss; for an
+---evergaol boss with `can_open`, on its pad, and with `open = true` the evergaol opened too.
 ---@param id integer # row id or defeat flag
+---@param opts { open: boolean? }?
 ---@return boolean queued
-function bosses.warp(id) end
+function bosses.warp(id, opts) end
+
+---Open the boss's evergaol for the player (it must be near): the pad, "Enter evergaol?" YES,
+---then a step towards the boss. The game window must have focus. Errors unless `can_open`.
+---@param id integer
+---@return boolean queued
+function bosses.open(id) end
 
 ---Start the boss's fight: its AI's wake bit, what a fog or an evergaol turns on.
 ---@param id integer

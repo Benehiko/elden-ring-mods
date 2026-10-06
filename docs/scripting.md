@@ -242,8 +242,8 @@ lists every field a row has, by the name a mod uses.
 sdk.hooks.on(sdk.hooks.event.on_death, function() sdk.log.info("died") end)
 ```
 
-Four events exist: `on_boss_defeated` (payload `{ id, flag, kind }`, see
-`bosses`), `on_present` (a frame is about to be presented, payload
+Five events exist: `on_boss_defeated` (payload `{ id, flag, kind }`, see
+`bosses`), `on_evergaol_entered` (payload `{ id }`), `on_present` (a frame is about to be presented, payload
 `{}`), `on_rune_gain` (payload `{ amount = n }`) and `on_death` (payload
 `{ deaths = n }`: the character's lifetime death count, this death included).
 `deaths` is the game's own counter, saved with the character, the same value
@@ -454,6 +454,26 @@ end)
 
 `hooks.event.on_boss_defeated` fires when a boss dies and the game records
 it: `{ id, flag, kind }`.
+
+**Evergaols: open them for the player, or let the player do it.** An
+evergaol boss has `can_open` set when the SDK can open its evergaol.
+`warp(id, { open = true })` warps there, opens the evergaol and walks the
+player up to the boss. Plain `warp(id)` stands the player on the evergaol's
+pad and leaves the opening to them. `open(id)` opens it when the player is
+already near. Either way, `hooks.event.on_evergaol_entered` fires with
+`{ id }` once the player is inside. The opening uses the game's own
+controls, so it works while the game window has focus, which it does while
+someone is playing.
+
+```lua
+local B = sdk.bosses
+local bols = B.id.bols_carian_knight
+B.reset(bols)                      -- a fresh evergaol, at the next map load
+B.warp(bols, { open = true })      -- or B.warp(bols) to let the player open it
+sdk.hooks.on(sdk.hooks.event.on_evergaol_entered, function(ev)
+  sdk.log.info("in the evergaol of " .. ev.id)
+end)
+```
 
 **Watching a fight.** `state(id)` is a loaded boss's live state — `alive`,
 `hp`, `hp_max`, `pos`, and `bodies` / `bodies_alive` for every loaded body of

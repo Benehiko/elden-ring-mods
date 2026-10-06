@@ -242,7 +242,8 @@ lists every field a row has, by the name a mod uses.
 sdk.hooks.on(sdk.hooks.event.on_death, function() sdk.log.info("died") end)
 ```
 
-Three events exist: `on_present` (a frame is about to be presented, payload
+Five events exist: `on_boss_defeated` (payload `{ id, flag, kind }`, see
+`bosses`), `on_evergaol_entered` (payload `{ id }`), `on_present` (a frame is about to be presented, payload
 `{}`), `on_rune_gain` (payload `{ amount = n }`) and `on_death` (payload
 `{ deaths = n }`: the character's lifetime death count, this death included).
 `deaths` is the game's own counter, saved with the character, the same value
@@ -422,6 +423,63 @@ back; its runes do.
 
 ```lua
 sdk.bosses.revive(sdk.bosses.id.margit_the_fell_omen)
+```
+
+**What kind of fight.** Each boss has `kind`: `"evergaol"`,
+`"minor_erdtree"` (an Erdtree or Putrid Avatar), `"field"` (any other
+open-world boss) or `"arena"` (a dungeon's boss room); `sdk.bosses.kind` is
+the enum. `phases` is how many kills the game needed before it recorded the
+defeat, where measured: each body or phase that comes back counts, so 1 is
+one body with no second phase. An evergaol boss has `evergaol`, the
+evergaol's name. `grace` is the grace `warp` travels to.
+
+**Running a fight.** `warp(id)` travels to the boss's grace with the game's
+own grace warp and stands the player beside the boss once it has loaded.
+`wake(id)` starts the fight (the boss's AI wakes; the fog's music and boss
+area are the event script's and do not start). `kill(id)` runs the game's
+own death routine, and the game records the defeat itself; a boss with more
+`phases` needs a kill for each. `reset(id)` makes the fight new again: the
+defeat record and, for an evergaol, its own state. It lands when the map
+next loads. A woken boss fights for real, so `wake` does not protect the
+player.
+
+```lua
+local B = sdk.bosses
+B.reset(B.id.margit_the_fell_omen)
+B.warp(B.id.margit_the_fell_omen)
+sdk.hooks.on(sdk.hooks.event.on_boss_defeated, function(ev)
+  sdk.log.info(string.format("%d down (%s)", ev.id, ev.kind))
+end)
+```
+
+`hooks.event.on_boss_defeated` fires when a boss dies and the game records
+it: `{ id, flag, kind }`.
+
+**Where a boss is.** `boss.spawns` lists where the boss was recorded:
+`{ phase, entity, map, pos }` for `"idle"` (waiting before its fight),
+`"fight"` (when the fight started) and `"kill1"`, `"kill2"`, … (each body
+that had to be killed, so a second phase shows up as `kill2`). `pos` is
+comparable with `player_pos()` near the boss; `map` is the boss's map block.
+The list is empty for a boss not recorded yet.
+
+**Evergaols: open them for the player, or let the player do it.** An
+evergaol boss has `can_open` set when the SDK can open its evergaol.
+`warp(id, { open = true })` warps there, opens the evergaol and walks the
+player up to the boss. Plain `warp(id)` stands the player on the evergaol's
+pad and leaves the opening to them. `open(id)` opens it when the player is
+already near. Either way, `hooks.event.on_evergaol_entered` fires with
+`{ id }` once the player is inside. The opening uses the game's own
+controls, so it works while the game window has focus, which it does while
+someone is playing.
+
+```lua
+local B = sdk.bosses
+local bols = B.id.bols_carian_knight
+B.reset(bols)                      -- a fresh evergaol, at the next map load
+B.warp(bols, { open = true })      -- or B.warp(bols) to let the player open it
+sdk.hooks.on(sdk.hooks.event.on_evergaol_entered, function(ev)
+  sdk.log.info("in the evergaol of " .. ev.id)
+end)
 ```
 
 **Watching a fight.** `state(id)` is a loaded boss's live state — `alive`,

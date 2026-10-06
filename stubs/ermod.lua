@@ -60,10 +60,17 @@ hooks.event = {
   on_rune_gain = "on_rune_gain",
   ---The player died. Payload: { deaths = integer }, the character's lifetime death count including this one (the game's own counter; sdk.watch.stat.deaths reads it any time)
   on_death = "on_death",
+  ---A boss died and the game recorded its defeat. Payload: { id = integer (sdk.bosses.id), flag = integer, kind = string }
+  on_boss_defeated = "on_boss_defeated",
+  ---The player entered an evergaol, opened by hand or by bosses.open. Payload: { id = integer (sdk.bosses.id) }
+  on_evergaol_entered = "on_evergaol_entered",
 }
 
 ---@class ermod.event.payload
 ---@field amount integer? # on_rune_gain only
+---@field id integer? # on_boss_defeated only: the boss's row id (sdk.bosses.id)
+---@field flag integer? # on_boss_defeated only: its defeat flag
+---@field kind string? # on_boss_defeated only: its kind (sdk.bosses.kind)
 ---@field deaths integer? # on_death only: the character's lifetime death count, including this death
 
 ---Subscribe to a named engine event. Unknown names are an error at
@@ -393,6 +400,12 @@ local bosses = {}
 ---@field drop_lots integer[] # the item lots behind `drops` (negative: ItemLotParam_enemy)
 ---@field bodies { entity: integer, hp_max: integer }[] # the encounter's bodies seen live (partners, phases, waves)
 ---@field hp_max integer? # measured max HP; nil if not measured
+---@field kind ermod.bosses.kind # "evergaol", "minor_erdtree", "field" (open world) or "arena" (a dungeon's boss room)
+---@field phases integer? # kills the game needed before it recorded the defeat (each body or phase that comes back); nil if not measured
+---@field evergaol string? # the evergaol's name, for an evergaol boss
+---@field grace integer? # the grace `bosses.warp` travels to (entity id); nil if it has none
+---@field spawns { phase: string, entity: integer, map: string, pos: ermod.vec3 }[] # where the boss was: "idle" (before the fight), "fight" (when it started), "kill1".. (each body killed; a second phase shows as kill2); pos in the frame the player is in near it, map the boss's map block (hex). Empty where not recorded.
+---@field can_open boolean? # evergaol bosses: true when the SDK can open its evergaol (`bosses.open`, `warp(id, { open = true })`): its pad has been recorded
 
 ---@class ermod.vec3
 ---@field x number
@@ -412,6 +425,40 @@ local bosses = {}
 ---@field hp integer
 ---@field hp_max integer
 ---@field pos ermod.vec3
+
+---@enum ermod.bosses.kind
+bosses.kind = { arena = "arena", field = "field", minor_erdtree = "minor_erdtree", evergaol = "evergaol" }
+
+---Travel to the boss's grace, then, once the boss has loaded: beside the boss; for an
+---evergaol boss with `can_open`, on its pad, and with `open = true` the evergaol opened too.
+---@param id integer # row id or defeat flag
+---@param opts { open: boolean? }?
+---@return boolean queued
+function bosses.warp(id, opts) end
+
+---Open the boss's evergaol for the player (it must be near): the pad, "Enter evergaol?" YES,
+---then a step towards the boss. The game window must have focus. Errors unless `can_open`.
+---@param id integer
+---@return boolean queued
+function bosses.open(id) end
+
+---Start the boss's fight: its AI's wake bit, what a fog or an evergaol turns on.
+---@param id integer
+---@param entity integer? # a body of the encounter; the row's own by default
+---@return boolean queued
+function bosses.wake(id, entity) end
+
+---Kill a live body through the game's own death routine; the game records the defeat.
+---A boss with more `phases` needs a kill for each.
+---@param id integer
+---@param entity integer?
+---@return boolean queued
+function bosses.kill(id, entity) end
+
+---Bring the fight back as new (the defeat flag, and an evergaol's own state); lands when the map next loads.
+---@param id integer
+---@return integer writes # flag writes queued
+function bosses.reset(id) end
 
 ---A loaded boss's live state (refreshed every 30 frames), or nil when it is not loaded.
 ---@param id integer # row id or defeat flag
@@ -553,8 +600,8 @@ bosses.id = {
   crucible_knight_ordovis = 30100800, -- Crucible Knight Ordovis
   crucible_knight_30100801 = 30100801, -- Crucible Knight
   black_knife_assassin_30110800 = 30110800, -- Black Knife Assassin
-  perfumer_tricia = 30120800, -- Perfumer Tricia
-  misbegotten_warrior = 30120801, -- Misbegotten Warrior
+  perfumer_tricia_and_misbegotten_warrior = 30120800, -- Perfumer Tricia & Misbegotten Warrior
+  perfumer_tricia = 30120801, -- Perfumer Tricia
   grave_warden_duelist_30130800 = 30130800, -- Grave Warden Duelist
   erdtree_burial_watchdog_30140800 = 30140800, -- Erdtree Burial Watchdog
   cemetery_shade_30150800 = 30150800, -- Cemetery Shade
@@ -577,7 +624,7 @@ bosses.id = {
   misbegotten_crusader = 31120800, -- Misbegotten Crusader
   demi_human_chief = 31150800, -- Demi-Human Chief
   guardian_golem = 31170800, -- Guardian Golem
-  omenkiller = 31180800, -- Omenkiller
+  omenkiller_and_miranda_the_blighted_bloom = 31180800, -- Omenkiller & Miranda the Blighted Bloom
   black_knife_assassin_31190800 = 31190800, -- Black Knife Assassin
   necromancer_garris = 31190850, -- Necromancer Garris
   cleanrot_knight_31200800 = 31200800, -- Cleanrot Knight
@@ -612,7 +659,7 @@ bosses.id = {
   glintstone_dragon_smarag = 1034450800, -- Glintstone Dragon Smarag
   royal_revenant = 1034480800, -- Royal Revenant
   glintstone_dragon_adula_1034500800 = 1034500800, -- Glintstone Dragon Adula
-  omenkiller_1035420800 = 1035420800, -- Omenkiller
+  omenkiller = 1035420800, -- Omenkiller
   royal_knight_loretta = 1035500800, -- Royal Knight Loretta
   magma_wyrm_1035530800 = 1035530800, -- Magma Wyrm
   death_rite_bird = 1036450340, -- Death Rite Bird
@@ -621,7 +668,7 @@ bosses.id = {
   fallingstar_beast_1036540800 = 1036540800, -- Fallingstar Beast
   death_rite_bird_1037420340 = 1037420340, -- Death Rite Bird
   bell_bearing_hunter = 1037460800, -- Bell Bearing Hunter
-  ancient_dragon_lansseax = 1037510800, -- Ancient Dragon Lansseax
+  lichdragon_fortissax_1037510800 = 1037510800, -- Lichdragon Fortissax
   demi_human_queen_maggie = 1037530800, -- Demi-Human Queen Maggie
   ulcerated_tree_spirit_1037540810 = 1037540810, -- Ulcerated Tree Spirit
   adan_thief_of_fire = 1038410800, -- Adan, Thief of Fire
@@ -631,13 +678,13 @@ bosses.id = {
   nights_cavalry_1039430340 = 1039430340, -- Night's Cavalry
   tibia_mariner_1039440800 = 1039440800, -- Tibia Mariner
   godefroy_the_grafted = 1039500800, -- Godefroy the Grafted
-  bell_bearing_hunter_1039510800 = 1039510800, -- Bell Bearing Hunter
+  nights_cavalry_1039510800 = 1039510800, -- Night's Cavalry
   bell_bearing_hunter_1039540800 = 1039540800, -- Bell Bearing Hunter
   black_knife_assassin_1040520800 = 1040520800, -- Black Knife Assassin
   sanguine_noble = 1040530800, -- Sanguine Noble
   fallingstar_beast_1041500800 = 1041500800, -- Fallingstar Beast
   tree_sentinel = 1041510800, -- Tree Sentinel
-  ancient_dragon_lansseax_1041520800 = 1041520800, -- Ancient Dragon Lansseax
+  ancient_dragon_lansseax = 1041520800, -- Ancient Dragon Lansseax
   wormface = 1041530800, -- Wormface
   ancient_hero_of_zamor_1042330800 = 1042330800, -- Ancient Hero of Zamor
   tree_sentinel_1042360800 = 1042360800, -- Tree Sentinel

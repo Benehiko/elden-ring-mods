@@ -404,6 +404,7 @@ local bosses = {}
 ---@field phases integer? # kills the game needed before it recorded the defeat (each body or phase that comes back); nil if not measured
 ---@field evergaol string? # the evergaol's name, for an evergaol boss
 ---@field grace integer? # the grace `bosses.warp` travels to (entity id); nil if it has none
+---@field spawns { phase: string, entity: integer, map: string, pos: ermod.vec3 }[] # where the boss was: "idle" (before the fight), "fight" (when it started), "kill1".. (each body killed; a second phase shows as kill2); pos in the frame the player is in near it, map the boss's map block (hex). Empty where not recorded.
 ---@field can_open boolean? # evergaol bosses: true when the SDK can open its evergaol (`bosses.open`, `warp(id, { open = true })`): its pad has been recorded
 
 ---@class ermod.vec3

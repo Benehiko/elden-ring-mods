@@ -455,6 +455,13 @@ end)
 `hooks.event.on_boss_defeated` fires when a boss dies and the game records
 it: `{ id, flag, kind }`.
 
+**Where a boss is.** `boss.spawns` lists where the boss was recorded:
+`{ phase, entity, map, pos }` for `"idle"` (waiting before its fight),
+`"fight"` (when the fight started) and `"kill1"`, `"kill2"`, … (each body
+that had to be killed, so a second phase shows up as `kill2`). `pos` is
+comparable with `player_pos()` near the boss; `map` is the boss's map block.
+The list is empty for a boss not recorded yet.
+
 **Evergaols: open them for the player, or let the player do it.** An
 evergaol boss has `can_open` set when the SDK can open its evergaol.
 `warp(id, { open = true })` warps there, opens the evergaol and walks the

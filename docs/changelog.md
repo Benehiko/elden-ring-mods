@@ -5,7 +5,188 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
-## Unreleased
+## v0.8.0 (2026-10-08)
+
+Game build **2.7.1.0**, as in v0.7.0. Every player in a co-op session needs the
+same game build and this engine version.
+
+### `--debug`: help track down a co-op crash
+
+A host could crash mid-session (exit code `0xC0000005`) inside the game's
+own memory handling, after something wrote into memory the game had already
+let go of. What does that write is not known yet.
+
+Launch with `ermod-engine --debug` (it works with `coop host` and
+`coop join` too) and the engine watches for that damage. When it finds it,
+it writes what it found to `ermod-runtime.log` (lines starting
+`heap guard`) and steps around it, so the game usually keeps running,
+though it can still crash later. Those lines are what's needed to find the
+cause: send them with a bug report.
+
+It costs the game about 3% more CPU, so it is off unless you ask for it.
+
+### Overlay: Ctrl+Tab between windows, and mod buttons that press keys work
+
+With the engine menu open (backtick) or the overlay holding the input
+(Insert), **Ctrl+Tab** now moves between the menu and a mod's window. The
+menu used to take the keyboard straight back, and it stayed drawn on top,
+covering a mod window placed under it. Clicking a window works as before.
+
+A mod button that makes the game press a key, such as `sdk.player`'s
+whistle, now works while the overlay holds the input. The overlay still
+keeps your own keys and mouse from the game, but no longer swallows the
+engine's own press, so the button no longer reports "pressed" with nothing
+happening.
+
+The engine's presses still reach the game only while its window is the
+active one, like your own keys.
+
+### Mods: `sdk.player` — Torrent from a mod
+
+A mod with the new `player` permission can see how the ride stands and call
+Torrent itself:
+
+- `sdk.player.ride_state()`: `on_foot`, `mounting`, `riding` or
+  `dismounting` (nil outside a world); `sdk.player.mounted()`;
+  `sdk.player.in_world()`.
+- `sdk.player.whistle()` and `sdk.player.dismount()` do what the player
+  does: select the Spectral Steed Whistle and press use. Each returns true,
+  or false and a reason (`"no_world"`, `"wrong_state"`, `"busy"`, …).
+
+The character needs the whistle, and can't stand on a grace (the game
+refuses to call Torrent there). In a co-op session both calls return false,
+`"in_session"` for now: the engine's own button press does not reach the
+game in a session yet. Solo they work. `examples/whistle.lua` puts the ride
+state and Whistle and Dismount buttons in a window.
+
+### Characters: `whistle=on` gives a made character Torrent's whistle
+
+A character made with `character new` has never met Melina, so it has no
+Spectral Steed Whistle and can't call Torrent: the use-item key uses a flask
+instead. Add `whistle=on` (to `character new` or `dev save set`) and the
+character holds the whistle in its first free quick item slot. It is refused
+if the character already has one or has no free quick item slot. Only the
+item is given; nothing of the story that comes with it in the game.
+
+### Profiles: a new profile is ready for a new character
+
+`ermod-engine profile new <name>` now gives the profile an empty save, so
+`ermod-engine character new --profile <name> --class <class>` can make a
+character in it straight away. Before, a new profile had no save, and the
+only ways to get one were launching the game once or `profile port`, which
+copies in every character from your own save. Your own save is only read.
+`profile port <name> --force` still copies your characters in if you want
+them.
+
+### Profiles: `profile list` shows the game's backup save
+
+Before each save, the game keeps a copy of the previous one as
+`ER0000.sl2.bak`. A character you delete from a profile stays in that copy
+until the game next saves, and nothing said so. `profile list` now shows
+when each profile's backup was written, and names any character that is
+only in the backup.
+
+### Times are shown in your timezone
+
+Dates and times the launcher shows are now on your own clock: the backup
+times in `profile list`, the date in a `profile backup` file name, "ported
+from your vanilla save" in `profile list` and the settings window, and the
+`diagnostics` archive name. They were in UTC, so a backup made just after
+midnight could be dated the day before. Each time names its zone (`CEST`,
+`EDT`); where no timezone can be found, times are in UTC and say so.
+
+### Co-op: a player who leaves can join the same host again
+
+A player who left a session (with `coop leave`, by quitting, or because the
+game crashed) and joined the same host again loaded in but was never
+connected. Neither player saw the other, until the host restarted its game.
+Joining again now connects as the first join did. The host needs this
+version.
+
+### Co-op: rejoining loads you where the host is now
+
+A player who left and joined again could load where they had left instead of
+beside the host, if the host had just travelled. The host's game gave out
+the grace it was leaving while it loaded the new one. Now a host that is
+loading says so, and the joiner's `coop join` waits for it to arrive
+(up to two minutes) and loads there. The host needs this version. A joiner on
+an older version loads where its save stands while the host is loading.
+
+### Co-op: a joiner's fast travel loads as fast as the host's
+
+When a player who joined travelled to a grace, their loading screen lasted
+about 20 seconds where the host's took 5. The joiner's game was waiting out
+a 15-second change of light, caused by its clock catching up with the
+host's time during the load. That change now finishes straight away, behind
+the loading screen, and a joiner's load takes about as long as the host's.
+
+### Co-op: you are told when a teammate dies out of sight
+
+When a player dies far from you (80 m or more, or somewhere not loaded in
+your world), you see "`<name>` has died" on screen. A death near you, or in
+the boss fight you are both in, shows nothing: you saw it. Before, a
+death could be missed, and a player who only travelled or loaded could be
+reported as dead. Every player needs this version.
+
+### Co-op: you see where a teammate travels
+
+When a teammate travels to a grace, every player sees "`<name>` travelled to
+`<grace>`" on screen. Every player needs this version: the traveller's game
+is the one that says where it went.
+
+### Co-op: the game's own notices, with your teammates' Steam names
+
+A teammate joining, leaving or dying now shows in the game's own on-screen
+messages, such as "`<name>` has joined your world", instead of the engine's
+small overlay, and a grace a teammate lights shows the game's LOST GRACE
+DISCOVERED banner in your world. Each player is named by their Steam name. A
+teammate on an older version, or whose name has not arrived about 10 seconds
+after joining, shows as "Player NNNN". If the engine does not recognise the
+game's code for these messages, it uses its own overlay as before.
+
+### Co-op: one player's story moments stay theirs
+
+When one player rested or met Melina at a grace, the other player was pulled
+into it: they watched the cutscene wherever they were, could not skip it, and
+were warped to the grace. Now the host's story cutscenes play only for the
+host, and another player's rest only respawns the enemies in your world.
+
+### Co-op: enemies are there wherever the host goes
+
+Once the host walked away from the area where the session started, the
+enemies ahead of it never appeared. The engine was claiming the host's enemies for the wrong slots outside the
+first map tile. Every tile's enemies are now claimed.
+
+### Co-op: a joiner's runes are dropped where it died
+
+A joiner that died dropped nothing: the game treated it as a summoned
+visitor, and visitors lose no runes. Every player's death now leaves its
+runes on the ground in its own world, to be picked up as in a solo game.
+
+### Co-op: a grace one player lights is lit for everyone
+
+A grace the joiner found was not lit, not even in the joiner's own world, and
+a grace the host found never reached the joiner. Now whoever lights a grace
+lights it for every player in the session.
+
+### `ermod-engine dev save show` shows the dropped runes
+
+Each character now has a `blood-stain` line: whether a drop is waiting to be
+picked up, and its map and position.
+
+### Co-op: a joiner keeps all its flasks after dying
+
+A joiner that died came back with about half its flasks (a Wretch's three
+Crimson and one Cerulean became one and none): the game reloaded it with a
+summoned visitor's flask allowance. Each player now keeps its own full
+flasks across a death.
+
+### Co-op: the host no longer crashes when a joiner leaves
+
+When a joiner left the session, the host's game could crash soon after: the
+engine kept looking at the joiner's character after the game had removed it.
+It now lets go of that character as the joiner leaves. The host needs this
+version.
 
 ### New example: your stats on screen
 
@@ -14,6 +195,30 @@ small HUD: level, runes, deaths, HP, the eight attributes and, in co-op, the
 distance to the nearest teammate. A value that just changed shows by how
 much, in green or red, for a few seconds. It only reads and draws, so it is
 safe to run in any co-op session.
+
+### `ermod-engine diagnostics`: your logs, ready for a bug report
+
+`ermod-engine diagnostics` packs the engine's logs into one `.tar.gz` in the
+current directory (or wherever `--out` says) to attach to a GitHub issue.
+Your account name in any path, every Steam ID and every IP address are
+replaced with placeholders first — the same value gets the same number in
+every file, so a co-op session can still be followed. Your own logs are not
+touched, and it works without the game being found.
+
+### `dev rig seed` writes only into a `rig-` profile
+
+Seeding joiners (`dev rig seed`, or `dev rig up` with `seed_joiners = true`)
+copied the host's save over whatever profile the joiner's machine played on,
+even a player's own. It now refuses, before stopping the game or copying
+anything, unless that profile is named `rig-…`. On a machine someone also
+plays on, give the rig its own profile
+(`ermod-engine profile new rig-seed && ermod-engine profile use rig-seed`), or
+set `seed_joiners = false`.
+
+The rig's launch (`dev coop rig`) on a player's profile no longer touches the
+character either: it does not change which character Continue loads, does
+not restamp the save's account, and refuses a `grace` other than `""`. It
+still writes where the player joins (`map=`/`pos=`), as `coop join` does.
 
 ## v0.7.0 (2026-10-06)
 

@@ -474,6 +474,13 @@ Delete the line to go back to full sharpness. Measured on an M4 Mac at
 A value outside 0.5 to 1.0 is ignored and the log says so. On a game build
 other than 2.7.1.0 the game renders at full size and the log says why.
 
+**Render scale or a lower resolution?** Both draw fewer pixels. Lowering the
+resolution in the game's own settings softens everything, menus and text
+included, and is the fastest: on the same Mac, 1280x720 took 13.9 ms where
+2560x1440 at `render_scale = 0.5`, which draws the world at the same size,
+took 18.7 ms. `render_scale` keeps the HUD, menus and text at your screen's
+full sharpness and softens only the world.
+
 ---
 
 ## When something does not work

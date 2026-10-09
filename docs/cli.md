@@ -6,7 +6,7 @@
 
 Every command here is in the release build, and `ermod-engine --help` prints the same text. A command marked "no launch" never starts the game.
 
-**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`trace start`](#ermod-engine-trace-start) [`trace stop`](#ermod-engine-trace-stop) [`trace report`](#ermod-engine-trace-report) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
+**Usage:** [`ermod-engine`](#ermod-engine) [`paths`](#ermod-engine-paths) [`install`](#ermod-engine-install) [`diagnostics`](#ermod-engine-diagnostics) [`coop id`](#ermod-engine-coop-id) [`coop host`](#ermod-engine-coop-host) [`coop join`](#ermod-engine-coop-join) [`coop leave`](#ermod-engine-coop-leave) [`profile`](#ermod-engine-profile) [`profile new|use|delete`](#ermod-engine-profile-newusedelete) [`profile backup`](#ermod-engine-profile-backup) [`profile port`](#ermod-engine-profile-port) [`profile export`](#ermod-engine-profile-export) [`character list`](#ermod-engine-character-list) [`character new`](#ermod-engine-character-new) [`character delete`](#ermod-engine-character-delete) [`completion bash|zsh|fish`](#ermod-engine-completion-bashzshfish) [`settings`](#ermod-engine-settings) [`shot`](#ermod-engine-shot) [`trace start`](#ermod-engine-trace-start) [`trace stop`](#ermod-engine-trace-stop) [`trace report`](#ermod-engine-trace-report) [`uninstall`](#ermod-engine-uninstall) [`check-build`](#ermod-engine-check-build) [`--version`](#ermod-engine---version) [`--help`](#ermod-engine---help)
 
 **Writing a mod:** [`mod verify`](#ermod-engine-mod-verify) [`mod perf`](#ermod-engine-mod-perf) [`mod bake`](#ermod-engine-mod-bake)
 
@@ -25,6 +25,7 @@ Locate the game, stage the runtime, launch. Steam must be running — on macOS t
 - `--regulation none` — clear a staged artifact
 - `--muted` — launch with no sound (the runtime mutes the game's audio session in-process; the prefix and the game's own sound options are left alone)
 - `--ignore-build-guard` — UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened
+- `--debug` — turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting "heap guard" in ermod-runtime.log). Costs the game about 3% more CPU
 - `--prefix <bottle>` — macOS: the Wine bottle holding the game, instead of searching CrossOver's and Whisky's bottle directories
 - `--wine <path>` — macOS: the Wine binary to run it with, instead of searching. Together these two flags cover any Wine setup — Game Porting Toolkit, Homebrew, Heroic — without the engine knowing its layout. WINEPREFIX and WINE in the environment do the same.
 - `--backend <name>` — macOS: auto, crossover, whisky or protium. auto (the default) uses protium when it is installed and has the game, else CrossOver. Naming one searches only that one. Also macos_backend = "&lt;name&gt;" in engine.cfg.
@@ -48,6 +49,16 @@ ermod-engine install <mod.lua | dir/> [--force]
 
 Copy a mod (or every .lua in a directory) into the mods directory.
 
+### `ermod-engine diagnostics`
+
+```text
+ermod-engine diagnostics [--out <file>]
+```
+
+Pack the engine's logs into a .tar.gz to attach to a GitHub issue, with your account name, Steam IDs and IP addresses replaced by placeholders. Your own logs are not changed; no launch.
+
+- `--out <file>` — where to write it (default: the current directory, named after the date and time)
+
 ### `ermod-engine coop id`
 
 ```text
@@ -70,7 +81,7 @@ Launch the game ready to host co-op. Press Continue at the title; once your worl
 ermod-engine coop join <host-id>@<ip>[:port] [<id>@<ip>[:port] ...] [--port N] [--as ID] [<launch flags>]
 ```
 
-Launch the game and join a host. Press Continue at the title; once your world is loaded the command joins. The host must already be hosting: a joiner that comes first gets no session. With three or more players, also list each player who joined before you. For both: &lt;ip&gt; is an IPv4 address and a peer's port defaults to 7777. The machines must reach each other's UDP port directly — a LAN or a VPN; nothing crosses a NAT. Two machines on one Steam account: give one of them `--as` &lt;another Steam ID&gt; (any SteamID64 no one here uses), so the two are different players. Launch flags: `--mods`, `--regulation`, `--muted`, and on macOS `--prefix` and `--wine`. Every machine needs game build 2.7.0.0, and a joiner whose game-changing mods differ from the host's is held until it enables the host's mods in the ermod menu. The command ends when the game does.
+Launch the game and join a host. Press Continue at the title; once your world is loaded the command joins. The host must already be hosting: a joiner that comes first gets no session. With three or more players, also list each player who joined before you. For both: &lt;ip&gt; is an IPv4 address and a peer's port defaults to 7777. The machines must reach each other's UDP port directly — a LAN or a VPN; nothing crosses a NAT. Two machines on one Steam account: give one of them `--as` &lt;another Steam ID&gt; (any SteamID64 no one here uses), so the two are different players. Launch flags: `--mods`, `--regulation`, `--muted`, `--debug`, and on macOS `--prefix` and `--wine`. Every machine needs the same game build, 2.7.0.0 or 2.7.1.0, and a joiner whose game-changing mods differ from the host's is held until it enables the host's mods in the ermod menu. The command ends when the game does.
 
 ### `ermod-engine coop leave`
 

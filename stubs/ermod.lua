@@ -948,8 +948,10 @@ function coop.set_rune_rates(rates) end
 function coop.rune_rates() end
 
 ---The local player and Torrent: whether the player is in a world, how
----the ride stands, and whistling for Torrent or getting off the way the
----player does. Present with the "player" permission.
+---the ride stands, Torrent's health, whistling for Torrent or getting
+---off the way the player does, and mounting, reviving or killing
+---Torrent directly. Present with the "player" permission. Every action
+---works solo only and answers "in_session" in a co-op session.
 ---@class ermod.sdk.player
 local player = {}
 
@@ -982,6 +984,40 @@ function player.whistle() end
 ---@return boolean ok
 ---@return string reason
 function player.dismount() end
+
+---Call Torrent and get on at once, through the game's own horse call:
+---no whistle in the inventory and no key press. Returns as `whistle`,
+---and also "no_steed" (no Torrent is loaded for the player),
+---"wrong_state" (not on foot, or Torrent is dead: revive it first) or
+---"refused" (the game said no, as it does on a grace or in a tight spot).
+---@return boolean ok
+---@return string reason
+function player.mount() end
+
+---Bring a dead Torrent back to life beside the player, at full health,
+---without a flask. It does not mount; call `mount` or `whistle` next.
+---Returns as `mount`; "wrong_state" means Torrent is alive.
+---@return boolean ok
+---@return string reason
+function player.revive() end
+
+---Kill Torrent through the game's death routine, as a fatal blow would.
+---A rider falls off. Returns as `mount`; "wrong_state" means Torrent is
+---already dead.
+---@return boolean ok
+---@return string reason
+function player.kill_steed() end
+
+---Torrent's health, or nil when no Torrent is loaded for the player.
+---Updated every frame.
+---@return integer? hp
+---@return integer? hp_max
+function player.steed_hp() end
+
+---Whether Torrent is dead, or nil when no Torrent is loaded for the
+---player. Updated every frame.
+---@return boolean?
+function player.steed_dead() end
 
 ---@enum ermod.ride
 player.ride = {

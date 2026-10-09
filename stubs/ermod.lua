@@ -948,8 +948,14 @@ function coop.set_rune_rates(rates) end
 function coop.rune_rates() end
 
 ---The local player and Torrent: whether the player is in a world, how
----the ride stands, and whistling for Torrent or getting off the way the
----player does. Present with the "player" permission.
+---the ride stands, Torrent's health, and mounting, dismounting, reviving
+---or killing Torrent. Each action calls the game directly: no key press,
+---and the whistle need not be in a quick slot. Present with the
+---"player" permission. Every action returns true and "ok", or false and
+---why: "no_world", "no_steed" (no Torrent is loaded for the player),
+---"no_whistle" (the player does not hold the Spectral Steed Whistle),
+---"wrong_state", "refused" (the game said no), "in_session" (solo only
+---for now) or "unavailable" (not on this game build).
 ---@class ermod.sdk.player
 local player = {}
 
@@ -966,22 +972,44 @@ function player.ride_state() end
 ---@return boolean
 function player.mounted() end
 
----Use the Spectral Steed Whistle, the way the player does: select it and
----press use. Torrent comes and the player gets on; `ride_state()` shows
----it. The character must hold the whistle and must not stand on a
----grace (the game refuses there, after the press). Returns true and
----"ok" when the press was made, else false and why: "no_world",
----"wrong_state" (already riding), "busy" (a press is being held),
----"in_session" (not yet in a co-op session) or "unavailable" (no game).
+---Call Torrent and get on, through the game's own horse call. The player
+---must hold the whistle, be on foot, and have a living Torrent;
+---`ride_state()` shows the ride begin. "wrong_state" means not on foot
+---or Torrent is dead (revive it first); "refused" is the game's no, as on
+---a grace or in a tight spot.
 ---@return boolean ok
 ---@return string reason
-function player.whistle() end
+function player.mount() end
 
----Get off Torrent, the way the player does. Returns as `whistle`;
----"wrong_state" means the player is not riding.
+---Get off Torrent, through the game's own ride request. "wrong_state"
+---means the player is not riding.
 ---@return boolean ok
 ---@return string reason
 function player.dismount() end
+
+---Bring a dead Torrent back to life beside the player, at full health,
+---without a flask. The player must hold the whistle. It does not mount;
+---call `mount` next. "wrong_state" means Torrent is alive.
+---@return boolean ok
+---@return string reason
+function player.revive() end
+
+---Kill Torrent through the game's death routine, as a fatal blow would.
+---A rider falls off. "wrong_state" means Torrent is already dead.
+---@return boolean ok
+---@return string reason
+function player.kill_steed() end
+
+---Torrent's health, or nil when no Torrent is loaded for the player.
+---Updated every frame.
+---@return integer? hp
+---@return integer? hp_max
+function player.steed_hp() end
+
+---Whether Torrent is dead, or nil when no Torrent is loaded for the
+---player. Updated every frame.
+---@return boolean?
+function player.steed_dead() end
 
 ---@enum ermod.ride
 player.ride = {

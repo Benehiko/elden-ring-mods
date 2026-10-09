@@ -4,7 +4,7 @@
 -- (e.g. .luarc.json: { "workspace.library": ["path/to/stubs"] }).
 
 ---@alias ermod.run_at "launch"|"events"
----@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"|"trace"|"coop"
+---@alias ermod.permission "log"|"hooks"|"params"|"perf"|"store"|"ui"|"screen"|"watch"|"rules"|"bosses"|"trace"|"coop"|"player"
 
 ---The `sdk` table a mod's entry point receives. Only the modules the
 ---manifest's `permissions` list are present; the rest are nil.
@@ -21,6 +21,7 @@
 ---@field bosses ermod.sdk.bosses? # present with the "bosses" permission
 ---@field trace ermod.sdk.trace? # present with the "trace" permission
 ---@field coop ermod.sdk.coop? # present with the "coop" permission
+---@field player ermod.sdk.player? # present with the "player" permission
 ---@field items ermod.sdk.items # every item, spell, skill and class by row id; always present
 
 ---The table a mod script returns.
@@ -416,12 +417,14 @@ local bosses = {}
 ---@field z number
 
 ---@class ermod.boss_state
----@field alive boolean # any body of the encounter alive (a wave fight like Fia's Champions has several)
----@field hp integer # the row's own character (or the first body when it is not loaded)
----@field hp_max integer
----@field pos ermod.vec3 # live position, in the player's frame near it
+---@field loaded boolean # a body of the encounter is in the world now
+---@field alive boolean # loaded, and any body alive (a wave fight like Fia's Champions has several); false when not loaded
+---@field defeated boolean? # the game's defeat record: true, it stays dead at its map's next load; false, it is there. nil outside a world
+---@field hp integer? # the row's own character (or the first body when it is not loaded); nil when not loaded
+---@field hp_max integer? # nil when not loaded
+---@field pos ermod.vec3? # live position, in the player's frame near it; nil when not loaded
 ---@field bodies_alive integer # loaded bodies of the encounter that are alive
----@field bodies ermod.boss_body[] # every loaded body: entity ids row .. row+9
+---@field bodies ermod.boss_body[] # every loaded body: entity ids row .. row+9 (empty when not loaded)
 
 ---@class ermod.boss_body
 ---@field entity integer
@@ -463,9 +466,9 @@ function bosses.kill(id, entity) end
 ---@return integer writes # flag writes queued
 function bosses.reset(id) end
 
----A loaded boss's live state (refreshed every 30 frames), or nil when it is not loaded.
+---The boss's state, always: loaded, alive and defeated; HP and position while loaded (refreshed every 30 frames).
 ---@param id integer # row id or defeat flag
----@return ermod.boss_state?
+---@return ermod.boss_state
 function bosses.state(id) end
 
 ---The player's live position, or nil outside a world.
@@ -536,7 +539,8 @@ function bosses.set_immortal(id, on, entity) end
 ---@return ermod.boss?
 function bosses.find(id) end
 
----Clear one boss's defeat flag. Errors on an id that is no boss.
+---Make the boss unbeaten (its defeat flag, and an evergaol's own flags); it is back when its map next loads.
+---Errors on an id that is no boss.
 ---@param id integer # row id or defeat flag
 ---@return boolean queued # false when no game is attached
 function bosses.revive(id) end
@@ -942,6 +946,55 @@ function coop.set_rune_rates(rates) end
 ---The rates set by `set_rune_rates` (both 1 unless a mod changed them).
 ---@return ermod.coop.rune_rates
 function coop.rune_rates() end
+
+---The local player and Torrent: whether the player is in a world, how
+---the ride stands, and whistling for Torrent or getting off the way the
+---player does. Present with the "player" permission.
+---@class ermod.sdk.player
+local player = {}
+
+---Whether there is a local player in a loaded world.
+---@return boolean
+function player.in_world() end
+
+---How the ride stands: `player.ride.on_foot`, `mounting`, `riding` or
+---`dismounting`. Nil outside a world. Updated every frame.
+---@return ermod.ride?
+function player.ride_state() end
+
+---Whether the player is on Torrent (`ride_state()` is `riding`).
+---@return boolean
+function player.mounted() end
+
+---Use the Spectral Steed Whistle, the way the player does: select it and
+---press use. Torrent comes and the player gets on; `ride_state()` shows
+---it. The character must hold the whistle and must not stand on a
+---grace (the game refuses there, after the press). Returns true and
+---"ok" when the press was made, else false and why: "no_world",
+---"wrong_state" (already riding), "busy" (a press is being held),
+---"in_session" (not yet in a co-op session) or "unavailable" (no game).
+---@return boolean ok
+---@return string reason
+function player.whistle() end
+
+---Get off Torrent, the way the player does. Returns as `whistle`;
+---"wrong_state" means the player is not riding.
+---@return boolean ok
+---@return string reason
+function player.dismount() end
+
+---@enum ermod.ride
+player.ride = {
+  ---Not on Torrent.
+  on_foot = "on_foot",
+  ---Torrent has been called and the player is getting on.
+  mounting = "mounting",
+  ---On Torrent.
+  riding = "riding",
+  ---Getting off Torrent.
+  dismounting = "dismounting",
+}
+
 
 ---Every item, spell, skill and class the game names, by row id. Each
 ---table maps a name to the id of its row in the param file

@@ -1,4 +1,6 @@
-# Connecting for co-op: LAN or VPN
+# Elden Ring co-op over LAN or VPN: ZeroTier and Tailscale
+
+<!-- description: Connect for Elden Ring co-op over LAN or a VPN: ZeroTier, Tailscale and the firewall, step by step, so friends anywhere can join. -->
 
 Co-op runs directly between the players' machines. Each machine listens on
 **UDP port 7777**, and nothing gets through a home router from the internet,

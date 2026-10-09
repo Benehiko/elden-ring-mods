@@ -1,4 +1,6 @@
-# Writing mods in Lua
+# Writing Elden Ring mods in Lua
+
+<!-- description: Write Elden Ring mods in Lua: every SDK module (params, hooks, ui, bosses, coop and more), the sandbox, live reload and the author loop. -->
 
 A mod is one Lua file. The same file runs two ways: `ermod-engine mod bake` executes it
 on the host and writes a patched `regulation.bin` the engine loads with

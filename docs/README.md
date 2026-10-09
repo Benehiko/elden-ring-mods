@@ -2,6 +2,15 @@
 
 Everything here is also on the website, rendered from these same files.
 
+## Start here
+
+| Guide                                                 | What it covers                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------- |
+| [How to mod Elden Ring](mod-elden-ring.md)            | Live Lua mods: install one, write one, switch them in the game      |
+| [Elden Ring on Linux](elden-ring-linux.md)            | Mods and co-op under Proton                                         |
+| [Elden Ring on macOS](elden-ring-macos.md)            | Mods and co-op on Apple Silicon, in CrossOver, Whisky or protium    |
+| [Elden Ring co-op with friends](elden-ring-coop.md)   | Peer-to-peer co-op over LAN or VPN, mods included                   |
+
 ## Playing
 
 | Guide                                                             | What it covers                                                             |

@@ -1,4 +1,6 @@
-# Playing co-op
+# Playing Elden Ring co-op
+
+<!-- description: Play Elden Ring co-op with friends, with mods, step by step: hosting, joining, three or more players, mods in co-op and fixes when a join fails. Linux and macOS. -->
 
 This page shows you how to play Elden Ring with friends, with mods, through
 the engine. You type a few commands in a terminal. Every command appears

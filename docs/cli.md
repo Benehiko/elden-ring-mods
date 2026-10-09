@@ -24,6 +24,7 @@ Locate the game, stage the runtime, launch. Steam must be running — on macOS t
 - `--regulation <file>` — stage an `ermod-engine mod bake` output; the game reads it instead of its own regulation.bin
 - `--regulation none` — clear a staged artifact
 - `--muted` — launch with no sound (the runtime mutes the game's audio session in-process; the prefix and the game's own sound options are left alone)
+- `--no-metal-stats` — macOS: do not read Metal's per-frame GPU time. By default the engine sets MTL_HUD_ENABLED and MTL_HUD_LOG_ENABLED (Metal logs only while its HUD is on, so Apple's HUD shows), reads the lines Metal writes to the game's stderr, and shows GPU time per frame in the ermod menu and in `trace report`
 - `--ignore-build-guard` — UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened
 - `--debug` — turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting "heap guard" in ermod-runtime.log). Costs the game about 3% more CPU
 - `--prefix <bottle>` — macOS: the Wine bottle holding the game, instead of searching CrossOver's and Whisky's bottle directories
@@ -184,10 +185,10 @@ Ask the running game for a frame capture; no launch.
 ### `ermod-engine trace start`
 
 ```text
-ermod-engine trace start [--cpu LEVEL] [--gpu]
+ermod-engine trace start [--cpu LEVEL] [--gpu] [--mac-gpu]
 ```
 
-Start the running game's frame tracer: `--cpu` light|normal|detailed samples the game's threads (normal when nothing is given), `--gpu` times its GPU work (alone, GPU only); no launch.
+Start the running game's frame tracer: `--cpu` light|normal|detailed samples the game's threads (normal when nothing is given), `--gpu` times its GPU work (alone, GPU only); no launch. `--mac-gpu` (macOS) also samples the Mac's GPU utilisation beside the trace and stays until the trace stops; the report then says whether the game is GPU-bound, which `--gpu` cannot under D3DMetal.
 
 ### `ermod-engine trace stop`
 

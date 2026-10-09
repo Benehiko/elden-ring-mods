@@ -2,10 +2,11 @@
 --
 -- A small window shows how the ride stands (`sdk.player.ride_state()`) and
 -- Torrent's health (`sdk.player.steed_hp()`), with a button per action:
--- Mount, Dismount, Revive and Kill. Each calls the game directly; no key is
--- pressed. The player must hold the Spectral Steed Whistle to mount or
--- revive (a character made with `character new ... whistle=on` does), but it
--- need not sit in a quick slot.
+-- Mount, Dismount, Revive and Kill. Mount and Dismount use the whistle the
+-- way the player does, inside the game; nothing reaches the desktop. The
+-- player must hold the Spectral Steed Whistle to mount or revive (a character
+-- made with `character new ... whistle=on` does), but it need not sit in a
+-- quick slot.
 --
 -- When Torrent dies, the mod revives it three seconds later and puts the
 -- player back on. Every change of the ride state is logged, so

@@ -478,8 +478,8 @@ other than 2.7.1.0 the game renders at full size and the log says why.
 resolution in the game's own settings softens everything, menus and text
 included, and is the fastest: on the same Mac, 1280x720 took 13.9 ms where
 2560x1440 at `render_scale = 0.5`, which draws the world at the same size,
-took 18.7 ms. `render_scale` keeps the HUD, menus and text at your screen's
-full sharpness and softens only the world.
+took 18.7 ms. `render_scale` keeps the HUD at your screen's full sharpness
+and softens only the world.
 
 ---
 

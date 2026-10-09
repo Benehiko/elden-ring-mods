@@ -1,4 +1,4 @@
-# elden-ring-mods
+# Elden Ring mods and co-op on Linux and macOS
 
 **Mod Elden Ring in Lua, live in the running game, and play it in co-op with
 your friends, over LAN or a VPN.** On Linux and macOS.
@@ -29,6 +29,21 @@ your friends, over LAN or a VPN.** On Linux and macOS.
   reach FromSoftware's servers ([the rules](docs/install.md#before-you-start)).
 
 🌐 **Website: <https://benehiko.github.io/elden-ring-mods/>**
+
+## I want to…
+
+- **…mod Elden Ring.** Drop a Lua file in a folder while the game runs and
+  switch it on from the in-game menu; no ModEngine, no toolchain.
+  [How to mod Elden Ring](docs/mod-elden-ring.md).
+- **…play Elden Ring on Linux.** A native launcher finds your Steam game and
+  its Proton and starts it with mods and co-op.
+  [Elden Ring on Linux](docs/elden-ring-linux.md).
+- **…play Elden Ring on macOS.** On Apple Silicon, inside CrossOver, Whisky,
+  protium or any Wine; the launcher finds the bottle for you.
+  [Elden Ring on macOS](docs/elden-ring-macos.md).
+- **…play Elden Ring co-op with friends.** Peer to peer over LAN, ZeroTier or
+  Tailscale, with the host's mods offered to everyone who joins.
+  [Elden Ring co-op](docs/elden-ring-coop.md).
 
 ---
 

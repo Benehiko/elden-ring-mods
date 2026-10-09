@@ -19,7 +19,13 @@ PAGEFIND ?= pagefind
 
 # The website, built into $(SITE) and deployed by .github/workflows/pages.yml.
 SITE ?= _site
+SITE_URL := https://benehiko.github.io/elden-ring-mods
 REPO_BLOB := https://github.com/Benehiko/elden-ring-mods/blob/main
+
+# A guide's <meta name="description">, for search results and link previews,
+# comes from a `<!-- description: ... -->` line under its title (invisible on
+# GitHub). A guide without one gets this.
+DEFAULT_DESCRIPTION := Mod Elden Ring and play it in co-op with friends on Linux and macOS: live Lua mods, private LAN or VPN co-op, your game install and saves never touched.
 
 # Every guide in docs/ becomes a page. cli.md is left out: the engine
 # generates cli.html for the website itself. docs/README.md is the guides
@@ -40,7 +46,10 @@ GUIDES := $(filter-out docs/cli.md docs/README.md,$(wildcard docs/*.md))
 #      docs/ to GitHub, and the GitHub guide links in the generated cli.html to
 #      the pages here. cli.html also gets the theme script, which the engine's
 #      generator does not emit yet.
-#   4. pagefind indexes the result into $(SITE)/pagefind for search.html.
+#   4. cli.html gets a canonical link, and sitemap.xml lists
+#      every page but search.html, for search engines. (A robots.txt would be
+#      ignored: it only counts at the root of benehiko.github.io.)
+#   5. pagefind indexes the result into $(SITE)/pagefind for search.html.
 #
 # pandoc and pagefind come from the flake, pinned by flake.lock.
 site:
@@ -51,10 +60,13 @@ site:
 		[ "$$name" = README ] && name=guides; \
 		title=$$(sed -n '1s/^# //p' "$$md"); \
 		[ -n "$$title" ] || { echo "site: $$md must start with a '# Title' line" >&2; exit 1; }; \
-		sed 1d "$$md" | $(PANDOC) --from gfm --to html5 \
+		desc=$$(sed -n 's/^<!-- description: \(.*\) -->$$/\1/p' "$$md" | head -n 1); \
+		[ -n "$$desc" ] || desc='$(DEFAULT_DESCRIPTION)'; \
+		sed -e 1d -e '/^<!-- description: /d' "$$md" | $(PANDOC) --from gfm --to html5 \
 			--template docs/guide.template.html \
 			--toc --toc-depth=2 --wrap=none \
 			--metadata pagetitle="$$title" --metadata source="$$md" \
+			--metadata description="$$desc" --metadata url="$(SITE_URL)/$$name.html" \
 			--output "$(SITE)/$$name.html" || exit 1; \
 	done
 	@for f in $(SITE)/*.html; do \
@@ -68,6 +80,18 @@ site:
 	@grep -q 'src="theme.js"' $(SITE)/cli.html || { \
 		sed 's#</head>#<script src="theme.js"></script></head>#' $(SITE)/cli.html > $(SITE)/cli.html.tmp && \
 		mv $(SITE)/cli.html.tmp $(SITE)/cli.html; }
+	@grep -q 'rel="canonical"' $(SITE)/cli.html || { \
+		sed 's#</head>#<link rel="canonical" href="$(SITE_URL)/cli.html"></head>#' \
+			$(SITE)/cli.html > $(SITE)/cli.html.tmp && mv $(SITE)/cli.html.tmp $(SITE)/cli.html; }
+	@{ echo '<?xml version="1.0" encoding="UTF-8"?>'; \
+		echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'; \
+		echo '  <url><loc>$(SITE_URL)/</loc></url>'; \
+		for f in $(SITE)/*.html; do \
+			name=$$(basename "$$f"); \
+			case "$$name" in index.html|search.html) continue;; esac; \
+			echo "  <url><loc>$(SITE_URL)/$$name</loc></url>"; \
+		done; \
+		echo '</urlset>'; } > $(SITE)/sitemap.xml
 	@$(PAGEFIND) --site $(SITE) --output-subdir pagefind --quiet
 	@echo "site: built $(SITE)/ ($$(ls $(SITE)/*.html | wc -l | tr -d ' ') pages)"
 

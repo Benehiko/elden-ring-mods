@@ -1,4 +1,6 @@
-# Installing the engine
+# Installing Elden Ring mods on Linux and macOS
+
+<!-- description: Install ermod-engine to play Elden Ring with mods on Linux (Proton) or macOS (CrossOver, Whisky, protium): verifying the download, where mods go, profiles, settings and troubleshooting. -->
 
 This page is for playing with mods, not for building anything. You need a
 Steam copy of Elden Ring and the engine archive for your machine:

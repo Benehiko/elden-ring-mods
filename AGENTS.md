@@ -47,7 +47,10 @@ closed repository `elden-ring-mods-engine`.
   JavaScript and no Python: tools come from nixpkgs, pinned by `flake.lock`.
 - `make site` builds the website into `_site/`; `make serve` builds it and
   serves it on <http://localhost:1414> (search does not work from `file://`).
-  A guide must start with a `# Title` line: it becomes the page title.
+  A guide must start with a `# Title` line: it becomes the page title. A
+  `<!-- description: ... -->` line under it becomes the page's meta
+  description for search results. Lead with what people search for: search
+  engines show about the first 155 characters. Avoid quotes in it.
   `.github/workflows/pages.yml` deploys `main` to GitHub Pages.
 - CI: every example parses, Markdown is formatted, the website builds, and
   no Python or `tools/` exists.

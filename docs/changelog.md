@@ -16,7 +16,7 @@ The game can draw the 3D scene at a fraction of the screen size and scale it
 up, but on PC it never does. Set `render_scale` in `engine.cfg` to a number
 from 0.5 to 1.0 and the engine turns it on:
 
-```
+```text
 render_scale = 0.6
 ```
 

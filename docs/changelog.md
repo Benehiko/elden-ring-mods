@@ -5,10 +5,56 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
-## v0.8.0 (2026-10-08)
+## v0.8.0 (2026-10-10)
 
 Game build **2.7.1.0**, as in v0.7.0. Every player in a co-op session needs the
 same game build and this engine version.
+
+### Faster frames: render the world smaller
+
+The game can draw the 3D scene at a fraction of the screen size and scale it
+up, but on PC it never does. Set `render_scale` in `engine.cfg` to a number
+from 0.5 to 1.0 and the engine turns it on:
+
+```
+render_scale = 0.6
+```
+
+The picture is softer the lower you go. On an M4 Mac at
+2560x1440 with every setting on LOW, 0.6 cut the GPU's work per frame from
+28.8 ms to 20.6 ms, and 0.5 to 18.7 ms. It works on game build 2.7.1.0; on
+another build the log says so and the game renders at full size.
+
+### Mods: read the game's load balancer and graphics presets
+
+`sdk.params.file` now names `GraphicsConfig`, `LoadBalancerParam` and
+`LoadBalancerNewDrawDistScaleParam_win64`: the values behind each quality
+preset, and the console-style load balancer's effect cuts, dynamic resolution
+and draw-distance scaling. On PC the game does not act on the load balancer
+tables, so changing them does not change the frame rate.
+
+### macOS: see how hard the GPU works
+
+Under D3DMetal the frame trace could not see the GPU, so a GPU-bound frame
+looked like the game's CPU work. On macOS the engine now reads Metal's own
+per-frame figures.
+
+- The ermod menu shows a line under the frame rate:
+  `metal: GPU <ms> ms of a <ms> ms frame (<share>%), GPU busy <util>%`.
+- `ermod-engine trace start --mac-gpu` also samples the GPU driver beside the
+  trace, and `trace report` adds a `mac gpu` section: utilisation, GPU memory,
+  Metal's GPU time per frame, and whether the game is GPU-bound.
+- Metal writes these figures only while its HUD is on, so Apple's Metal HUD
+  now shows in the corner of the game on every macOS launch. Launch with
+  `--no-metal-stats` to turn it and the menu line off.
+
+### Co-op: no invisible wall at cave entrances
+
+Walking from the open world into a cave or catacomb during co-op could stop
+the host or a joiner at the entrance, as if a wall stood there. It happened
+whenever that player had loaded in, rested or travelled somewhere outside the
+dungeon and then walked to it. The dungeon is now open to everyone in the
+session, however they got there.
 
 ### `--debug`: help track down a co-op crash
 
@@ -25,6 +71,58 @@ cause: send them with a bug report.
 
 It costs the game about 3% more CPU, so it is off unless you ask for it.
 
+### Co-op: Torrent comes back after you are knocked off it
+
+In co-op, a ride that ended without a dismount (knocked off Torrent, for
+example) left Torrent standing there. The whistle then did nothing for a
+while, so calling Torrent again could take a whistle or two. Torrent is now
+dismissed when such a ride ends, as it is after a dismount, so the next
+whistle works.
+
+### Co-op: no crash when mounting Torrent
+
+The game could crash for a player mounting Torrent in co-op, after an
+earlier ride in the same session. The engine was reading the earlier ride's
+Torrent, which the game had already removed.
+
+### Co-op: reviving Torrent with a flask works
+
+When Torrent died under you in co-op, a Flask of Crimson Tears often could
+not bring it back:
+
+- A joiner was never offered the revive. The host's game sent the joiner's
+  Torrent's health back from its own copy, so the joiner's game thought the
+  dead Torrent was alive: no flask prompt, and the whistle could not call it.
+  Each player's game now keeps its own Torrent's health.
+- A revive that did work mounted the rider and then threw them straight off.
+  The ride now holds.
+- Reviving within a few seconds of the death left Torrent stuck, and every
+  whistle after it did nothing. An early revive now works like a late one.
+
+### Co-op: Torrent stays under its rider for everyone
+
+A teammate's Torrent could be missing from your world, with the teammate
+riding nothing, or put far away from them. It happened when the host had
+been on Torrent since it loaded, and in parts of the open world where the
+game's large and small map tiles overlap. A joiner could also stop seeing the host's Torrent after
+it had died. Every player now sees each Torrent under its rider.
+
+### Characters: `horse=off` loads a character on foot
+
+A character saved while riding loads on Torrent. `dev save set … horse=off`
+puts Torrent away in the save, so the character loads on foot; Torrent's
+health is kept. A joiner that loaded into a session on horseback could end up
+stuck in the ground or dead, so the rig (`dev rig`, `dev coop rig`) now sets
+`horse=off` for every joiner, on a player's profile too. `coop join` does not
+do this yet: a joiner should get off Torrent before quitting the game.
+
+### Rig: `--debug` on every machine, and killing Torrent on purpose
+
+`dev rig up --debug` and `dev rig cycle` launch every machine with `--debug`,
+so the heap guard runs everywhere (`dev rig cycle --no-debug` leaves it off).
+`dev state horse_hp=0` kills your Torrent the way the game does, to test a
+revive; `0` is the only value it takes.
+
 ### Overlay: Ctrl+Tab between windows, and mod buttons that press keys work
 
 With the engine menu open (backtick) or the overlay holding the input
@@ -32,8 +130,7 @@ With the engine menu open (backtick) or the overlay holding the input
 menu used to take the keyboard straight back, and it stayed drawn on top,
 covering a mod window placed under it. Clicking a window works as before.
 
-A mod button that makes the game press a key, such as `sdk.player`'s
-whistle, now works while the overlay holds the input. The overlay still
+A mod button that makes the game press a key now works while the overlay holds the input. The overlay still
 keeps your own keys and mouse from the game, but no longer swallows the
 engine's own press, so the button no longer reports "pressed" with nothing
 happening.
@@ -43,30 +140,60 @@ active one, like your own keys.
 
 ### Mods: `sdk.player` — Torrent from a mod
 
-A mod with the new `player` permission can see how the ride stands and call
-Torrent itself:
+A mod with the new `player` permission can see how the ride stands, and
+mount, dismount, revive and kill Torrent, solo only:
 
 - `sdk.player.ride_state()`: `on_foot`, `mounting`, `riding` or
-  `dismounting` (nil outside a world); `sdk.player.mounted()`;
-  `sdk.player.in_world()`.
-- `sdk.player.whistle()` and `sdk.player.dismount()` do what the player
-  does: select the Spectral Steed Whistle and press use. Each returns true,
-  or false and a reason (`"no_world"`, `"wrong_state"`, `"busy"`, …).
+  `dismounting`; `sdk.player.mounted()`; `sdk.player.in_world()`, which is
+  false while a map loads, a grace warp included.
+- `sdk.player.mount()` calls Torrent and gets on.
+- `sdk.player.dismount()` gets off.
+- `sdk.player.revive()` brings a dead Torrent back beside the player, without
+  a flask; it does not mount.
+- `sdk.player.kill_steed()` kills Torrent; a rider falls off.
+- `sdk.player.steed_hp()` and `sdk.player.steed_dead()` read Torrent's
+  health, or nil when no Torrent is loaded.
 
-The character needs the whistle, and can't stand on a grace (the game
-refuses to call Torrent there). In a co-op session both calls return false,
-`"in_session"` for now: the engine's own button press does not reach the
-game in a session yet. Solo they work. `examples/whistle.lua` puts the ride
-state and Whistle and Dismount buttons in a window.
+`ride_state()`, `steed_hp()` and `steed_dead()` read nil outside a world and
+while a map loads.
 
-### Characters: `whistle=on` gives a made character Torrent's whistle
+Mounting and dismounting use the whistle as the player does, inside the
+game: the engine selects it, presses use on the game's own input, and puts
+the selected item back. Nothing reaches the desktop, and the Spectral Steed
+Whistle need not sit in a quick slot, but the player must hold it to mount
+or revive.
+
+Each call returns true, or false and a reason: `no_world`, `no_steed`,
+`no_whistle`, `wrong_state` (Torrent already dead or alive, or the wrong
+ride state), `refused` (the game said no, as on a grace), `busy` (a mount or
+dismount is still being pressed), `in_session` (in a co-op session, for now)
+or `unavailable`. `examples/torrent.lua` puts the ride state and a button for
+each call in a window, and revives and remounts a fallen Torrent.
+
+### Characters: a made character can call Torrent
 
 A character made with `character new` has never met Melina, so it has no
 Spectral Steed Whistle and can't call Torrent: the use-item key uses a flask
 instead. Add `whistle=on` (to `character new` or `dev save set`) and the
-character holds the whistle in its first free quick item slot. It is refused
-if the character already has one or has no free quick item slot. Only the
-item is given; nothing of the story that comes with it in the game.
+character holds the whistle in its first free quick item slot, selected if
+no quick item was, so the use-item key calls Torrent. It is refused if the
+character already has one or has no free quick item slot. Only the item is
+given; nothing of the story that comes with it in the game.
+
+A made character also loaded with the game's hints on screen and the game
+paused, so nothing it was told to do happened until someone closed them.
+`character new` now marks those hints as already read, as a played character
+has them.
+
+`dev save set tutorial=<id>` marks any hint read, and `dev save show
+--flags` and `--inventory` print a slot's event flags, items, quick items
+and the hints it has read, to compare two saves.
+
+### Settings window: saving the Engine tab keeps your other settings
+
+Saving the Engine tab used to write only the settings it shows, which reset
+`coop_join_approval` to `auto` and turned the frame trace off. It now keeps
+every setting in `engine.cfg`.
 
 ### Profiles: a new profile is ready for a new character
 

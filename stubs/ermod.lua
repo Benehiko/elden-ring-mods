@@ -114,6 +114,12 @@ params.file = {
   NpcParam = "NpcParam",
   ---`SP_EFFECT_PARAM_ST` rows, 912 bytes each.
   SpEffectParam = "SpEffectParam",
+  ---`CS_GRAPHICS_CONFIG_PARAM_ST` rows, 16 bytes each.
+  GraphicsConfig = "GraphicsConfig",
+  ---`LOAD_BALANCER_PARAM_ST` rows, 80 bytes each.
+  LoadBalancerParam = "LoadBalancerParam",
+  ---`LOAD_BALANCER_NEW_DRAW_DIST_SCALE_PARAM_ST` rows, 48 bytes each.
+  LoadBalancerNewDrawDistScaleParam_win64 = "LoadBalancerNewDrawDistScaleParam_win64",
 }
 
 ---One row of a param file by id, or nil if there is no such row.

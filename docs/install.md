@@ -420,7 +420,7 @@ frame_trace_cpu = "off"
 | `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
 | `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                             |
 | `frame_trace_gpu`        | `false`    | Starts a frame trace at launch that times the game's GPU work. See [Finding stutters](performance.md).                                                                                  |
-| `render_scale`           | `1.0`      | Draws the world at this fraction of the screen size, from `0.5` to `1.0`, and scales it up. Lower is faster and softer. Game build 2.7.1.0 only. See [Render scale](#render-scale).   |
+| `render_scale`           | `1.0`      | Draws the world at this fraction of the screen size, from `0.5` to `1.0`, and scales it up. Lower is faster and softer. Game build 2.7.1.0 only. See [Render scale](#render-scale).     |
 
 One setting per line, as `name = value`. Setting names are lowercase,
 exactly as above. A key or a level is a quoted name; a switch is `true` or
@@ -465,21 +465,26 @@ Delete the line to go back to full sharpness. Measured on an M4 Mac at
 2560x1440 with every setting on LOW, the graphics card's work per frame:
 
 | `render_scale` | Per frame |
-| --- | --- |
-| `1.0` | 28.8 ms |
-| `0.7` | 21.9 ms |
-| `0.6` | 20.6 ms |
-| `0.5` | 18.7 ms |
+| -------------- | --------- |
+| `1.0`          | 28.8 ms   |
+| `0.7`          | 21.9 ms   |
+| `0.6`          | 20.6 ms   |
+| `0.5`          | 18.7 ms   |
 
 A value outside 0.5 to 1.0 is ignored and the log says so. On a game build
 other than 2.7.1.0 the game renders at full size and the log says why.
 
-**Render scale or a lower resolution?** Both draw fewer pixels. Lowering the
-resolution in the game's own settings softens everything, menus and text
-included, and is the fastest: on the same Mac, 1280x720 took 13.9 ms where
-2560x1440 at `render_scale = 0.5`, which draws the world at the same size,
-took 18.7 ms. `render_scale` keeps the HUD at your screen's full sharpness
-and softens only the world.
+**Render scale or a lower resolution?** Both draw fewer pixels. These two
+draw the world at the same size, 1280x720, on the same Mac in the same spot:
+
+| Setting                         | Per frame | Frame rate              | Looks                 |
+| ------------------------------- | --------- | ----------------------- | --------------------- |
+| 2560x1440, `render_scale = 0.5` | 18.7 ms   | about 53 fps            | world soft, HUD sharp |
+| 1280x720 in the game's settings | 13.9 ms   | 60 fps (the game's cap) | everything soft       |
+
+A lower resolution in the game's own settings is faster and needs no engine
+setting. `render_scale` costs a few milliseconds more and keeps the HUD at
+your screen's full sharpness.
 
 ---
 

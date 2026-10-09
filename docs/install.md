@@ -420,10 +420,11 @@ frame_trace_cpu = "off"
 | `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
 | `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                             |
 | `frame_trace_gpu`        | `false`    | Starts a frame trace at launch that times the game's GPU work. See [Finding stutters](performance.md).                                                                                  |
+| `render_scale`           | `1.0`      | Draws the world at this fraction of the screen size, from `0.5` to `1.0`, and scales it up. Lower is faster and softer. Game build 2.7.1.0 only. See [Render scale](#render-scale).   |
 
 One setting per line, as `name = value`. Setting names are lowercase,
 exactly as above. A key or a level is a quoted name; a switch is `true` or
-`false`.
+`false`; a number such as `render_scale` is written bare, `0.6`.
 Lines starting with `#` are comments.
 
 A key name is one of:
@@ -440,6 +441,38 @@ Key names ignore case: `F10`, `f10`, `Insert` and `INSERT` all work. A key
 name the engine does not know leaves that key at its default, and the log
 says so. A line the engine cannot read at all stops the reading: that line
 and every setting after it keep their defaults.
+
+### Render scale
+
+If the game runs slowly because the graphics card cannot keep up, as on
+most Macs, `render_scale` trades sharpness for speed. The game draws the
+world smaller and scales it up to fill the screen; this is the game's own
+dynamic-resolution feature, which it otherwise never turns on.
+
+1. Close the game.
+2. Add a line to `~/.local/share/ermod/engine.cfg`, creating the file if it
+   is not there:
+
+   ```text
+   render_scale = 0.7
+   ```
+
+3. Launch as usual. Once your character is in the world,
+   `ermod-runtime.log` says `render scale — 1 -> 0.7`.
+
+Try `0.7` first and go lower if you need more speed; `0.5` is the lowest.
+Delete the line to go back to full sharpness. Measured on an M4 Mac at
+2560x1440 with every setting on LOW, the graphics card's work per frame:
+
+| `render_scale` | Per frame |
+| --- | --- |
+| `1.0` | 28.8 ms |
+| `0.7` | 21.9 ms |
+| `0.6` | 20.6 ms |
+| `0.5` | 18.7 ms |
+
+A value outside 0.5 to 1.0 is ignored and the log says so. On a game build
+other than 2.7.1.0 the game renders at full size and the log says why.
 
 ---
 

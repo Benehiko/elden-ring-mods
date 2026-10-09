@@ -90,6 +90,8 @@
         <dd>clear a staged artifact</dd>
         <dt><code>--muted</code></dt>
         <dd>launch with no sound (the runtime mutes the game's audio session in-process; the prefix and the game's own sound options are left alone)</dd>
+        <dt><code>--no-metal-stats</code></dt>
+        <dd>macOS: do not read Metal's per-frame GPU time. By default the engine sets MTL_HUD_ENABLED and MTL_HUD_LOG_ENABLED (Metal logs only while its HUD is on, so Apple's HUD shows), reads the lines Metal writes to the game's stderr, and shows GPU time per frame in the ermod menu and in <code>trace report</code></dd>
         <dt><code>--ignore-build-guard</code></dt>
         <dd>UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened</dd>
         <dt><code>--debug</code></dt>
@@ -225,8 +227,8 @@
 
     <article class="cmd" id="trace-start">
       <h3><code>ermod-engine trace start</code></h3>
-      <pre><code>ermod-engine trace start [--cpu LEVEL] [--gpu]</code></pre>
-      <p>Start the running game's frame tracer: <code>--cpu</code> light|normal|detailed samples the game's threads (normal when nothing is given), <code>--gpu</code> times its GPU work (alone, GPU only); no launch.</p>
+      <pre><code>ermod-engine trace start [--cpu LEVEL] [--gpu] [--mac-gpu]</code></pre>
+      <p>Start the running game's frame tracer: <code>--cpu</code> light|normal|detailed samples the game's threads (normal when nothing is given), <code>--gpu</code> times its GPU work (alone, GPU only); no launch. <code>--mac-gpu</code> (macOS) also samples the Mac's GPU utilisation beside the trace and stays until the trace stops; the report then says whether the game is GPU-bound, which <code>--gpu</code> cannot under D3DMetal.</p>
     </article>
 
     <article class="cmd" id="trace-stop">

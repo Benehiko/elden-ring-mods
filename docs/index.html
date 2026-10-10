@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Elden Ring mods and co-op on Linux and macOS · ermod-engine</title>
-<meta name="description" content="Mod Elden Ring and play co-op with friends on Linux and macOS (Apple Silicon). Live Lua mods you toggle in-game, private co-op over LAN or VPN with mods synced from the host, and your game install and saves are never touched.">
+<title>Cross-platform Elden Ring mods and co-op · ermod-engine</title>
+<meta name="description" content="Mod Elden Ring on Linux, macOS (Apple Silicon) and, experimentally, Windows, and play co-op with friends on Linux and macOS. Live Lua mods you toggle in-game, private co-op over LAN or VPN with mods synced from the host, and your game install and saves are never touched.">
 <link rel="canonical" href="https://benehiko.github.io/elden-ring-mods/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ermod-engine: Elden Ring mods on Linux and macOS">
-<meta property="og:title" content="Elden Ring mods and co-op on Linux and macOS">
-<meta property="og:description" content="Live Lua mods you toggle in-game and private co-op over LAN or VPN, on Linux and macOS. Your game install and saves are never touched.">
+<meta property="og:site_name" content="ermod-engine: cross-platform Elden Ring mods">
+<meta property="og:title" content="Cross-platform Elden Ring mods and co-op">
+<meta property="og:description" content="Live Lua mods you toggle in-game on Linux, macOS and Windows (experimental), and private co-op over LAN or VPN on Linux and macOS. Your game install and saves are never touched.">
 <meta property="og:url" content="https://benehiko.github.io/elden-ring-mods/">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">
@@ -17,9 +17,9 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "ermod-engine",
-  "description": "Mod Elden Ring and play co-op with friends on Linux and macOS: live Lua mods and private peer-to-peer co-op over LAN or VPN.",
+  "description": "Cross-platform Elden Ring mods: live Lua mods on Linux, macOS and Windows (experimental), and private peer-to-peer co-op over LAN or VPN on Linux and macOS.",
   "applicationCategory": "GameApplication",
-  "operatingSystem": "Linux, macOS",
+  "operatingSystem": "Linux, macOS, Windows",
   "url": "https://benehiko.github.io/elden-ring-mods/",
   "downloadUrl": "https://github.com/Benehiko/elden-ring-mods/releases/latest",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -55,7 +55,7 @@
 <main>
 
   <section class="hero">
-    <h1>Elden Ring, modded,<br>on Linux and macOS.</h1>
+    <h1>Elden Ring, modded,<br>on Linux, macOS and Windows.</h1>
 
     <div class="command" role="figure" aria-label="The command that launches the modded game">
       <span class="prompt" aria-hidden="true">$</span><code>./ermod-engine --mods ~/mods</code>
@@ -83,6 +83,7 @@
       <li><a href="mod-elden-ring.html">I want to mod Elden Ring</a>: live Lua mods, switched on and off in the game.</li>
       <li><a href="elden-ring-linux.html">I want to play Elden Ring on Linux</a>, with mods and co-op, under Proton.</li>
       <li><a href="elden-ring-macos.html">I want to play Elden Ring on macOS</a>, on Apple Silicon with CrossOver, Whisky or protium.</li>
+      <li><a href="install.html#windows-experimental">I want to play Elden Ring with mods on Windows</a>, experimentally, with no Wine.</li>
       <li><a href="elden-ring-coop.html">I want to play Elden Ring co-op</a> with friends, over LAN or a VPN, mods included.</li>
     </ul>
   </section>
@@ -123,7 +124,8 @@
       <dt>Mods are live Lua scripts.</dt>
       <dd>
         Switch any mod on or off from the in-game menu, no restart. Edit a
-        file while you play and it reloads within a second. Each mod runs in
+        file while you play and it reloads within a second (on Windows, once
+        you run <code>ermod-engine mod verify</code>). Each mod runs in
         its own sandbox with only the modules it declares; one that
         misbehaves is switched off and the others carry on.
       </dd>
@@ -137,12 +139,13 @@
         differ. <a href="coop.html#mods-in-co-op">Mods in co-op</a>.
       </dd>
 
-      <dt>Native on Linux and macOS.</dt>
+      <dt>Native on Linux, macOS and Windows.</dt>
       <dd>
         A native launcher for Linux x86-64 and Apple Silicon. It finds your
-        game and drives Proton, CrossOver, Whisky or protium for you. No
-        Windows machine, no setup.
-        An experimental launcher for Windows runs the game without Wine.
+        game and drives Proton, CrossOver, Whisky or protium for you, with no
+        setup. On Windows, an experimental launcher runs the game and your
+        mods without Wine; co-op, profiles and the settings window are Linux
+        and macOS only for now.
       </dd>
 
       <dt>Small and quick.</dt>

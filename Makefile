@@ -25,7 +25,7 @@ REPO_BLOB := https://github.com/Benehiko/elden-ring-mods/blob/main
 # A guide's <meta name="description">, for search results and link previews,
 # comes from a `<!-- description: ... -->` line under its title (invisible on
 # GitHub). A guide without one gets this.
-DEFAULT_DESCRIPTION := Mod Elden Ring and play it in co-op with friends on Linux and macOS: live Lua mods, private LAN or VPN co-op, your game install and saves never touched.
+DEFAULT_DESCRIPTION := Cross-platform Elden Ring mods: live Lua mods on Linux, macOS and Windows (experimental), private LAN or VPN co-op on Linux and macOS, your game install and saves never touched.
 
 # Every guide in docs/ becomes a page. cli.md is left out: the engine
 # generates cli.html for the website itself. docs/README.md is the guides

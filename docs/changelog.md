@@ -10,6 +10,23 @@ engine does anything at all.
 Game build **2.7.1.0**, as in v0.7.0. Every player in a co-op session needs the
 same game build and this engine version.
 
+### Windows: a native launcher is on the way
+
+The engine now has a native Windows launcher, `ermod-engine.exe`, that runs
+the game without Wine. It finds Elden Ring through Steam, refuses while Easy
+Anti-Cheat runs, checks each mod in `%LOCALAPPDATA%\ermod\mods`, and starts
+the game with the runtime and the mods that passed, keeping its logs,
+profiles and mod records in `%LOCALAPPDATA%\ermod`. Profiles, co-op and the
+settings window are not there yet.
+
+It is not in this release's downloads. It has run the game, with mods, only
+inside a Proton prefix, not yet on a Windows PC, and it ships once it has.
+Its check of each mod is also less sealed off than on Linux and macOS: it
+cannot start programs or write to your files, but can still read files and
+reach the network. Until then, every archive still carries
+`ermod-runtime.dll` and `ermod-launcher.exe` for running under Wine or
+Proton.
+
 ### Faster frames: render the world smaller
 
 The game can draw the 3D scene at a fraction of the screen size and scale it

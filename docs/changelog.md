@@ -10,22 +10,29 @@ engine does anything at all.
 Game build **2.7.1.0**, as in v0.7.0. Every player in a co-op session needs the
 same game build and this engine version.
 
-### Windows: a native launcher is on the way
+### Windows: an experimental native launcher
 
-The engine now has a native Windows launcher, `ermod-engine.exe`, that runs
-the game without Wine. It finds Elden Ring through Steam, refuses while Easy
-Anti-Cheat runs, checks each mod in `%LOCALAPPDATA%\ermod\mods`, and starts
-the game with the runtime and the mods that passed, keeping its logs,
-profiles and mod records in `%LOCALAPPDATA%\ermod`. Profiles, co-op and the
-settings window are not there yet.
+A new download, `ermod-engine-<version>-windows-x86_64.zip`, runs the game on
+Windows without Wine. Its `ermod-engine.exe` finds Elden Ring through Steam,
+refuses while Easy Anti-Cheat runs, checks each mod in
+`%LOCALAPPDATA%\ermod\mods`, and starts the game with the runtime and the
+mods that passed, keeping its logs, profiles and mod records in
+`%LOCALAPPDATA%\ermod`.
 
-It is not in this release's downloads. It has run the game, with mods, only
-inside a Proton prefix, not yet on a Windows PC, and it ships once it has.
-Its check of each mod is also less sealed off than on Linux and macOS: it
-cannot start programs or write to your files, but can still read files and
-reach the network. Until then, every archive still carries
-`ermod-runtime.dll` and `ermod-launcher.exe` for running under Wine or
-Proton.
+```text
+ermod-engine            launch the game with the runtime and your mods
+ermod-engine --dry-run  find the game and say what a launch would do
+ermod-engine mod verify check the mods without launching
+```
+
+It is **experimental**. It has run the game, with mods, only inside a Proton
+prefix, not yet on a Windows PC. Profiles, co-op and the settings window are
+Linux and macOS only for now, and its profile starts empty, with no copy of
+your characters. A mod added or edited while the game runs waits until you
+run `mod verify`. Its check of each mod is less sealed off than on Linux and
+macOS: it cannot start programs or write to your files, but can still read
+files and reach the network. `ermod-engine.exe` is not code-signed, so
+Windows SmartScreen warns the first time you run it.
 
 ### Faster frames: render the world smaller
 

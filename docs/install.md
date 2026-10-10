@@ -1,6 +1,6 @@
 # Installing Elden Ring mods on Linux and macOS
 
-<!-- description: Install ermod-engine to play Elden Ring with mods on Linux (Proton) or macOS (CrossOver, Whisky, protium): verifying the download, where mods go, profiles, settings and troubleshooting. -->
+<!-- description: Install ermod-engine to play Elden Ring with mods on Linux (Proton), macOS (CrossOver, Whisky, protium) or, experimentally, Windows: verifying the download, where mods go, profiles, settings and troubleshooting. -->
 
 This page is for playing with mods, not for building anything. You need a
 Steam copy of Elden Ring and the engine archive for your machine:
@@ -8,6 +8,9 @@ Steam copy of Elden Ring and the engine archive for your machine:
 - **Linux (x86-64):** the game under Proton.
 - **macOS (Apple Silicon):** the game inside a Wine bottle (CrossOver,
   Whisky, or any Wine you name).
+- **Windows (x86-64), experimental:** the game as Steam installs it. See
+  [Windows](#windows-experimental) below; the rest of this page is about
+  Linux and macOS.
 
 No toolchain, no checkout, no ModEngine.
 
@@ -17,6 +20,55 @@ loads your mods into it, and never writes to the game install.
 This file ships inside the release archive as `INSTALL.md`. The latest copy
 lives at
 <https://github.com/Benehiko/elden-ring-mods/blob/main/docs/install.md>.
+
+---
+
+## Windows (experimental)
+
+The Windows download is `ermod-engine-<version>-windows-x86_64.zip`. It has
+run the game, with mods, only inside a Proton prefix so far, not yet on a
+Windows PC, so expect rough edges and tell us what you find.
+
+What it does: `ermod-engine.exe` finds Elden Ring through Steam, refuses to
+launch while Easy Anti-Cheat runs (the anti-cheat section below applies in
+full), checks each mod, and starts the game with your mods. What it does
+not do yet: profiles, porting your characters, co-op, the settings window,
+and the rest of the commands on this page.
+
+1. **Verify the download** as in
+   [Check the download is ours](#check-the-download-is-ours), using
+   `cosign-windows-amd64.exe` from cosign's releases page for step 1. For
+   step 2, in PowerShell, compare the hash this prints with the zip's line
+   in `SHA256SUMS`:
+
+   ```powershell
+   (Get-FileHash ermod-engine-<version>-windows-x86_64.zip).Hash.ToLower()
+   ```
+
+2. **Unpack** the zip anywhere, and open a terminal in the unpacked folder.
+   Windows SmartScreen warns about `ermod-engine.exe` (*Windows protected
+   your PC*) because it is not signed with a Windows code-signing
+   certificate; once the download is verified, choose
+   **More info → Run anyway**.
+3. **Check that it finds your game**, launching nothing:
+
+   ```bat
+   ermod-engine --dry-run
+   ```
+
+4. **Put mods** in `%LOCALAPPDATA%\ermod\mods`, one `.lua` file each.
+5. **Play:** `ermod-engine` checks your mods, then launches the game.
+   `ermod-engine mod verify` checks them without launching; a mod you add or
+   edit while the game runs waits until you run it.
+
+The engine keeps everything in `%LOCALAPPDATA%\ermod`: logs in `logs`, the
+save the modded game plays on in `profiles\default\save`, and its records of
+checked mods in `verified`. That save starts empty, so the modded game
+starts with no characters; your own save is never opened.
+
+Its check of each mod is less sealed off than on Linux and macOS: it cannot
+start programs or write to your files, but can still read files and reach
+the network.
 
 ---
 

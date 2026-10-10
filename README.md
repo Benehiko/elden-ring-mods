@@ -1,7 +1,8 @@
-# Elden Ring mods and co-op on Linux and macOS
+# Cross-platform Elden Ring mods and co-op
 
 **Mod Elden Ring in Lua, live in the running game, and play it in co-op with
-your friends, over LAN or a VPN.** On Linux and macOS.
+your friends, over LAN or a VPN.** On Linux, macOS and, experimentally,
+Windows.
 
 - 📁 **Your game install is never touched.** The engine reads the game
   directory and writes nothing into it, so Steam's integrity check has
@@ -16,14 +17,16 @@ your friends, over LAN or a VPN.** On Linux and macOS.
   join you, and you can only join machines you can reach. No strangers, no
   lobby password.
 - ⚡ **Mods are live Lua scripts.** Switch any mod on or off from the in-game
-  menu; edit a file and it reloads within a second. No toolchain, no
-  ModEngine, no restart.
+  menu; edit a file and it reloads within a second (on Windows, once you run
+  `ermod-engine mod verify`). No toolchain, no ModEngine, no restart.
 - 🤝 **Mods follow the host, with your consent.** Join a host with mods you
   lack and the menu offers them, already downloaded. Nothing lands in your
   mods directory until you press **Enable**.
-- 🐧 **Native on Linux and macOS.** A native launcher for Linux x86-64 and
-  Apple Silicon that finds your game and drives Proton, CrossOver, Whisky or
-  protium for you. No Windows, no setup.
+- 🐧 **Native on Linux, macOS and Windows.** A native launcher for Linux
+  x86-64 and Apple Silicon that finds your game and drives Proton, CrossOver,
+  Whisky or protium for you, with no setup. On Windows, an experimental
+  launcher runs the game and your mods without Wine; co-op, profiles and the
+  settings window are Linux and macOS only for now.
 - 🪶 **Small and quick.** One download of a few megabytes, nothing to install:
   unpack it and play. Easy Anti-Cheat never runs, and modded sessions never
   reach FromSoftware's servers ([the rules](docs/install.md#before-you-start)).
@@ -41,6 +44,9 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 - **…play Elden Ring on macOS.** On Apple Silicon, inside CrossOver, Whisky,
   protium or any Wine; the launcher finds the bottle for you.
   [Elden Ring on macOS](docs/elden-ring-macos.md).
+- **…play Elden Ring with mods on Windows.** Experimental: a native
+  launcher finds your Steam game and starts it with your mods, no Wine.
+  [Windows](docs/install.md#windows-experimental).
 - **…play Elden Ring co-op with friends.** Peer to peer over LAN, ZeroTier or
   Tailscale, with the host's mods offered to everyone who joins.
   [Elden Ring co-op](docs/elden-ring-coop.md).
@@ -52,8 +58,9 @@ your friends, over LAN or a VPN.** On Linux and macOS.
 ### 1. Play with mods
 
 Download `ermod-engine` for your machine from the
-**[latest release](https://github.com/Benehiko/elden-ring-mods/releases/latest)** (`…-linux-x86_64.tar.gz` or
-`…-macos-aarch64.tar.gz`), then:
+**[latest release](https://github.com/Benehiko/elden-ring-mods/releases/latest)** (`…-linux-x86_64.tar.gz`,
+`…-macos-aarch64.tar.gz`, or `…-windows-x86_64.zip`), then, on Linux or
+macOS:
 
 ```sh
 tar -xzf ermod-engine-<version>-<platform>.tar.gz
@@ -68,6 +75,11 @@ mods on and off.
 [Verifying the download](docs/install.md#check-the-download-is-ours),
 [macOS's quarantine](docs/install.md#on-macos-clear-the-quarantine) and
 everything else are in **[the install guide](docs/install.md)**.
+
+On Windows (experimental), unpack the `.zip`, put mods in
+`%LOCALAPPDATA%\ermod\mods`, and run `ermod-engine --dry-run`, then
+`ermod-engine`, from a terminal in the unpacked folder; see
+[Windows](docs/install.md#windows-experimental).
 
 ### 2. Play co-op
 

@@ -97,7 +97,7 @@
         <dt><code>--ignore-build-guard</code></dt>
         <dd>UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened</dd>
         <dt><code>--debug</code></dt>
-        <dd>turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting &quot;heap guard&quot; in ermod-runtime.log). Costs the game about 3% more CPU</dd>
+        <dd>turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting &quot;heap guard&quot; in ermod-runtime.log), and the count-only observers behind the runtime log's census lines. Costs the game CPU time; measure frame rate without it</dd>
         <dt><code>--prefix &lt;bottle&gt;</code></dt>
         <dd>macOS: the Wine bottle holding the game, instead of searching CrossOver's and Whisky's bottle directories</dd>
         <dt><code>--wine &lt;path&gt;</code></dt>

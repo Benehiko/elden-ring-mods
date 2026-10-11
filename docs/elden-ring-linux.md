@@ -40,6 +40,12 @@ Press **`` ` ``** (backtick) in the game to switch mods on and off. Add one
 with `./ermod-engine install <mod>.lua`, or write your own:
 [How to mod Elden Ring](mod-elden-ring.md).
 
+## Frame rate on Intel 12th to 14th gen
+
+On a CPU with both P-cores and E-cores, Linux may run the game on the slow
+E-cores. [Intel P-cores and E-cores on Linux](linux-intel-hybrid-cpu.md)
+shows how to check and how to keep the game on the fast cores.
+
 ## Co-op with friends
 
 Up to five players, peer to peer, with no matchmaking and no FromSoftware

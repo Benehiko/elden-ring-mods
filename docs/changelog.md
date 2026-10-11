@@ -5,6 +5,72 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
+## Unreleased
+
+Graphics settings from outside the game, and a mod that trades distant
+detail for speed. Game build **2.7.1.0**.
+
+### Graphics presets: one line from potato to extreme
+
+`engine.cfg` has a `[graphics]` section. One line sets the game up for a
+kind of machine:
+
+```toml
+[graphics]
+preset = "potato"   # potato, low, medium, high, maximum or extreme
+```
+
+or, for a single launch, `--preset potato` on `ermod-engine`, `coop host`
+or `coop join`.
+
+- `potato` is for integrated graphics and low-power laptops: 1280x720 in a
+  window, every quality option at its lowest, the world drawn at 70% size,
+  and map objects and grass switching to simpler models at 30% of the usual
+  distance. On an Intel Iris Xe laptop it took the game from about 12 to
+  25–28 fps.
+- `maximum` sets every option to the top the game's menu offers: Maximum
+  where there is one, High where there is not.
+- `extreme` adds ray tracing at Maximum and keeps map objects and grass
+  detailed to 1.5x their usual distance.
+- `low`, `medium` and `high` sit between; they are a first pass and have not
+  been measured yet.
+
+A preset sets the quality options, the render scale and both detail levels,
+even where you set them yourself. Your screen stays yours: only `potato`
+picks one, and only when you leave `resolution` and `display` out; the
+others keep the display mode and size you chose in the game. Setting
+`display` without `resolution` keeps the size you were playing at.
+
+Every setting also works without a preset: `resolution`, `display`,
+`quality`, `render_scale`, `object_detail` and `grass_detail`. Remove a
+preset and your own settings apply; remove those and the game's own come
+back, because the engine remembers what it changed in the game's graphics
+settings and puts it back. A value the engine cannot read stops the launch
+and says which setting it is and what it takes, and `--dry-run` checks them
+and lists what a launch would set. The older top-level `render_scale` line
+still works. On Windows the experimental launcher applies the render scale
+and both detail levels, not yet the quality options, resolution or display,
+and it does not take `--preset`. See
+[Graphics presets](install.md#graphics-presets).
+
+### Mods can lower distant detail: object and grass LOD
+
+`sdk.params.file` now has `PartsDrawParam` and `GrassLodRangeParam`. The
+first holds, for every map object, the distances at which it swaps to a
+lower-poly model or texture, stops drawing, or stops casting a shadow; the
+second holds grass LOD ranges. The new example
+[`lod_trim.lua`](../examples/lod_trim.lua)
+scales them, so lower detail arrives sooner. The game reads them when it
+loads an area, so a change shows after the next load.
+
+On an Intel Iris Xe laptop at 1280x720 with `render_scale = 0.7`, in
+daylight at The First Step, the graphics card's work per frame fell 29% with
+grass LOD at 0.3, 14% with object LOD at 0.3, and 42% with both, which took
+the frame rate from about 12.5 to about 18 fps. The picture changes visibly
+at 0.3: grass and distant objects lose detail sooner. Going lower gains
+nothing more there: once the geometry is cheap, the game's own CPU work sets
+the frame rate.
+
 ## v0.8.0 (2026-10-10)
 
 Game build **2.7.1.0**, as in v0.7.0. Every player in a co-op session needs the

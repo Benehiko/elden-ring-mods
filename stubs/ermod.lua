@@ -120,6 +120,10 @@ params.file = {
   LoadBalancerParam = "LoadBalancerParam",
   ---`LOAD_BALANCER_NEW_DRAW_DIST_SCALE_PARAM_ST` rows, 48 bytes each.
   LoadBalancerNewDrawDistScaleParam_win64 = "LoadBalancerNewDrawDistScaleParam_win64",
+  ---`PARTS_DRAW_PARAM_ST` rows, 144 bytes each.
+  PartsDrawParam = "PartsDrawParam",
+  ---`GRASS_LOD_RANGE_PARAM_ST` rows, 24 bytes each.
+  GrassLodRangeParam = "GrassLodRangeParam",
 }
 
 ---One row of a param file by id, or nil if there is no such row.

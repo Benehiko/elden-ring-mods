@@ -474,7 +474,7 @@ frame_trace_cpu = "off"
 | `coop_join_approval`     | `"auto"`   | Who gets into your co-op session. `"auto"` lets in every player whose game-changing mods match yours; `"ask"` holds each one until you press **Allow** or **Refuse** in the ermod menu. |
 | `frame_trace_cpu`        | `"off"`    | Starts a frame trace at launch that samples the game's code: `"light"`, `"normal"` or `"detailed"`. See [Finding stutters](performance.md).                                             |
 | `frame_trace_gpu`        | `false`    | Starts a frame trace at launch that times the game's GPU work. See [Finding stutters](performance.md).                                                                                  |
-| `render_scale`           | `1.0`      | Draws the world at this fraction of the screen size, from `0.5` to `1.0`, and scales it up. Lower is faster and softer. Game build 2.7.1.0 only. See [Render scale](#render-scale).     |
+| `render_scale`           | `1.0`      | The older place for `render_scale`; it still works. It now belongs in the `[graphics]` section with the other graphics settings: see [Graphics presets](#graphics-presets).             |
 
 One setting per line, as `name = value`. Setting names are lowercase,
 exactly as above. A key or a level is a quoted name; a switch is `true` or
@@ -496,6 +496,71 @@ name the engine does not know leaves that key at its default, and the log
 says so. A line the engine cannot read at all stops the reading: that line
 and every setting after it keep their defaults.
 
+### Graphics presets
+
+One line sets the game up for a kind of machine, from outside the game:
+
+```text
+[graphics]
+preset = "potato"
+```
+
+or, for a single launch, `--preset potato` on `ermod-engine`, `coop host`
+or `coop join`. `--preset` replaces the `engine.cfg` preset for that launch.
+
+| Preset    | For                                    | What it sets                                                                                                                        |
+| --------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `potato`  | integrated graphics, low-power laptops | 1280x720 in a window, every option at its lowest, the world drawn at 70% size, objects and grass simpler from 30% of their distance |
+| `low`     | weak graphics cards                    | every option Low, the world at 85% size, objects at 60% and grass at 50% of their distance                                          |
+| `medium`  |                                        | every option Medium, objects and grass at 80% of their distance                                                                     |
+| `high`    |                                        | every option High                                                                                                                   |
+| `maximum` |                                        | every option at the top the game's menu offers: Maximum where it has one, High where it does not; ray tracing off                   |
+| `extreme` | the fastest graphics cards             | `maximum`, plus ray tracing at Maximum, and objects and grass keeping their detail to 150% of their usual distance                  |
+
+`potato` took an Intel Iris Xe laptop from about 12 to 25–28 fps. The
+presets between `potato` and `maximum` are a first pass and have not been
+measured yet.
+
+A preset sets the quality options, the render scale and the object and
+grass detail, even where you set them yourself. Your screen stays yours:
+only `potato` picks one, and only when you have not set `resolution` or
+`display`; every other preset keeps the display mode and size you chose in
+the game.
+
+Every setting also works without a preset, in the same section:
+
+| Setting         | Values                                                                        | What it does                                                                                                            |
+| --------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `preset`        | `"potato"`, `"low"`, `"medium"`, `"high"`, `"maximum"`, `"extreme"`           | As above.                                                                                                               |
+| `resolution`    | `"native"` or `"WIDTHxHEIGHT"`, e.g. `"1600x900"`                             | The screen size. `"native"` keeps the game's own.                                                                       |
+| `display`       | `"windowed"`, `"fullscreen"`, `"borderless"`                                  | The display mode. Without a `resolution` it keeps the size you play at.                                                 |
+| `quality`       | `"game"`, `"lowest"`, `"low"`, `"medium"`, `"high"`, `"maximum"`, `"extreme"` | Every quality option at that level, as the presets set them. `"game"` leaves the game's own.                            |
+| `render_scale`  | `0.5` to `1.0`                                                                | Draws the world at this fraction of the screen size and scales it up. See [Render scale](#render-scale).                |
+| `object_detail` | `0.1` to `2.0`                                                                | How far map objects keep their detailed models: `0.5` switches to simpler ones at half the usual distance, `1.5` later. |
+| `grass_detail`  | `0.1` to `2.0`                                                                | The same for grass.                                                                                                     |
+
+```text
+[graphics]
+quality = "medium"
+render_scale = 0.8
+grass_detail = 0.5
+```
+
+A setting you leave out stays as the game has it. Remove a preset and your
+own settings apply; remove those too and the game's own come back: the
+engine remembers what it changed in the game's graphics settings and puts
+it back. A value the engine cannot read stops the launch and says which
+setting it is and what it takes. `ermod-engine --dry-run` checks the
+section too, and lists every graphics setting a launch would write.
+
+Changing an option in the game's own menu works as usual, but a preset sets
+its options again on the next launch.
+
+On Windows, the experimental launcher applies `render_scale`,
+`object_detail` and `grass_detail` from `[graphics]` (a preset's included),
+but not yet `quality`, `resolution` or `display`, and it does not take
+`--preset`.
+
 ### Render scale
 
 If the game runs slowly because the graphics card cannot keep up, as on
@@ -504,10 +569,11 @@ world smaller and scales it up to fill the screen; this is the game's own
 dynamic-resolution feature, which it otherwise never turns on.
 
 1. Close the game.
-2. Add a line to `~/.local/share/ermod/engine.cfg`, creating the file if it
-   is not there:
+2. Add the setting to `~/.local/share/ermod/engine.cfg`, creating the file
+   if it is not there:
 
    ```text
+   [graphics]
    render_scale = 0.7
    ```
 
@@ -525,8 +591,10 @@ Delete the line to go back to full sharpness. Measured on an M4 Mac at
 | `0.6`          | 20.6 ms   |
 | `0.5`          | 18.7 ms   |
 
-A value outside 0.5 to 1.0 is ignored and the log says so. On a game build
-other than 2.7.1.0 the game renders at full size and the log says why.
+A value outside 0.5 to 1.0 stops the launch with a message saying what it
+takes; on the older top-level `render_scale` line it is ignored with a
+warning instead. On a game build other than 2.7.1.0 the game renders at
+full size and the log says why. A preset sets its own render scale.
 
 **Render scale or a lower resolution?** Both draw fewer pixels. These two
 draw the world at the same size, 1280x720, on the same Mac in the same spot:

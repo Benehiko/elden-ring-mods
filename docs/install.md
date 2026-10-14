@@ -538,6 +538,7 @@ Every setting also works without a preset, in the same section:
 | `render_scale`  | `0.5` to `1.0`                                                                | Draws the world at this fraction of the screen size and scales it up. See [Render scale](#render-scale).                |
 | `object_detail` | `0.1` to `2.0`                                                                | How far map objects keep their detailed models: `0.5` switches to simpler ones at half the usual distance, `1.5` later. |
 | `grass_detail`  | `0.1` to `2.0`                                                                | The same for grass.                                                                                                     |
+| `cpu_cores`     | `"performance"` (the default) or `"all"`                                      | Which CPU cores the game runs on. See [Performance cores](#performance-cores).                                          |
 
 ```text
 [graphics]
@@ -607,6 +608,30 @@ draw the world at the same size, 1280x720, on the same Mac in the same spot:
 A lower resolution in the game's own settings is faster and needs no engine
 setting. `render_scale` costs a few milliseconds more and keeps the HUD at
 your screen's full sharpness.
+
+### Performance cores
+
+Intel's 12th to 14th generation CPUs have fast performance cores (P-cores)
+and slower efficiency cores (E-cores). Elden Ring does most of each frame's
+work on one thread, so its frame rate drops whenever that thread lands on
+an E-core. A few seconds after your character is in the world, the
+engine keeps the game on the P-cores. `ermod-runtime.log` says what it did
+on a line starting `cpu —`.
+
+On an i7-13700KF under Linux, keeping the game on the P-cores took it from
+about 91 to 122 fps in the same spot.
+
+The engine leaves the cores alone when every core is the same kind, and
+when the CPU has fewer than six P-cores: there the game's many threads
+would crowd onto too few cores and run slower. To keep every core in use
+anyway:
+
+```text
+[graphics]
+cpu_cores = "all"
+```
+
+It works on game builds 2.7.0.0 and 2.7.1.0.
 
 ---
 

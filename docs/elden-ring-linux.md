@@ -43,8 +43,9 @@ with `./ermod-engine install <mod>.lua`, or write your own:
 ## Frame rate on Intel 12th to 14th gen
 
 On a CPU with both P-cores and E-cores, Linux may run the game on the slow
-E-cores. [Intel P-cores and E-cores on Linux](linux-intel-hybrid-cpu.md)
-shows how to check and how to keep the game on the fast cores.
+E-cores. The engine keeps the game on the fast cores once you are in the
+world. [Intel P-cores and E-cores on Linux](linux-intel-hybrid-cpu.md)
+shows how to check whether your system is affected.
 
 ## Co-op with friends
 

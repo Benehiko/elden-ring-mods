@@ -12,8 +12,14 @@ On an i7-13700KF with a Radeon RX 9070, standing in the same spot:
 
 | Game allowed to run on | Frame rate in the world |
 | ---------------------- | ----------------------- |
-| every core             | 88–93 fps               |
-| P-cores only           | 98–110 fps              |
+| every core             | about 91 fps            |
+| P-cores only           | about 122 fps           |
+
+**The engine does this for you.** Once your character is in the world, it
+keeps the game on the P-cores by itself (see
+[Performance cores](install.md#performance-cores)). You need this guide
+only to check whether your system is affected, to pin the game by hand when
+`cpu_cores = "all"` is set, or with an engine older than that feature.
 
 This guide shows how to check whether your system is affected and how to
 keep the game on the P-cores. Nothing here changes your system's settings.

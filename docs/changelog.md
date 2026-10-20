@@ -89,7 +89,7 @@ On a CPU with performance and efficiency cores, such as Intel's 12th to
 14th generation, the engine keeps the game on the performance cores once
 your character is in the world. On an i7-13700KF under Linux that took the
 game from about 91 to 122 fps in the same spot. It needs at least six
-performance cores, and game build 2.7.0.0 or 2.7.1.0. To turn it off:
+performance cores. To turn it off:
 
 ```toml
 [graphics]

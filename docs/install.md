@@ -631,8 +631,6 @@ anyway:
 cpu_cores = "all"
 ```
 
-It works on game builds 2.7.0.0 and 2.7.1.0.
-
 ---
 
 ## When something does not work

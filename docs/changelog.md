@@ -7,8 +7,8 @@ engine does anything at all.
 
 ## Unreleased
 
-Graphics settings from outside the game, and a mod that trades distant
-detail for speed. Game build **2.7.1.0**.
+Graphics settings from outside the game, a mod that trades distant detail
+for speed, and less CPU work per frame. Game build **2.7.1.0**.
 
 ### Graphics presets: one line from potato to extreme
 
@@ -70,6 +70,33 @@ the frame rate from about 12.5 to about 18 fps. The picture changes visibly
 at 0.3: grass and distant objects lose detail sooner. Going lower gains
 nothing more there: once the geometry is cheap, the game's own CPU work sets
 the frame rate.
+
+### Less engine work per frame
+
+A launch no longer carries the engine's debugging instruments: about 90
+counters that only fill the engine's log, several of them on work the game
+does for every character every frame. `--debug` turns them back on, with
+the heap guard; measure frame rates without it.
+
+The figures `sdk.trace` reports, each character's `sync.pop_age` and the
+multiplayer predicate counts, start once a mod with the `trace` permission
+runs or a co-op session begins, and count from then. Mods, co-op and
+Torrent behave as before.
+
+### The game stays on the fast cores
+
+On a CPU with performance and efficiency cores, such as Intel's 12th to
+14th generation, the engine keeps the game on the performance cores once
+your character is in the world. On an i7-13700KF under Linux that took the
+game from about 91 to 122 fps in the same spot. It needs at least six
+performance cores. To turn it off:
+
+```toml
+[graphics]
+cpu_cores = "all"
+```
+
+See [Performance cores](install.md#performance-cores).
 
 ## v0.8.0 (2026-10-10)
 

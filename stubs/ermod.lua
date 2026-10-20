@@ -809,7 +809,7 @@ local trace = {}
 ---@field rec4 ermod.vec3? # the last position record stored for the slot (owner's, block-relative)
 ---@field rec4_tag integer?
 ---@field rec70_hp integer? # HP in the last type-0x70 record (the owner's view); nil when none
----@field pop_age integer? # frames since a received position record was consumed; nil if never
+---@field pop_age integer? # frames since a received position record was consumed; nil if never, or in the first second after a mod with the trace permission loads
 
 ---@class ermod.trace.chr
 ---@field key string # FieldInsHandle "lo:hi" (hex): the same character on every machine
@@ -841,7 +841,7 @@ local trace = {}
 ---@field area_cleared integer # times the session's multiplayer area was cleared (the white wall's check)
 ---@field warp_back_refused integer # times the game asked to warp the player back inside it
 ---@field block_solo_forced integer # map blocks told "solo" under the fabricated session
----@field predicates ermod.trace.predicate[] # multiplayer predicates: how often asked, how often true
+---@field predicates ermod.trace.predicate[] # multiplayer predicates: how often asked, how often true, counted from when a mod with the trace permission or a co-op session first ran
 
 ---Bumped each time the runtime publishes a new snapshot.
 ---@return integer

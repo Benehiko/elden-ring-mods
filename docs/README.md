@@ -20,6 +20,7 @@ Everything here is also on the website, rendered from these same files.
 | [Playing co-op](coop.md)                                          | Sessions, mods in co-op, fixes                                             |
 | [Connecting for co-op: LAN or VPN](network.md)                    | ZeroTier, Tailscale and the firewall                                       |
 | [Finding stutters](performance.md)                                | Tracing what makes frames slow, and reading the report                     |
+| [Intel P-cores and E-cores on Linux](linux-intel-hybrid-cpu.md)   | Keeping the game on the fast cores of a 12th to 14th gen Intel CPU         |
 
 ## Writing mods
 

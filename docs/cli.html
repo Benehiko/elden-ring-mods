@@ -97,7 +97,7 @@
         <dt><code>--ignore-build-guard</code></dt>
         <dd>UNSAFE: run a game build with no verified address set as the newest one that has one, instead of vanilla. Expect crashes and wrong reads/writes in the modded profile; your own save is still never opened</dd>
         <dt><code>--debug</code></dt>
-        <dd>turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting &quot;heap guard&quot; in ermod-runtime.log). Costs the game about 3% more CPU</dd>
+        <dd>turn on the engine's debugging instruments for this launch: the heap guard, which logs and survives the memory corruption behind one known co-op crash (lines starting &quot;heap guard&quot; in ermod-runtime.log), and the count-only observers behind the runtime log's census lines. Costs the game CPU time; measure frame rate without it</dd>
         <dt><code>--prefix &lt;bottle&gt;</code></dt>
         <dd>macOS: the Wine bottle holding the game, instead of searching CrossOver's and Whisky's bottle directories</dd>
         <dt><code>--wine &lt;path&gt;</code></dt>
@@ -150,7 +150,7 @@
     <article class="cmd" id="coop-join">
       <h3><code>ermod-engine coop join</code></h3>
       <pre><code>ermod-engine coop join &lt;host-id&gt;@&lt;ip&gt;[:port] [&lt;id&gt;@&lt;ip&gt;[:port] ...] [--port N] [--as ID] [&lt;launch flags&gt;]</code></pre>
-      <p>Launch the game and join a host. Press Continue at the title; once your world is loaded the command joins. The host must already be hosting: a joiner that comes first gets no session. With three or more players, also list each player who joined before you. For both: &lt;ip&gt; is an IPv4 address and a peer's port defaults to 7777. The machines must reach each other's UDP port directly — a LAN or a VPN; nothing crosses a NAT. Two machines on one Steam account: give one of them <code>--as</code> &lt;another Steam ID&gt; (any SteamID64 no one here uses), so the two are different players. Launch flags: <code>--mods</code>, <code>--regulation</code>, <code>--muted</code>, <code>--preset</code>, <code>--debug</code>, and on macOS <code>--prefix</code> and <code>--wine</code>. Every machine needs the same game build, 2.7.0.0 or 2.7.1.0, and a joiner whose game-changing mods differ from the host's is held until it enables the host's mods in the ermod menu. The command ends when the game does.</p>
+      <p>Launch the game and join a host. Press Continue at the title; once your world is loaded the command joins. The host must already be hosting: a joiner that comes first gets no session. With three or more players, also list each player who joined before you. For both: &lt;ip&gt; is an IPv4 address and a peer's port defaults to 7777. The machines must reach each other's UDP port directly — a LAN or a VPN; nothing crosses a NAT. Two machines on one Steam account: give one of them <code>--as</code> &lt;another Steam ID&gt; (any SteamID64 no one here uses), so the two are different players. Launch flags: <code>--mods</code>, <code>--regulation</code>, <code>--muted</code>, <code>--preset</code>, <code>--debug</code>, and on macOS <code>--prefix</code> and <code>--wine</code>. Every machine needs the same game build, 2.7.0.0, 2.7.1.0 or 2.7.2.0, and a joiner whose game-changing mods differ from the host's is held until it enables the host's mods in the ermod menu. The command ends when the game does.</p>
     </article>
 
     <article class="cmd" id="coop-leave">

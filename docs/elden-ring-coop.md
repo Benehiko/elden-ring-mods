@@ -16,7 +16,7 @@ Windows build.
 
 - **Every player:** ermod-engine installed
   ([Linux](elden-ring-linux.md), [macOS](elden-ring-macos.md)), the same
-  engine release, and game build 2.7.0.0 or 2.7.1.0
+  engine release, and game build 2.7.0.0, 2.7.1.0 or 2.7.2.0
   (`./ermod-engine check-build`).
 - **A different Steam account per player.** Two machines on one account can
   still play: see [the co-op guide](coop.md#same-steam-id-on-two-machines).

@@ -5,10 +5,30 @@ it. Engine releases are published on the open repo's Releases page; the
 supported game build is part of every entry, because it decides whether the
 engine does anything at all.
 
-## Unreleased
+## v0.9.0 (2026-10-21)
 
-Graphics settings from outside the game, a mod that trades distant detail
-for speed, and less CPU work per frame. Game build **2.7.1.0**.
+Game build **2.7.2.0**, the October update; 2.7.1.0 still works. Every player
+in a co-op session needs the same game build and this engine version. Also:
+graphics settings from outside the game, a frame-rate cap above 60, a mod
+that trades distant detail for speed, and less CPU work per frame.
+
+### Game build 2.7.2.0
+
+The game's October update (2.7.2.0, Steam build 25827938) is supported. Mods
+load, co-op sessions form, and skipping the title menu, grace travel and the
+co-op fixes for death, graces, warps and Torrent work as on 2.7.1.0, and so
+do shared runes and render scale. Update the engine and the game together:
+co-op needs both to match on every machine.
+
+### Play above 60 fps
+
+```toml
+[graphics]
+max_fps = 144   # a whole number from 30 to 1000
+```
+
+replaces the game's 60 fps cap. Presets never change it. See
+[Frame-rate cap](install.md#frame-rate-cap).
 
 ### Graphics presets: one line from potato to extreme
 

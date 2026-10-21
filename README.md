@@ -141,7 +141,8 @@ either key with `./ermod-engine settings`
 
 | Game build           | Engine           |                                    |
 | -------------------- | ---------------- | ---------------------------------- |
-| **2.7.1.0** (latest) | v0.3.0 and later | mods and co-op                     |
+| **2.7.2.0** (latest) | v0.9.0 and later | mods and co-op                     |
+| 2.7.1.0              | v0.3.0 and later | mods and co-op                     |
 | 2.7.0.0              | v0.2.0 and later | mods and co-op                     |
 | 2.6.2.0              | v0.1.0 and later | mods; co-op without the rule fixes |
 

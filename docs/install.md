@@ -594,8 +594,9 @@ Delete the line to go back to full sharpness. Measured on an M4 Mac at
 
 A value outside 0.5 to 1.0 stops the launch with a message saying what it
 takes; on the older top-level `render_scale` line it is ignored with a
-warning instead. On a game build other than 2.7.1.0 the game renders at
-full size and the log says why. A preset sets its own render scale.
+warning instead. On a game build other than 2.7.1.0 or 2.7.2.0 the game
+renders at full size and the log says why. A preset sets its own render
+scale.
 
 **Render scale or a lower resolution?** Both draw fewer pixels. These two
 draw the world at the same size, 1280x720, on the same Mac in the same spot:
@@ -608,6 +609,23 @@ draw the world at the same size, 1280x720, on the same Mac in the same spot:
 A lower resolution in the game's own settings is faster and needs no engine
 setting. `render_scale` costs a few milliseconds more and keeps the HUD at
 your screen's full sharpness.
+
+### Frame-rate cap
+
+The game caps itself at 60 fps. To raise the cap, for a high-refresh
+display:
+
+```text
+[graphics]
+max_fps = 144
+```
+
+It takes a whole number from 30 to 1000, and a preset never changes it.
+Once the game starts, `ermod-runtime.log` says
+`max fps — the 60 fps frame time at … now caps at 144 fps`. On a game build
+other than 2.7.1.0 or 2.7.2.0 the log says the cap stays 60. Play in
+borderless or windowed mode: exclusive fullscreen has not been checked with
+it. Delete the line to go back to 60.
 
 ### Performance cores
 

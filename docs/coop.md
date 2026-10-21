@@ -58,7 +58,7 @@ in the install guide has the safety rules; read them first.
 - **The engine installed.** Follow the [install guide](install.md). The
   commands below use `./ermod-engine`, typed in the directory you unpacked
   it into, as the install guide does.
-- **Game build 2.7.0.0 or 2.7.1.0.** Co-op works on these builds only. To check yours:
+- **Game build 2.7.0.0, 2.7.1.0 or 2.7.2.0.** Co-op works on these builds only. To check yours:
 
   ```sh
   ./ermod-engine check-build
@@ -260,7 +260,7 @@ wait for the host's `you are hosting`, and run `coop join` again.
 
 ### Wrong game build
 
-Co-op needs build 2.7.0.0 or 2.7.1.0 on every machine. On another build the ermod
+Co-op needs build 2.7.0.0, 2.7.1.0 or 2.7.2.0 on every machine. On another build the ermod
 menu's co-op section says `not available for this game build`, and the
 `coop` command stops with an error. Run `./ermod-engine check-build`
 and update the game through Steam.
